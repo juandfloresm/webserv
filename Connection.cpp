@@ -10,19 +10,19 @@ Connection::Connection(int port) : _port(port)
 
 	if (this->_serverSocket != -1)
 	{
-		sockaddr_in addr;
+		sockaddr_in addr, client;
 		memset(&addr, '\0', sizeof(sockaddr_in));
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
 		addr.sin_addr.s_addr = INADDR_ANY;
+		socklen_t size = sizeof(client);
 			
 		if (bind(this->_serverSocket, (struct sockaddr *) &addr, sizeof(addr)) != -1)
 		{
 			std::cerr << "[Info] server is accepting HTTP connections on port: " << port << std::endl;
 			while (true)
 			{
-				this->_clientSocket = accept(this->_serverSocket, nullptr, nullptr);
-				std::cout << "Connected" << std::endl;
+				this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &client, &size);
 				char buffer[1024] = { 0 };
 				int received = recv(this->_clientSocket, buffer, sizeof(buffer), 0);
 				if (received > 0)

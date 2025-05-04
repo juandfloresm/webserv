@@ -36,4 +36,9 @@ sanitize: fclean $(OBJ)
 	$(CC) $(FLAGS) -g $(OBJ) -fsanitize=address -o $(NAME)
 	./$(NAME) $(ARG)
 
+gitter:
+	git add -A
+	git commit -am "Recursive commit"
+	git push
+
 .PHONY: all clean fclean re runner valgrind sanitize
