@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter:
 	git add -A
-	git commit -am "Recursive commit"
+	git commit -am "Initial server"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize
