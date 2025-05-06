@@ -5,7 +5,7 @@
 # include <string>
 # include "Message.hpp"
 
-typedef enum { GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE } Method;
+typedef enum { GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, HEAD } Method;
 
 class Request : public Message
 {
@@ -19,6 +19,8 @@ class Request : public Message
 
 		Method getMethod( void ) const;
 		std::string getResource( void ) const;
+
+		const std::string getMethodString( void ) const;
 
 	private:
 		Method _method;

@@ -8,8 +8,9 @@ const char Connection::CONFIG_SEP = '=';
 
 Connection::Connection(std::string config)
 {
-	std::cout << std::endl << "**** CONFIG LINES ****" << std::endl;
+	std::cout << std::endl << "....... CONFIG ........" << std::endl << std::endl;
 	readFile(config, Connection::processConfig);
+	std::cout << std::endl << "......................." << std::endl << std::endl;
 
 	this->_serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -147,13 +148,36 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 
 void Connection::processClientRequest()
 {
-	std::cout << std::endl << "**** REQUEST LINES ****" << std::endl;
-	char buffer[BUFFER];
-	int received = recv(this->_clientSocket, buffer, sizeof(buffer), 0);
+	this->_index = 0;
+	std::string line = getLine();
+	std::string method, resource, major, minor;
+	std::istringstream f(line);
+	getline(f, method, ' ');
+	getline(f, resource, ' ');
+	getline(f, major, '/');
+	getline(f, major, '.');
+	getline(f, minor, '.');
+	Request r((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
+	std::cout << r << std::endl;
+}
+
+std::string Connection::getLine( void )
+{
+	std::string line = "";
+	int received = recv(this->_clientSocket, this->_buffer, sizeof(this->_buffer), 0);
 	if (received > 0)
 	{
-		std::cout << buffer << std::endl; // Test for 10, 13, 32 ASCII codes CRLF to get lines
+		char c;
+		while (this->_buffer[this->_index])
+		{
+			c = this->_buffer[this->_index];
+			if (c == LF && this->_buffer[this->_index + 1] == CR)
+				break ;
+			line.push_back(c);
+			this->_index++;	
+		}
 	}
+	return line;
 }
 
 /*

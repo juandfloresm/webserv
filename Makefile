@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter:
 	git add -A
-	git commit -am "Request / Response objects"
+	git commit -am "Creating Request with first line of the input"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

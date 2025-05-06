@@ -30,7 +30,11 @@ Request & Request::operator=( Request const & rhs )
 
 std::ostream & operator<<( std::ostream & o, Request const & i )
 {
-	o << "Request = " << i.getResource();
+	o << std::endl << "....... REQUEST ......." << std::endl << std::endl;
+	o << "method = " << i.getMethodString() << std::endl;
+	o << "resource = " << i.getResource() << std::endl;
+	o << "version = HTTP/" << i.getMajorVersion() << "." << i.getMinorVersion() << std::endl;
+	o << std::endl << "......................." << std::endl;
 	return o;
 }
 
@@ -38,6 +42,29 @@ std::ostream & operator<<( std::ostream & o, Request const & i )
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
+
+const std::string Request::getMethodString( void ) const
+{
+	switch(this->_method)
+	{
+		case GET:
+			return "GET";
+		case POST:
+			return "POST";
+		case PUT:
+			return "PUT";
+		case DELETE:
+			return "DELETE";
+		case TRACE:
+			return "TRACE";
+		case OPTIONS:
+			return "OPTIONS";
+		case HEAD:
+			return "HEAD";
+		default:
+			return "UNKNOWN";
+	}
+}
 
 
 /*

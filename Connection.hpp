@@ -12,8 +12,12 @@
 # include <sstream>
 # include <map>
 # include <vector>
+# include "Request.hpp"
+# include "Response.hpp"
 
 # define BUFFER 1024
+# define LF 10
+# define CR 13
 
 class Connection
 {
@@ -29,7 +33,7 @@ class Connection
 		static void processConfig( Connection & i, std::string line );
 		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 		void processClientRequest();
-		int liner();
+		std::string getLine( void );
 
 		int geti(std::string key) const;
 		std::string gets(std::string key) const;
@@ -43,6 +47,9 @@ class Connection
 		std::map<std::string, std::string> _config;
 
 		static const char CONFIG_SEP;
+
+		char _buffer[BUFFER];
+		int _index;
 };
 
 std::ostream & operator<<( std::ostream & o, Connection const & i );
