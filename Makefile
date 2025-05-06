@@ -4,7 +4,7 @@ CC 				:=	c++
 
 FLAGS 			:=	-Wall -Wextra -Werror -pedantic -std=c++98
 
-SRC 			:=	main.cpp Connection.cpp
+SRC 			:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp
 
 OBJ 			:=	$(SRC:.cpp=.o)
 
@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter:
 	git add -A
-	git commit -am "Extending config values format"
+	git commit -am "Request / Response objects"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

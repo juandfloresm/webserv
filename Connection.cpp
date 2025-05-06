@@ -8,7 +8,7 @@ const char Connection::CONFIG_SEP = '=';
 
 Connection::Connection(std::string config)
 {
-
+	std::cout << std::endl << "**** CONFIG LINES ****" << std::endl;
 	readFile(config, Connection::processConfig);
 
 	this->_serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -35,12 +35,7 @@ Connection::Connection(std::string config)
 				{
 					this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &client, &size);
 					if (this->_clientSocket != -1)
-					{
-						char buffer[BUFFER];
-						int received = recv(this->_clientSocket, buffer, sizeof(buffer), 0);
-						if (received > 0)
-							std::cout << buffer << std::endl;
-					}
+						processClientRequest();
 					else
 					{
 						std::cerr << "[Error] accepting client connection" << std::endl;
@@ -126,7 +121,7 @@ void Connection::processConfig( Connection & i, std::string line )
 	std::istringstream f(line);
 	getline(f, key, Connection::CONFIG_SEP);
 	getline(f, value, Connection::CONFIG_SEP);
-	std::cout << "Key: " << key << ", Value: " << value << std::endl;
+	std::cout << key << ": " << value << std::endl;
 	i._config[key] = value;
 }
 
@@ -148,6 +143,17 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 	}
 	else
 		std::cerr << "Error: could not open file" << std::endl;
+}
+
+void Connection::processClientRequest()
+{
+	std::cout << std::endl << "**** REQUEST LINES ****" << std::endl;
+	char buffer[BUFFER];
+	int received = recv(this->_clientSocket, buffer, sizeof(buffer), 0);
+	if (received > 0)
+	{
+		std::cout << buffer << std::endl; // Test for 10, 13, 32 ASCII codes CRLF to get lines
+	}
 }
 
 /*

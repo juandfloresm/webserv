@@ -1,4 +1,5 @@
 #include "./Connection.hpp"
+#include "./Message.hpp"
 
 int main(int argc, char *argv[])
 {
