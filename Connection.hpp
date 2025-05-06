@@ -29,7 +29,9 @@ class Connection
 		static void processConfig( Connection & i, std::string line );
 		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 
-		int get(std::string key) const;
+		int geti(std::string key) const;
+		std::string gets(std::string key) const;
+		float getf(std::string key) const;
 
 	private:
 		unsigned int _port;

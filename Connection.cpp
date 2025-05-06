@@ -18,7 +18,7 @@ Connection::Connection(std::string config)
 		sockaddr_in addr;
 		sockaddr_in client;
 
-		int port = get("port");
+		int port = geti("port");
 
 		memset(&addr, '\0', sizeof(sockaddr_in));
 		addr.sin_family = AF_INET;
@@ -28,7 +28,7 @@ Connection::Connection(std::string config)
 			
 		if (bind(this->_serverSocket, (struct sockaddr *) &addr, sizeof(addr)) != -1)
 		{
-			if (listen(this->_serverSocket, get("connections")) == 0)
+			if (listen(this->_serverSocket, geti("connections")) == 0)
 			{
 				std::cerr << "[Info] server is accepting HTTP connections on port: " << port << std::endl;
 				while (true)
@@ -90,13 +90,33 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-int Connection::get(std::string key) const
+std::string Connection::gets(std::string key) const
 {
 	std::map<std::string, std::string> m = this->_config;
-	if (m.find("f") == m.end()) {
-		return (-1);
+	if (m.find(key) == m.end()) {
+		return "";
+	} else {
+		return m[key];
+	}
+}
+
+int Connection::geti(std::string key) const
+{
+	std::map<std::string, std::string> m = this->_config;
+	if (m.find(key) == m.end()) {
+		return 0;
 	} else {
 		return atoi(m[key].c_str());
+	}
+}
+
+float Connection::getf(std::string key) const
+{
+	std::map<std::string, std::string> m = this->_config;
+	if (m.find(key) == m.end()) {
+		return 0;
+	} else {
+		return atof(m[key].c_str());
 	}
 }
 
