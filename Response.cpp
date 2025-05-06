@@ -45,8 +45,10 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 
 void Response::sampleResonseSetup( void )
 {
+	std::ostringstream ss;
+    ss << this->_status;
 	this->_description = this->_statusDescriptions[this->_status];
-	this->_statusString = std::to_string(this->_status);
+	this->_statusString = ss.str();
 	this->_content = readError(this->_statusString);
 	this->_contentLength = this->_content.size();
 }
@@ -74,10 +76,14 @@ void Response::initStatusDescriptions( void )
 
 const std::string Response::toString( void ) const
 {
-	std::string major = std::to_string(getMajorVersion());
-	std::string minor = std::to_string(getMinorVersion());
+	std::ostringstream ss;
+    ss << getMajorVersion();
+	std::string major = ss.str();
+	ss << getMinorVersion();
+	std::string minor = ss.str();
 	std::string contentType = "text/html";
-	std::string contentLength = std::to_string(this->_contentLength);
+	ss << this->_contentLength;
+	std::string contentLength = ss.str();
 
 	std::string r = "";
 
@@ -102,7 +108,7 @@ std::string Response::readError( std::string status ) const
 {
 	std::string line;
 	std::string filePath = this->_connection.gets("error_pages") + status + ".html";
-	std::ifstream file(filePath);
+	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
 		return "";
