@@ -2,8 +2,13 @@
 
 int main(int argc, char *argv[])
 {
-	(void) argc;
-	(void) argv;
-	Connection c(8080);
+	if (argc == 2)
+	{
+		Connection c(argv[1]);
+	}
+	else
+	{
+		std::cerr << "Incorrect number of arguments" << std::endl;
+	}
 	return (0);
 }

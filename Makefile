@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter:
 	git add -A
-	git commit -am "Working connection"
+	git commit -am "Reading from configuration file"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize
