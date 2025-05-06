@@ -1,0 +1,6 @@
+.DS_Store
+*.log
+webserv
+*.o
+*_shrubbery
+.vscode/
