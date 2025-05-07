@@ -8,7 +8,7 @@ SRC 			:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp
 
 OBJ 			:=	$(SRC:.cpp=.o)
 
-ARG				:=	./config/zweb.config
+ARG				:=	./config/my.conf
 
 all: $(NAME)
 
@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter:
 	git add -A
-	git commit -am "Sample request to root / and a 500 status code response"
+	git commit -am "Supporting baseline config"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

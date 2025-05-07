@@ -18,6 +18,7 @@
 # define BUFFER 1024
 # define LF 10
 # define CR 13
+# define CONFIG "./config/zweb.conf"
 
 typedef std::map<std::string, std::string> Config;
 
