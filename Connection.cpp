@@ -92,7 +92,10 @@ int Connection::connect()
 			{
 				this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
 				if (this->_clientSocket != -1)
+				{
 					processClientRequest();
+					close(this->_clientSocket);
+				}
 				else
 				{
 					/* Handle accept error */
