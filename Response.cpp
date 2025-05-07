@@ -4,8 +4,10 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response(Status status, std::string description, int major, int minor) : Message(major, minor), _status(status), _description(description)
+Response::Response(Status status, int major, int minor, const Connection & connection) : Message(major, minor), _status(status), _connection(connection)
 {
+	initStatusDescriptions();
+	sampleResonseSetup();
 }
 
 
@@ -30,7 +32,9 @@ Response & Response::operator=( Response const & rhs )
 
 std::ostream & operator<<( std::ostream & o, Response const & i )
 {
-	o << "Response status: " << i.getStatus();
+	o << std::endl << "....... RESPONSE ......" << std::endl << std::endl;
+	o << i.toString();
+	o << "......................." << std::endl;
 	return o;
 }
 
@@ -39,6 +43,76 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+void Response::sampleResonseSetup( void )
+{
+	this->_description = this->_statusDescriptions[this->_status];
+	this->_statusString = std::to_string(this->_status);
+	this->_content = readError(this->_statusString);
+	this->_contentLength = this->_content.size();
+}
+
+void Response::send( void )
+{
+	std::string resp = toString();
+	write(this->_connection.getClientSocket(), resp.c_str(), resp.size());
+}
+
+void Response::initStatusDescriptions( void )
+{
+	/* 200 - 299 .............................. */
+	this->_statusDescriptions[OK] = "OK";
+
+	/* 300 - 399 .............................. */
+	this->_statusDescriptions[MOVED_PERMANENTLY] = "Moved Permanently";
+
+	/* 400 - 499 .............................. */
+	this->_statusDescriptions[NOT_FOUND] = "Not Found";
+
+	/* 500 - 599 .............................. */
+	this->_statusDescriptions[INSERNAL_SERVER_ERROR] = "Internal Server Error";
+}
+
+const std::string Response::toString( void ) const
+{
+	std::string major = std::to_string(getMajorVersion());
+	std::string minor = std::to_string(getMinorVersion());
+	std::string contentType = "text/html";
+	std::string contentLength = std::to_string(this->_contentLength);
+
+	std::string r = "";
+
+	// Version
+	r += "HTTP/" + major + "." + minor + " ";
+	
+	// Status
+	r += this->_statusString + " " + getDescription() + CRLF;
+
+	// Headers
+	r += "Content-Type: " + contentType + CRLF;
+	r += "Content-Length: " + contentLength + CRLF;
+	r += CRLF; // Empty line between headers and content
+
+	r += this->_content;
+	r += CRLF;
+
+	return r;
+}
+
+std::string Response::readError( std::string status ) const
+{
+	std::string line;
+	std::string filePath = this->_connection.gets("error_pages") + status + ".html";
+	std::ifstream file(filePath);
+	if (!file.is_open()) {
+		std::cerr << "[Error] No error file match " << filePath << std::endl;
+		return "";
+	}
+	std::string buf;
+	while (getline(file, buf))
+		line += buf;
+	file.close();
+	return line;
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

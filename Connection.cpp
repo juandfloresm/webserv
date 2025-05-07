@@ -8,56 +8,8 @@ const char Connection::CONFIG_SEP = '=';
 
 Connection::Connection(std::string config)
 {
-	std::cout << std::endl << "....... CONFIG ........" << std::endl << std::endl;
-	readFile(config, Connection::processConfig);
-	std::cout << std::endl << "......................." << std::endl << std::endl;
-
-	this->_serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	if (this->_serverSocket != -1)
-	{
-		sockaddr_in addr;
-		sockaddr_in client;
-
-		int port = geti("port");
-
-		memset(&addr, '\0', sizeof(sockaddr_in));
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(port);
-		addr.sin_addr.s_addr = INADDR_ANY;
-		socklen_t size = sizeof(client);
-			
-		if (bind(this->_serverSocket, (struct sockaddr *) &addr, sizeof(addr)) != -1)
-		{
-			if (listen(this->_serverSocket, geti("connections")) == 0)
-			{
-				std::cerr << "[Info] server is accepting HTTP connections on port: " << port << std::endl;
-				while (true)
-				{
-					this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &client, &size);
-					if (this->_clientSocket != -1)
-						processClientRequest();
-					else
-					{
-						std::cerr << "[Error] accepting client connection" << std::endl;
-						break;
-					}
-
-					std::cout << std::endl << std::endl << std::endl << std::endl;
-				}
-			}
-		}
-		else
-		{
-			/* Handle binding error */
-			std::cerr << "[Error] binding client socket" << std::endl;
-		}
-	}
-	else
-	{
-		/* Handle socket error */
-		std::cerr << "[Error] opening server socket" << std::endl;
-	}
+	processConfig(config);
+	initServer();
 }
 
 
@@ -86,9 +38,100 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+void Connection::processConfig(std::string config)
+{
+	std::cout << std::endl << "....... CONFIG ........" << std::endl << std::endl;
+	readFile(config, Connection::processConfigLine);
+	std::cout << std::endl << "......................." << std::endl << std::endl;
+}
+
+void Connection::processConfigLine( Connection & i, std::string line )
+{
+	std::string key, value;
+	std::istringstream f(line);
+	getline(f, key, Connection::CONFIG_SEP);
+	getline(f, value, Connection::CONFIG_SEP);
+	std::cout << key << ": " << value << std::endl;
+	i._config[key] = value;
+}
+
+void Connection::initServer( void )
+{
+	this->_serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	if (this->_serverSocket != -1)
+	{
+		memset(&this->_serverAddress, '\0', sizeof(sockaddr_in));
+		memset(&this->_clientAddress, '\0', sizeof(sockaddr_in));
+		this->_serverAddress.sin_family = AF_INET;
+		this->_serverAddress.sin_port = htons(geti("port"));
+		this->_serverAddress.sin_addr.s_addr = INADDR_ANY;
+		this->_clientAddressSize = sizeof(this->_clientAddress);
+
+		if (connect() == -1)
+		{
+			/* Handle binding error */
+			std::cerr << "[Error] binding client socket" << std::endl;
+		}
+	}
+	else
+	{
+		/* Handle socket error */
+		std::cerr << "[Error] opening server socket" << std::endl;
+	}
+}
+
+int Connection::connect()
+{
+	if (bind(this->_serverSocket, (struct sockaddr *) &this->_serverAddress, sizeof(this->_serverAddress)) != -1)
+	{
+		if (listen(this->_serverSocket, geti("connections")) == 0)
+		{
+			std::cout << "[Info] server is accepting HTTP connections on port: " << geti("port") << std::endl;
+			while (true)
+			{
+				this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
+				if (this->_clientSocket != -1)
+					processClientRequest();
+				else
+				{
+					/* Handle accept error */
+					std::cerr << "[Error] accepting client connection" << std::endl;
+				}
+			}
+		}
+		return 0;
+	}
+	return -1;
+}
+
+void Connection::processClientRequest()
+{
+	this->_index = 0;
+	std::string line = getMessageLine();
+	std::string method, resource, major, minor;
+	std::istringstream f(line);
+	getline(f, method, ' ');
+	getline(f, resource, ' ');
+	getline(f, major, '/');
+	getline(f, major, '.');
+	getline(f, minor, '.');
+	
+	Request req((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
+	std::cout << req << std::endl;
+
+	Response res(INSERNAL_SERVER_ERROR, geti("major_version"), geti("minor_version"), *this);
+	std::cout << res << std::endl;
+	res.send();
+}
+
+/*
+** --------------------------------- UTILITIES ---------------------------------
+*/
+
 std::string Connection::gets(std::string key) const
 {
-	std::map<std::string, std::string> m = this->_config;
+	Config m = this->_config;
 	if (m.find(key) == m.end()) {
 		return "";
 	} else {
@@ -98,7 +141,7 @@ std::string Connection::gets(std::string key) const
 
 int Connection::geti(std::string key) const
 {
-	std::map<std::string, std::string> m = this->_config;
+	Config m = this->_config;
 	if (m.find(key) == m.end()) {
 		return 0;
 	} else {
@@ -108,22 +151,12 @@ int Connection::geti(std::string key) const
 
 float Connection::getf(std::string key) const
 {
-	std::map<std::string, std::string> m = this->_config;
+	Config m = this->_config;
 	if (m.find(key) == m.end()) {
 		return 0;
 	} else {
 		return atof(m[key].c_str());
 	}
-}
-
-void Connection::processConfig( Connection & i, std::string line )
-{
-	std::string key, value;
-	std::istringstream f(line);
-	getline(f, key, Connection::CONFIG_SEP);
-	getline(f, value, Connection::CONFIG_SEP);
-	std::cout << key << ": " << value << std::endl;
-	i._config[key] = value;
 }
 
 void Connection::readFile( std::string file, void (*f)( Connection & i, std::string line ) )
@@ -146,22 +179,7 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 		std::cerr << "Error: could not open file" << std::endl;
 }
 
-void Connection::processClientRequest()
-{
-	this->_index = 0;
-	std::string line = getLine();
-	std::string method, resource, major, minor;
-	std::istringstream f(line);
-	getline(f, method, ' ');
-	getline(f, resource, ' ');
-	getline(f, major, '/');
-	getline(f, major, '.');
-	getline(f, minor, '.');
-	Request r((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
-	std::cout << r << std::endl;
-}
-
-std::string Connection::getLine( void )
+std::string Connection::getMessageLine( void )
 {
 	std::string line = "";
 	int received = recv(this->_clientSocket, this->_buffer, sizeof(this->_buffer), 0);

@@ -19,6 +19,8 @@
 # define LF 10
 # define CR 13
 
+typedef std::map<std::string, std::string> Config;
+
 class Connection
 {
 
@@ -30,11 +32,15 @@ class Connection
 		int getServerSocket() const;
 		int getClientSocket() const;
 
-		static void processConfig( Connection & i, std::string line );
-		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
-		void processClientRequest();
-		std::string getLine( void );
+		void processConfig(std::string config);
+		static void processConfigLine( Connection & i, std::string line );
+		void initServer( void );
+		int connect();
 
+		void processClientRequest();
+		std::string getMessageLine( void );
+		
+		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 		int geti(std::string key) const;
 		std::string gets(std::string key) const;
 		float getf(std::string key) const;
@@ -44,7 +50,11 @@ class Connection
 		int _serverSocket;
 		int _clientSocket;
 
-		std::map<std::string, std::string> _config;
+		sockaddr_in _serverAddress;
+		sockaddr_in _clientAddress;
+		socklen_t _clientAddressSize;
+
+		Config _config;
 
 		static const char CONFIG_SEP;
 
