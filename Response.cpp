@@ -82,6 +82,9 @@ const std::string Response::toString( void ) const
 	ss << getMinorVersion();
 	std::string minor = ss.str();
 	std::string contentType = "text/html";
+
+	ss.str("");
+	ss.clear();
 	ss << this->_contentLength;
 	std::string contentLength = ss.str();
 
