@@ -83,27 +83,27 @@ void Connection::initServer( void )
 
 int Connection::connect()
 {
-	if (bind(this->_serverSocket, (struct sockaddr *) &this->_serverAddress, sizeof(this->_serverAddress)) != -1)
-	{
-		if (listen(this->_serverSocket, geti("connections")) == 0)
+	int _enable = 1;
+	if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) < 0) {
+		if (bind(this->_serverSocket, (struct sockaddr *) &this->_serverAddress, sizeof(this->_serverAddress)) != -1)
 		{
-			std::cout << "[Info] server is accepting HTTP connections on port: " << geti("port") << std::endl;
-			while (true)
+			if (listen(this->_serverSocket, geti("connections")) == 0)
 			{
-				this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
-				if (this->_clientSocket != -1)
+				std::cout << "[Info] server is accepting HTTP connections on port: " << geti("port") << std::endl;
+				while (true)
 				{
-					processClientRequest();
-					close(this->_clientSocket);
-				}
-				else
-				{
-					/* Handle accept error */
-					std::cerr << "[Error] accepting client connection" << std::endl;
+					this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
+					if (this->_clientSocket != -1)
+						processClientRequest();
+					else
+					{
+						/* Handle accept error */
+						std::cerr << "[Error] accepting client connection" << std::endl;
+					}
 				}
 			}
+			return 0;
 		}
-		return 0;
 	}
 	return -1;
 }
