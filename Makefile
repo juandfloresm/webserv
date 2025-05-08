@@ -36,7 +36,7 @@ sanitize: fclean $(OBJ)
 	$(CC) $(FLAGS) -g $(OBJ) -fsanitize=address -o $(NAME)
 	./$(NAME) $(ARG)
 
-gitter:
+gitter: fclean
 	git add -A
 	git commit -am "Event loop"
 	git push

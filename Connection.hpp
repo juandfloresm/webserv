@@ -18,6 +18,7 @@
 
 # define BUFFER 1024
 # define MAX_EVENTS 128
+# define MAX_MESSAGE_LEN 512
 # define LF 10
 # define CR 13
 # define CONFIG "./config/zweb.conf"
@@ -41,11 +42,12 @@ class Connection
 		int connect();
 		void preparePolling( void );
 		void eventLoop( void );
+		void simpleServer( void );
 
 		void processClientRequest();
 		std::string getMessageLine( void );
 		
-		void error(char* msg);
+		void error(std::string msg);
 		std::string gets(std::string key) const;
 		int geti(std::string key) const;
 		float getf(std::string key) const;

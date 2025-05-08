@@ -102,7 +102,7 @@ int Connection::connect()
 	return -1;
 }
 
-void Connection::simpleServer()
+void Connection::simpleServer( void )
 {
 	while (true)
 	{
@@ -206,9 +206,9 @@ void Connection::processClientRequest()
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
-void Connection::error(char *msg)
+void Connection::error(std::string msg)
 {
-	perror(msg);
+	perror(msg.c_str());
 	std::cerr << "[Error] on the event loop" << std::endl;
 }
 
