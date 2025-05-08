@@ -192,7 +192,7 @@ void Connection::processClientRequest( int clientSocketFD )
 	getline(f, minor, '.');
 	
 	Request req((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
-	Response res(OK, geti("major_version"), geti("minor_version"), *this);
+	Response res(OK, geti("major_version"), geti("minor_version"), *this, req);
 	res.doSend(clientSocketFD);
 }
 

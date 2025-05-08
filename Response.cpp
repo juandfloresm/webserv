@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response(Status status, int major, int minor, const Connection & connection) : Message(major, minor), _status(status), _connection(connection)
+Response::Response(Status status, int major, int minor, const Connection & connection, const Request & request) : Message(major, minor), _status(status), _connection(connection), _request(request)
 {
 	initStatusDescriptions();
 	sampleResonseSetup();
@@ -49,7 +49,7 @@ void Response::sampleResonseSetup( void )
     ss << this->_status;
 	this->_description = this->_statusDescriptions[this->_status];
 	this->_statusString = ss.str();
-	this->_content = readPage(this->_statusString);
+	this->_content = readPage();
 	this->_contentLength = this->_content.size();
 }
 
@@ -123,10 +123,12 @@ std::string Response::readError( std::string status ) const
 	return line;
 }
 
-std::string Response::readPage( std::string status ) const
+std::string Response::readPage( void ) const
 {
+	std::string base = this->_connection.gets("static_route");
+	std::string path = this->_request.getResource();
 	std::string line;
-	std::string filePath = this->_connection.gets("static_route") + status + ".html";
+	std::string filePath = base + path;
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;

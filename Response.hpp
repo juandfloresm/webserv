@@ -49,7 +49,7 @@ class Response : public Message
 		const std::string toString( void ) const;
 
 		std::string readError( std::string status ) const;
-		std::string readPage( std::string status ) const;
+		std::string readPage( void ) const;
 
 		void sampleResonseSetup( void );
 		void doSend( int fd );
@@ -62,6 +62,7 @@ class Response : public Message
 		const Connection & _connection;
 		std::string _content;
 		long _contentLength;
+		Request & _request;
 };
 
 std::ostream & operator<<( std::ostream & o, Response const & i );
