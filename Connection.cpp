@@ -135,7 +135,8 @@ void Connection::eventLoop( void )
 					processClientRequest(newSocketFD);
 				else
 				{
-					/* Handle accept error */
+					epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, newSocketFD, NULL);
+					close(newSocketFD);
 					ft_error("[Error] accepting client connection");
 				}
 			}
