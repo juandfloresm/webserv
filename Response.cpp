@@ -109,8 +109,9 @@ const std::string Response::toString( void ) const
 
 std::string Response::readError( std::string status ) const
 {
+	(void) status;
 	std::string line;
-	std::string filePath = this->_connection.gets("error_pages") + status + ".html";
+	std::string filePath = this->_connection.gets("error_pages") + "500" + ".html";
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
