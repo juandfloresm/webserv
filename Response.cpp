@@ -126,7 +126,7 @@ std::string Response::readError( std::string status ) const
 std::string Response::readPage( std::string status ) const
 {
 	std::string line;
-	std::string filePath = this->_connection.gets("static_pages") + status + ".html";
+	std::string filePath = this->_connection.gets("static_route") + status + ".html";
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
