@@ -44,7 +44,7 @@ class Connection
 		void eventLoop( void );
 		void simpleServer( void );
 
-		void processClientRequest();
+		void processClientRequest( int clientSocketFD );
 		std::string getMessageLine( void );
 		
 		void error(std::string msg);

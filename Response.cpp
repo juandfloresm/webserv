@@ -53,10 +53,10 @@ void Response::sampleResonseSetup( void )
 	this->_contentLength = this->_content.size();
 }
 
-void Response::send( void )
+void Response::doSend( void )
 {
 	std::string resp = toString();
-	write(this->_connection.getClientSocket(), resp.c_str(), resp.size());
+	send(this->_connection.getClientSocket(), resp.c_str(), resp.size(), 0);
 }
 
 void Response::initStatusDescriptions( void )

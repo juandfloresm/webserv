@@ -50,7 +50,7 @@ class Response : public Message
 		std::string readError( std::string status ) const;
 
 		void sampleResonseSetup( void );
-		void send( void );
+		void doSend( void );
 
 	private:
 		Status _status;

@@ -95,7 +95,7 @@ int Connection::connect()
 		if (listen(this->_serverSocket, geti("connections")) == 0)
 		{
 			std::cout << "[Info] server is accepting HTTP connections on port: " << geti("port") << std::endl;
-			simpleServer();
+			eventLoop();
 		}
 		return 0;
 	}
@@ -108,7 +108,7 @@ void Connection::simpleServer( void )
 	{
 		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
 		if (this->_clientSocket != -1)
-			processClientRequest();
+			processClientRequest(this->_clientSocket);
 		else
 		{
 			/* Handle accept error */
@@ -151,16 +151,7 @@ void Connection::eventLoop( void )
 			else
 			{
 				int newSocketFD = this->_events[i].data.fd;
-				int bytesReceived = recv(newSocketFD, this->_buffer, MAX_MESSAGE_LEN, 0);
-				if (bytesReceived <= 0)
-				{
-					epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, newSocketFD, NULL);
-					// shutdown(newSocketFD, SHUT_RDWR);
-				}
-				else
-				{
-					send(newSocketFD, this->_buffer, bytesReceived, 0);
-				}
+				processClientRequest(newSocketFD);
 			}
 		}
 	}
@@ -182,8 +173,9 @@ void Connection::preparePolling( void )
 	}
 }
 
-void Connection::processClientRequest()
+void Connection::processClientRequest( int clientSocketFD )
 {
+	this->_clientSocket = clientSocketFD;
 	this->_index = 0;
 	std::string line = getMessageLine();
 	std::string method, resource, major, minor;
@@ -199,7 +191,26 @@ void Connection::processClientRequest()
 
 	Response res(INSERNAL_SERVER_ERROR, geti("major_version"), geti("minor_version"), *this);
 	std::cout << res << std::endl;
-	res.send();
+	res.doSend();
+}
+
+std::string Connection::getMessageLine( void )
+{
+	std::string line = "";
+	int received = recv(this->_clientSocket, this->_buffer, sizeof(this->_buffer), 0);
+	if (received > 0)
+	{
+		char c;
+		while (this->_buffer[this->_index])
+		{
+			c = this->_buffer[this->_index];
+			if (c == LF && this->_buffer[this->_index + 1] == CR)
+				break ;
+			line.push_back(c);
+			this->_index++;	
+		}
+	}
+	return line;
 }
 
 /*
@@ -260,25 +271,6 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 	}
 	else
 		std::cerr << "Error: could not open file" << std::endl;
-}
-
-std::string Connection::getMessageLine( void )
-{
-	std::string line = "";
-	int received = recv(this->_clientSocket, this->_buffer, sizeof(this->_buffer), 0);
-	if (received > 0)
-	{
-		char c;
-		while (this->_buffer[this->_index])
-		{
-			c = this->_buffer[this->_index];
-			if (c == LF && this->_buffer[this->_index + 1] == CR)
-				break ;
-			line.push_back(c);
-			this->_index++;	
-		}
-	}
-	return line;
 }
 
 /*
