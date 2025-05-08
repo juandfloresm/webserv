@@ -49,6 +49,7 @@ class Response : public Message
 		const std::string toString( void ) const;
 
 		std::string readError( std::string status ) const;
+		std::string readPage( std::string status ) const;
 
 		void sampleResonseSetup( void );
 		void doSend( int fd );

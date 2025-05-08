@@ -49,7 +49,7 @@ void Response::sampleResonseSetup( void )
     ss << this->_status;
 	this->_description = this->_statusDescriptions[this->_status];
 	this->_statusString = ss.str();
-	this->_content = readError(this->_statusString);
+	this->_content = readPage(this->_statusString);
 	this->_contentLength = this->_content.size();
 }
 
@@ -109,9 +109,24 @@ const std::string Response::toString( void ) const
 
 std::string Response::readError( std::string status ) const
 {
-	(void) status;
 	std::string line;
-	std::string filePath = this->_connection.gets("error_pages") + "500" + ".html";
+	std::string filePath = this->_connection.gets("error_pages") + status + ".html";
+	std::ifstream file(filePath.c_str());
+	if (!file.is_open()) {
+		std::cerr << "[Error] No error file match " << filePath << std::endl;
+		return "";
+	}
+	std::string buf;
+	while (getline(file, buf))
+		line += buf;
+	file.close();
+	return line;
+}
+
+std::string Response::readPage( std::string status ) const
+{
+	std::string line;
+	std::string filePath = this->_connection.gets("static_pages") + status + ".html";
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
