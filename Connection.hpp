@@ -42,6 +42,7 @@ class Connection
 		int connect();
 		void preparePolling( void );
 		void eventLoop( void );
+		void simpleServer( void );
 
 		void processClientRequest( int clientSocketFD );
 		std::string getMessageLine( void );

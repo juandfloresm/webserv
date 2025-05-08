@@ -105,6 +105,22 @@ int Connection::connect()
 	return -1;
 }
 
+
+void Connection::simpleServer( void )
+{
+	while (true)
+	{
+		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
+		if (this->_clientSocket != -1)
+			processClientRequest(this->_clientSocket);
+		else
+		{
+			/* Handle accept error */
+			std::cerr << "[Error] accepting client connection" << std::endl;
+		}
+	}
+}
+
 void Connection::eventLoop( void )
 {
 	preparePolling();
