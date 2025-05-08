@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Testing concurrent connections"
+	git commit -am "Cleanup"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

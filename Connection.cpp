@@ -177,31 +177,6 @@ void Connection::processClientRequest( int clientSocketFD )
 	
 	Request req((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
 	Response res(OK, geti("major_version"), geti("minor_version"), *this);
-
-/*
-HTTP/1.1 200     0.00 secs:    2273 bytes ==> GET  /
-HTTP/1.1 200     0.00 secs:    2273 bytes ==> GET  /
-HTTP/1.1 200     0.00 secs:    2273 bytes ==> GET  /
-HTTP/1.1 200     0.00 secs:    2273 bytes ==> GET  /
-HTTP/1.1 200     0.00 secs:    2273 bytes ==> GET  /
-HTTP/1.1 200     0.00 secs:    2273 bytes ==> GET  /
-
-Lifting the server siege...
-Transactions:                 169002 hits
-Availability:                 100.00 %
-Elapsed time:                  59.26 secs
-Data transferred:             366.35 MB
-Response time:                  0.05 secs
-Transaction rate:            2851.87 trans/sec
-Throughput:                     6.18 MB/sec
-Concurrency:                  129.21
-Successful transactions:      169002
-Failed transactions:               0
-Longest transaction:           54.74
-Shortest transaction:           0.00
-
-*/
-
 	res.doSend(clientSocketFD);
 }
 
