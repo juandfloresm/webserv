@@ -127,8 +127,11 @@ std::string Response::readPage( void ) const
 {
 	std::string base = this->_connection.gets("static_route");
 	std::string path = this->_request.getResource();
+
 	std::string line;
 	std::string filePath = base + path;
+	std::cout << filePath << std::endl;
+
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
