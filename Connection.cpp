@@ -44,7 +44,7 @@ void Connection::processConfig(std::string config)
 	readFile(CONFIG, Connection::processConfigLine);
 	std::cout << std::endl << "....... CONFIG DELTA ........" << std::endl << std::endl;
 	readFile(config, Connection::processConfigLine);
-	std::cout << std::endl << "......................." << std::endl << std::endl;
+	std::cout << std::endl << "............................." << std::endl << std::endl;
 }
 
 void Connection::processConfigLine( Connection & i, std::string line )
