@@ -110,17 +110,16 @@ const std::string Response::toString( void ) const
 std::string Response::readError( std::string status ) const
 {
 	std::string line;
-	std::string filePath = this->_connection.gets("error_pages") + status + ".html";
-	std::ifstream file(filePath.c_str());
+	std::string filePath = this->_connection.gets("error_pages") + '/' + status + ".html";
+	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
 		return "";
 	}
-	std::string buf;
-	while (getline(file, buf))
-		line += buf;
+	std::ostringstream content;
+	content << file.rdbuf();
 	file.close();
-	return line;
+	return content.str();
 }
 
 std::string Response::readPage( void ) const
@@ -128,20 +127,27 @@ std::string Response::readPage( void ) const
 	std::string base = this->_connection.gets("static_route");
 	std::string path = this->_request.getResource();
 
-	std::string line;
-	std::string filePath = base + path;
-	std::cout << filePath << std::endl;
+	if (path.empty() || path[0] != '/')
+		path = "/" + path;
+	
+	bool isDirectory = (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
+	if (isDirectory)
+		path += "index.html"; // Default file
 
-	std::ifstream file(filePath.c_str());
+	std::string filePath = base + path;
+	std::cout << "Serving file: " << filePath << std::endl;
+
+
+	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
-		return "";
+		return readError("404");
 	}
-	std::string buf;
-	while (getline(file, buf))
-		line += buf;
+
+	std::ostringstream content;
+	content << file.rdbuf();
 	file.close();
-	return line;
+	return content.str();
 }
 
 /*
