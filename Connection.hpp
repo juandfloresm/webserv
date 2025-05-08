@@ -42,12 +42,11 @@ class Connection
 		int connect();
 		void preparePolling( void );
 		void eventLoop( void );
-		void simpleServer( void );
 
 		void processClientRequest( int clientSocketFD );
 		std::string getMessageLine( void );
 		
-		void error(std::string msg);
+		void ft_error(std::string msg);
 		std::string gets(std::string key) const;
 		int geti(std::string key) const;
 		float getf(std::string key) const;

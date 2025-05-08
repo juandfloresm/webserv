@@ -40,8 +40,9 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 
 void Connection::processConfig(std::string config)
 {
+	std::cout << std::endl << "....... CONFIG .............." << std::endl << std::endl;
 	readFile(CONFIG, Connection::processConfigLine);
-	std::cout << std::endl << "....... CONFIG ........" << std::endl << std::endl;
+	std::cout << std::endl << "....... CONFIG DELTA ........" << std::endl << std::endl;
 	readFile(config, Connection::processConfigLine);
 	std::cout << std::endl << "......................." << std::endl << std::endl;
 }
@@ -76,7 +77,7 @@ void Connection::initServer( void )
 				if (connect() == -1)
 				{
 					/* Handle binding error */
-					std::cerr << "[Error] binding client socket" << std::endl;
+					ft_error("[Error] binding client socket");
 				}
 			}
 		}
@@ -84,7 +85,7 @@ void Connection::initServer( void )
 	else
 	{
 		/* Handle socket error */
-		std::cerr << "[Error] opening server socket" << std::endl;
+		ft_error("[Error] opening server socket");
 	}
 }
 
@@ -106,37 +107,37 @@ void Connection::eventLoop( void )
 {
 	preparePolling();
 	int newEvents, sockConnectionFD;
-
 	while(true)
 	{
 		newEvents = epoll_wait(this->_epollfd, this->_events, MAX_EVENTS, -1);
-		
 		if (newEvents == -1)
-		{
-			error("[Error] with epoll_wait");
-		}
-
+			ft_error("[Error] with epoll_wait");
 		for (int i = 0; i < newEvents; ++i)
 		{
 			if (this->_events[i].data.fd == this->_serverSocket)
 			{
-				sockConnectionFD = accept(this->_serverSocket, (struct sockaddr *)&this->_clientAddress, &this->_clientAddressSize); //, SOCK_NONBLOCK
+				sockConnectionFD = accept(this->_serverSocket, (struct sockaddr *)&this->_clientAddress, &this->_clientAddressSize);
 				if (sockConnectionFD == -1)
 				{
-					error("[Error] accepting new connection");
+					ft_error("[Error] accepting new connection");
 				}
-
 				this->_pollEvent.events = EPOLLIN | EPOLLET;
 				this->_pollEvent.data.fd = sockConnectionFD;
 				if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, sockConnectionFD, &this->_pollEvent) == -1)
 				{
-					error("[Error] adding new event to epoll");
+					ft_error("[Error] adding new event to epoll");
 				}
 			}
 			else
 			{
 				int newSocketFD = this->_events[i].data.fd;
-				processClientRequest(newSocketFD);
+				if (newSocketFD != -1)
+					processClientRequest(newSocketFD);
+				else
+				{
+					/* Handle accept error */
+					ft_error("[Error] accepting client connection");
+				}
 			}
 		}
 	}
@@ -147,14 +148,14 @@ void Connection::preparePolling( void )
 	this->_epollfd = epoll_create(MAX_EVENTS);
 	if (this->_epollfd < 0)
 	{
-		error("[Error] creating epoll");
+		ft_error("[Error] creating epoll");
 	}
 	this->_pollEvent.events = EPOLLIN;
 	this->_pollEvent.data.fd = this->_serverSocket;
 
 	if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, this->_serverSocket, &this->_pollEvent) == -1)
 	{
-		error("[Error] adding new listeding socket to epoll");
+		ft_error("[Error] adding new listeding socket to epoll");
 	}
 }
 
@@ -198,27 +199,11 @@ std::string Connection::getMessageLine( void )
 	return line;
 }
 
-/* This is the simple version of accepting connections before. We are now using "eventLoop" for non-blocking I/0 */
-void Connection::simpleServer( void )
-{
-	while (true)
-	{
-		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
-		if (this->_clientSocket != -1)
-			processClientRequest(this->_clientSocket);
-		else
-		{
-			/* Handle accept error */
-			std::cerr << "[Error] accepting client connection" << std::endl;
-		}
-	}
-}
-
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
-void Connection::error(std::string msg)
+void Connection::ft_error(std::string msg)
 {
 	perror(msg.c_str());
 	std::cerr << "[Error] on the event loop" << std::endl;
