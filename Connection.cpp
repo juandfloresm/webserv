@@ -71,7 +71,8 @@ void Connection::initServer( void )
 
 		int _enable = 1;
 		if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) == 0) {
-			if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) {
+			if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
+			{				
 				if (connect() == -1)
 				{
 					/* Handle binding error */
@@ -94,21 +95,91 @@ int Connection::connect()
 		if (listen(this->_serverSocket, geti("connections")) == 0)
 		{
 			std::cout << "[Info] server is accepting HTTP connections on port: " << geti("port") << std::endl;
-			while (true)
-			{
-				this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
-				if (this->_clientSocket != -1)
-					processClientRequest();
-				else
-				{
-					/* Handle accept error */
-					std::cerr << "[Error] accepting client connection" << std::endl;
-				}
-			}
+			simpleServer();
 		}
 		return 0;
 	}
 	return -1;
+}
+
+void Connection::simpleServer()
+{
+	while (true)
+	{
+		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
+		if (this->_clientSocket != -1)
+			processClientRequest();
+		else
+		{
+			/* Handle accept error */
+			std::cerr << "[Error] accepting client connection" << std::endl;
+		}
+	}
+}
+
+void Connection::eventLoop( void )
+{
+	preparePolling();
+	int newEvents, sockConnectionFD;
+
+	while(1)
+	{
+		newEvents = epoll_wait(this->_epollfd, this->_events, MAX_EVENTS, -1);
+		
+		if (newEvents == -1)
+		{
+			error("[Error] with epoll_wait");
+		}
+
+		for (int i = 0; i < newEvents; ++i)
+		{
+			if (this->_events[i].data.fd == this->_serverSocket)
+			{
+				sockConnectionFD = accept4(this->_serverSocket, (struct sockaddr *)&this->_clientAddress, &this->_clientAddressSize, SOCK_NONBLOCK);
+				if (sockConnectionFD == -1)
+				{
+					error("[Error] accepting new connection");
+				}
+
+				this->_pollEvent.events = EPOLLIN | EPOLLET;
+				this->_pollEvent.data.fd = sockConnectionFD;
+				if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, sockConnectionFD, &this->_pollEvent) == -1)
+				{
+					error("[Error] adding new event to epoll");
+				}
+			}
+			else
+			{
+				int newSocketFD = this->_events[i].data.fd;
+				int bytesReceived = recv(newSocketFD, this->_buffer, MAX_MESSAGE_LEN, 0);
+				if (bytesReceived <= 0)
+				{
+					epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, newSocketFD, NULL);
+					// shutdown(newSocketFD, SHUT_RDWR);
+				}
+				else
+				{
+					send(newSocketFD, this->_buffer, bytesReceived, 0);
+				}
+			}
+		}
+	}
+}
+
+void Connection::preparePolling( void )
+{
+	this->_epollfd = epoll_create(MAX_EVENTS);
+	if (this->_epollfd < 0)
+	{
+		error("[Error] creating epoll");
+	}
+	this->_pollEvent.events = EPOLLIN;
+	this->_pollEvent.data.fd = this->_serverSocket;
+
+	if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, this->_serverSocket, &this->_pollEvent) == -1)
+	{
+		error("[Error] adding new listeding socket to epoll");
+	}
 }
 
 void Connection::processClientRequest()
@@ -134,6 +205,12 @@ void Connection::processClientRequest()
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
+
+void Connection::error(char *msg)
+{
+	perror(msg);
+	std::cerr << "[Error] on the event loop" << std::endl;
+}
 
 std::string Connection::gets(std::string key) const
 {

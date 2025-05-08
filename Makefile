@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter:
 	git add -A
-	git commit -am "Supporting baseline config"
+	git commit -am "Event loop"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

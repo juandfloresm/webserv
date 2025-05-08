@@ -6,6 +6,7 @@
 # include <fstream>
 # include <sys/socket.h>
 # include <netinet/in.h>
+# include <sys/epoll.h>
 # include <unistd.h>
 # include <cstring>
 # include <cmath>
@@ -16,6 +17,7 @@
 # include "Response.hpp"
 
 # define BUFFER 1024
+# define MAX_EVENTS 128
 # define LF 10
 # define CR 13
 # define CONFIG "./config/zweb.conf"
@@ -37,14 +39,17 @@ class Connection
 		static void processConfigLine( Connection & i, std::string line );
 		void initServer( void );
 		int connect();
+		void preparePolling( void );
+		void eventLoop( void );
 
 		void processClientRequest();
 		std::string getMessageLine( void );
 		
-		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
-		int geti(std::string key) const;
+		void error(char* msg);
 		std::string gets(std::string key) const;
+		int geti(std::string key) const;
 		float getf(std::string key) const;
+		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 
 	private:
 		unsigned int _port;
@@ -61,6 +66,10 @@ class Connection
 
 		char _buffer[BUFFER];
 		int _index;
+
+		struct epoll_event _pollEvent;
+		struct epoll_event _events[MAX_EVENTS];
+		int _epollfd;
 };
 
 std::ostream & operator<<( std::ostream & o, Connection const & i );
