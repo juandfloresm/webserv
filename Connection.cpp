@@ -58,7 +58,7 @@ void Connection::processConfigLine( Connection & i, std::string line )
 
 void Connection::initServer( void )
 {
-	this->_serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	this->_serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
 
 	if (this->_serverSocket != -1)
 	{
@@ -102,21 +102,6 @@ int Connection::connect()
 	return -1;
 }
 
-void Connection::simpleServer( void )
-{
-	while (true)
-	{
-		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
-		if (this->_clientSocket != -1)
-			processClientRequest(this->_clientSocket);
-		else
-		{
-			/* Handle accept error */
-			std::cerr << "[Error] accepting client connection" << std::endl;
-		}
-	}
-}
-
 void Connection::eventLoop( void )
 {
 	preparePolling();
@@ -135,7 +120,7 @@ void Connection::eventLoop( void )
 		{
 			if (this->_events[i].data.fd == this->_serverSocket)
 			{
-				sockConnectionFD = accept4(this->_serverSocket, (struct sockaddr *)&this->_clientAddress, &this->_clientAddressSize, SOCK_NONBLOCK);
+				sockConnectionFD = accept(this->_serverSocket, (struct sockaddr *)&this->_clientAddress, &this->_clientAddressSize); //, SOCK_NONBLOCK
 				if (sockConnectionFD == -1)
 				{
 					error("[Error] accepting new connection");
@@ -211,6 +196,22 @@ std::string Connection::getMessageLine( void )
 		}
 	}
 	return line;
+}
+
+/* This is the simple version of accepting connections before. We are now using "eventLoop" for non-blocking I/0 */
+void Connection::simpleServer( void )
+{
+	while (true)
+	{
+		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
+		if (this->_clientSocket != -1)
+			processClientRequest(this->_clientSocket);
+		else
+		{
+			/* Handle accept error */
+			std::cerr << "[Error] accepting client connection" << std::endl;
+		}
+	}
 }
 
 /*
