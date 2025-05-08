@@ -53,10 +53,23 @@ void Response::sampleResonseSetup( void )
 	this->_contentLength = this->_content.size();
 }
 
-void Response::doSend( void )
+void Response::doSend( int fd )
 {
+    sigset_t oldset, newset;
+    siginfo_t si;
+    struct timespec ts;
+
+	memset(&ts, '\0', sizeof(ts));
+
+    sigemptyset(&newset);
+    sigaddset(&newset, SIGPIPE);
+    pthread_sigmask(SIG_BLOCK, &newset, &oldset);
+
 	std::string resp = toString();
-	send(this->_connection.getClientSocket(), resp.c_str(), resp.size(), 0);
+    send(fd, resp.c_str(), resp.size(), 0);
+
+    while (sigtimedwait(&newset, &si, &ts) >= 0 || errno != EAGAIN);
+    pthread_sigmask(SIG_SETMASK, &oldset, 0);
 }
 
 void Response::initStatusDescriptions( void )

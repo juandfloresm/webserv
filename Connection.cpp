@@ -107,7 +107,7 @@ void Connection::eventLoop( void )
 	preparePolling();
 	int newEvents, sockConnectionFD;
 
-	while(1)
+	while(true)
 	{
 		newEvents = epoll_wait(this->_epollfd, this->_events, MAX_EVENTS, -1);
 		
@@ -176,7 +176,7 @@ void Connection::processClientRequest( int clientSocketFD )
 
 	Response res(INSERNAL_SERVER_ERROR, geti("major_version"), geti("minor_version"), *this);
 	std::cout << res << std::endl;
-	res.doSend();
+	res.doSend(clientSocketFD);
 }
 
 std::string Connection::getMessageLine( void )

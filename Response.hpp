@@ -5,6 +5,7 @@
 # include <string>
 # include <map>
 # include <sstream>
+# include <csignal>
 # include "Message.hpp"
 # include "Connection.hpp"
 
@@ -50,7 +51,7 @@ class Response : public Message
 		std::string readError( std::string status ) const;
 
 		void sampleResonseSetup( void );
-		void doSend( void );
+		void doSend( int fd );
 
 	private:
 		Status _status;
