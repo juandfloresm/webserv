@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Event loop"
+	git commit -am "Blocking the SIGPIPE signal for the whole application"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

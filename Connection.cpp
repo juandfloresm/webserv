@@ -12,7 +12,6 @@ Connection::Connection(std::string config)
 	initServer();
 }
 
-
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -21,7 +20,6 @@ Connection::~Connection()
 {
 	close(this->_serverSocket);
 }
-
 
 /*
 ** --------------------------------- OVERLOAD ---------------------------------
@@ -32,7 +30,6 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 	o << "Server listening on port = " << i.getPort();
 	return o;
 }
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------
@@ -59,6 +56,11 @@ void Connection::processConfigLine( Connection & i, std::string line )
 
 void Connection::initServer( void )
 {
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+		ft_error("[Error] Singal problem");
+		return ;
+	}
+	
 	this->_serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
 
 	if (this->_serverSocket != -1)
@@ -263,7 +265,6 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
-
 
 int Connection::getPort( void ) const
 {
