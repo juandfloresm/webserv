@@ -105,7 +105,7 @@ int Connection::connect()
 	return -1;
 }
 
-
+/* Deprecated :) */
 void Connection::simpleServer( void )
 {
 	while (true)
@@ -150,7 +150,9 @@ void Connection::eventLoop( void )
 			{
 				int newSocketFD = this->_events[i].data.fd;
 				if (newSocketFD != -1)
+				{
 					processClientRequest(newSocketFD);
+				}
 				else
 				{
 					epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, newSocketFD, NULL);

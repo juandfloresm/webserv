@@ -32,6 +32,9 @@ runner: re
 valgrind: re
 	valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)
 
+fds: re
+	valgrind --track-fds=yes ./$(NAME) $(ARG)
+
 sanitize: fclean $(OBJ)
 	$(CC) $(FLAGS) -g $(OBJ) -fsanitize=address -o $(NAME)
 	./$(NAME) $(ARG)
@@ -41,4 +44,4 @@ gitter: fclean
 	git commit -am "Valgrind checks"
 	git push
 
-.PHONY: all clean fclean re runner valgrind sanitize
+.PHONY: all clean fclean re runner valgrind fds sanitize
