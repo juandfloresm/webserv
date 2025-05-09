@@ -7,7 +7,7 @@
 Response::Response(Status status, int major, int minor, const Connection & connection, const Request & request) : Message(major, minor), _status(status), _connection(connection), _request(request)
 {
 	initStatusDescriptions();
-	sampleResonseSetup();
+	sampleStaticResponse();
 }
 
 
@@ -43,14 +43,26 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-void Response::sampleResonseSetup( void )
+void Response::sampleStaticResponse( void )
 {
 	std::ostringstream ss;
     ss << this->_status;
+	this->_content = readStaticPage();
+	this->_contentLength = this->_content.size();
 	this->_description = this->_statusDescriptions[this->_status];
 	this->_statusString = ss.str();
-	this->_content = readPage();
+	doSend(this->_connection.getClientSocket());
+}
+
+void Response::sampleDynamicResponse( void )
+{
+	std::ostringstream ss;
+    ss << this->_status;
+	this->_content = readDynamicPage();
 	this->_contentLength = this->_content.size();
+	this->_description = this->_statusDescriptions[this->_status];
+	this->_statusString = ss.str();
+	doSend(this->_connection.getClientSocket());
 }
 
 void Response::doSend( int fd )
@@ -122,7 +134,7 @@ std::string Response::readError( std::string status ) const
 	return content.str();
 }
 
-std::string Response::readPage( void ) const
+std::string Response::readStaticPage( void ) const
 {
 	std::string base = this->_connection.gets("static_route");
 	std::string path = this->_request.getResource();
@@ -148,6 +160,95 @@ std::string Response::readPage( void ) const
 	content << file.rdbuf();
 	file.close();
 	return content.str();
+}
+
+void Response::clearEnv( char **env )
+{
+	for (int i = 0; i < MAX_ENV; i++)
+		delete [] env[i];
+	delete [] env;
+}
+
+std::string Response::readDynamicPage( void )
+{
+	int stdin = dup(STDIN_FILENO);
+	int stdout = dup(STDOUT_FILENO);
+	int	fd[2];
+	char **cmd = NULL;
+	std::string response;
+
+	if (pipe(fd) == -1)
+	{
+		this->_status = INSERNAL_SERVER_ERROR;
+		this->_connection.ft_error("[Error] creating pipe");
+		return "";
+	}
+
+
+
+	char **env = new char*[MAX_ENV];
+	std::string e = "PATH_INFO=./cgi-bin";
+	env[0] = new char[e.size() + 1];
+	env[0] = strcpy(env[0], e.c_str());
+
+	e = "SCRIPT_NAME=test.php.cgi";
+	env[1] = new char[e.size() + 1];
+	env[1] = strcpy(env[1], e.c_str());
+
+	e = "PATH_TRANSLATED=./cgi-bin/test.php.cgi";
+	env[2] = new char[e.size() + 1];
+	env[2] = strcpy(env[2], e.c_str());
+
+	env[3] = NULL;
+
+
+
+	pid_t pid = fork();
+	if (pid < 0)
+	{
+		this->_status = INSERNAL_SERVER_ERROR;
+		this->_connection.ft_error("[Error] not abled to create fork");
+		clearEnv(env);
+		return "";
+	}
+	else if (!pid)
+	{
+		dup2(fd[0], STDIN_FILENO);
+		dup2(fd[1], STDOUT_FILENO);
+		close(fd[0]);
+		close(fd[1]);
+		execve(CGI_PHP, cmd, env);
+		this->_status = INSERNAL_SERVER_ERROR;
+		this->_connection.ft_error("[Error] error executing CGI");
+		clearEnv(env);
+	}
+	else
+	{
+		char buffer[CGI_BUFFSIZE] = {0};
+		waitpid(-1, NULL, 0);
+		int j = 1;
+		while (j > 0)
+		{
+			memset(buffer, 0, CGI_BUFFSIZE);
+			j = read(fd[0], buffer, CGI_BUFFSIZE - 1);
+			response += buffer;
+		}
+		close(fd[0]);
+		close(fd[1]);
+	}
+
+	dup2(stdin, STDIN_FILENO);
+	dup2(stdout, STDOUT_FILENO);
+
+	close(stdin);
+	close(stdout);
+
+	clearEnv(env);
+
+	if (pid == 0)
+		exit(0);
+
+	return response;
 }
 
 /*

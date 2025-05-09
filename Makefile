@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Generalizing resource matching"
+	git commit -am "Danymic page sample with CGI"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

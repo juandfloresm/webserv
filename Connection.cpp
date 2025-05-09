@@ -193,7 +193,6 @@ void Connection::processClientRequest( int clientSocketFD )
 	
 	Request req((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
 	Response res(OK, geti("major_version"), geti("minor_version"), *this, req);
-	res.doSend(clientSocketFD);
 }
 
 std::string Connection::getMessageLine( void )
@@ -219,7 +218,7 @@ std::string Connection::getMessageLine( void )
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
-void Connection::ft_error(std::string msg)
+void Connection::ft_error(const std::string msg) const
 {
 	perror(msg.c_str());
 	std::cerr << "[Error] on the event loop" << std::endl;

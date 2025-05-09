@@ -47,7 +47,7 @@ class Connection
 		void processClientRequest( int clientSocketFD );
 		std::string getMessageLine( void );
 		
-		void ft_error(std::string msg);
+		void ft_error(const std::string msg) const;
 		std::string gets(std::string key) const;
 		int geti(std::string key) const;
 		float getf(std::string key) const;

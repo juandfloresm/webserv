@@ -6,10 +6,14 @@
 # include <map>
 # include <sstream>
 # include <csignal>
+# include <sys/wait.h>
 # include "Message.hpp"
 # include "Connection.hpp"
 
 # define CRLF "\r\n"
+# define MAX_ENV 4
+# define CGI_PHP "/usr/bin/php-cgi"
+# define CGI_BUFFSIZE 2048
 
 class Connection;
 
@@ -49,9 +53,12 @@ class Response : public Message
 		const std::string toString( void ) const;
 
 		std::string readError( std::string status ) const;
-		std::string readPage( void ) const;
+		std::string readStaticPage( void ) const;
+		std::string readDynamicPage( void );
+		void clearEnv( char **env );
 
-		void sampleResonseSetup( void );
+		void sampleStaticResponse( void );
+		void sampleDynamicResponse( void );
 		void doSend( int fd );
 
 	private:
