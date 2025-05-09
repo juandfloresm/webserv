@@ -29,7 +29,8 @@ typedef enum {
 	NOT_FOUND = 404, 
 
 	/* 500 - 599 .............................. */
-	INTERNAL_SERVER_ERROR = 500
+	INTERNAL_SERVER_ERROR = 500,
+	NOT_IMPLEMENTED = 501
 
 } Status;
 
