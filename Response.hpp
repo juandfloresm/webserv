@@ -11,7 +11,7 @@
 # include "Connection.hpp"
 
 # define CRLF "\r\n"
-# define MAX_ENV 12
+# define MAX_ENV 14
 # define CGI_PHP "/usr/bin/php-cgi"
 # define CGI_BUFFSIZE 2048
 

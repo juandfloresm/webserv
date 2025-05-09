@@ -181,7 +181,6 @@ void Connection::preparePolling( void )
 void Connection::processClientRequest( int clientSocketFD )
 {
 	this->_clientSocket = clientSocketFD;
-	this->_index = 0;
 	std::string line = getMessageLine();
 	std::string method, resource, major, minor;
 	std::istringstream f(line);
@@ -190,26 +189,45 @@ void Connection::processClientRequest( int clientSocketFD )
 	getline(f, major, '/');
 	getline(f, major, '.');
 	getline(f, minor, '.');
-	
-	Request req((Method) atoi(method.c_str()), resource, atoi(major.c_str()), atoi(minor.c_str()));
+
+	Method m = UNKNOWN;
+	if (method.find("GET") != std::string::npos)
+		m = GET;
+	else if (method.find("POST") != std::string::npos)
+		m = POST;
+	else if (method.find("POST") != std::string::npos)
+		m = POST;
+	else if (method.find("DELETE") != std::string::npos)
+		m = DELETE;
+	else
+	{
+		Request req(m, resource, "", atoi(major.c_str()), atoi(minor.c_str()));
+		Response res(NOT_IMPLEMENTED, geti("major_version"), geti("minor_version"), *this, req);
+		return;
+	}
+
+	Request req(m, resource, "", atoi(major.c_str()), atoi(minor.c_str()));
 	Response res(OK, geti("major_version"), geti("minor_version"), *this, req);
 }
 
 std::string Connection::getMessageLine( void )
 {
 	std::string line = "";
-	int received = recv(this->_clientSocket, this->_buffer, sizeof(this->_buffer), 0);
-	if (received > 0)
+	char c, p = ' ';
+	while (recv(this->_clientSocket, this->_buffer, 1, 0) > 0)
 	{
-		char c;
-		while (this->_buffer[this->_index])
+		c = this->_buffer[0];
+		if (c == LF || c == CR)
 		{
-			c = this->_buffer[this->_index];
-			if (c == LF && this->_buffer[this->_index + 1] == CR)
-				break ;
-			line.push_back(c);
-			this->_index++;	
+			if (p == CR)
+				break;
+			else
+			{
+				p = c;
+				continue;
+			}
 		}
+		line.push_back(c);
 	}
 	return line;
 }

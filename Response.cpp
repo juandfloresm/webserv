@@ -7,7 +7,10 @@
 Response::Response(Status status, int major, int minor, const Connection & connection, const Request & request) : Message(major, minor), _status(status), _connection(connection), _request(request)
 {
 	initStatusDescriptions();
-	sampleResponse();
+	if (status == OK)
+		sampleResponse();
+	else
+		doSend(this->_connection.getClientSocket());
 }
 
 
@@ -45,20 +48,20 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 
 void Response::sampleResponse( void )
 {
-	std::ostringstream ss;
-    ss << this->_status;
 	if (this->_request.getResource().find(".php") != std::string::npos)
 		this->_content = readDynamicPage();
 	else
 		this->_content = readStaticPage();
-	this->_contentLength = this->_content.size();
-	this->_description = this->_statusDescriptions[this->_status];
-	this->_statusString = ss.str();
 	doSend(this->_connection.getClientSocket());
 }
 
 void Response::doSend( int fd )
 {
+	this->_contentLength = this->_content.size();
+	std::ostringstream ss;
+	ss << this->_status;
+	this->_description = this->_statusDescriptions[this->_status];
+	this->_statusString = ss.str();
 	std::string resp = toString();
 	send(fd, resp.c_str(), resp.size(), 0);
 }
@@ -76,6 +79,7 @@ void Response::initStatusDescriptions( void )
 
 	/* 500 - 599 .............................. */
 	this->_statusDescriptions[INTERNAL_SERVER_ERROR] = "Internal Server Error";
+	this->_statusDescriptions[NOT_IMPLEMENTED] = "Not Implemented";
 }
 
 const std::string Response::toString( void ) const
@@ -181,7 +185,7 @@ char **Response::getEnv( void )
 
 	if (env != NULL)
 	{
-		std::string e = "PATH_INFO=" + base + path;
+		std::string e = "PATH_INFO=" + path;
 		env[0] = new char[e.size() + 1];
 		env[0] = strcpy(env[0], e.c_str());
 	
@@ -224,8 +228,16 @@ char **Response::getEnv( void )
 		e = "SERVER_SOFTWARE=zweb/1.1";
 		env[10] = new char[e.size() + 1];
 		env[10] = strcpy(env[10], e.c_str());
+
+		e = "CONTENT_TYPE=" + this->_request.header("Content-Type");
+		env[11] = new char[e.size() + 1];
+		env[11] = strcpy(env[11], e.c_str());
+
+		e = "CONTENT_LENGTH=" + this->_request.header("Content-Length");
+		env[12] = new char[e.size() + 1];
+		env[12] = strcpy(env[12], e.c_str());
 	
-		env[11] = NULL;
+		env[13] = NULL;
 	}
 
 	return env;
@@ -253,7 +265,7 @@ std::string Response::readDynamicPage( void )
 		close(fd[1]);
 		return "";
 	}
-	
+
 	pid_t pid = fork();
 	if (pid < 0)
 	{

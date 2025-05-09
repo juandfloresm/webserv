@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Make php paths dyanmic"
+	git commit -am "Preparing for parsing  request Headers and body"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize

@@ -16,7 +16,7 @@
 # include "Request.hpp"
 # include "Response.hpp"
 
-# define BUFFER 1024
+# define BUFFER 1
 # define MAX_EVENTS 128
 # define MAX_MESSAGE_LEN 512
 # define LF 10
@@ -67,7 +67,6 @@ class Connection
 		static const char CONFIG_SEP;
 
 		char _buffer[BUFFER];
-		int _index;
 
 		struct epoll_event _pollEvent;
 		struct epoll_event _events[MAX_EVENTS];
