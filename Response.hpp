@@ -61,6 +61,8 @@ class Response : public Message
 		void sampleResponse( void );
 		void doSend( int fd );
 
+		std::string const getParsedCGIResponse( std::string const response );
+
 	private:
 		Status _status;
 		std::string _statusString;

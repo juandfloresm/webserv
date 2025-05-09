@@ -257,7 +257,6 @@ std::string Response::readDynamicPage( void )
 		{
 			memset(buffer, 0, CGI_BUFFSIZE);
 			j = read(fd[0], buffer, CGI_BUFFSIZE - 1);
-			std::cout << buffer << std::endl;
 			response += buffer;
 			if (j < CGI_BUFFSIZE)
 				break;
@@ -277,7 +276,29 @@ std::string Response::readDynamicPage( void )
 	if (pid == 0)
 		exit(0);
 
-	return response;
+	return getParsedCGIResponse(response);
+}
+
+std::string const Response::getParsedCGIResponse( std::string const response )
+{
+	int counter = 0;
+	bool compile = false;
+	std::string parsed = "";
+	for (size_t i = 0; i < response.size(); i++)
+	{
+		if (response[i] == 10 || response[i] == 13)
+		{
+			counter++;
+			if (counter == 4)
+				compile = true;
+			continue;
+		}
+		else
+			counter = 0;
+		if (compile)
+			parsed += response[i];
+	}
+	return (parsed);
 }
 
 /*
