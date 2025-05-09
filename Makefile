@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "CGI POST request with CONTENT_TYPE and CONTENT_LENTH meta-variables"
+	git commit -am "File Upload"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize
