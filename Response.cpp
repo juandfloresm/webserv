@@ -83,7 +83,7 @@ void Response::initStatusDescriptions( void )
 	this->_statusDescriptions[NOT_FOUND] = "Not Found";
 
 	/* 500 - 599 .............................. */
-	this->_statusDescriptions[INSERNAL_SERVER_ERROR] = "Internal Server Error";
+	this->_statusDescriptions[INTERNAL_SERVER_ERROR] = "Internal Server Error";
 }
 
 const std::string Response::toString( void ) const
@@ -179,7 +179,7 @@ std::string Response::readDynamicPage( void )
 
 	if (pipe(fd) == -1)
 	{
-		this->_status = INSERNAL_SERVER_ERROR;
+		this->_status = INTERNAL_SERVER_ERROR;
 		this->_connection.ft_error("[Error] creating pipe");
 		return "";
 	}
@@ -206,7 +206,7 @@ std::string Response::readDynamicPage( void )
 	pid_t pid = fork();
 	if (pid < 0)
 	{
-		this->_status = INSERNAL_SERVER_ERROR;
+		this->_status = INTERNAL_SERVER_ERROR;
 		this->_connection.ft_error("[Error] not abled to create fork");
 		clearEnv(env);
 		return "";
@@ -218,7 +218,7 @@ std::string Response::readDynamicPage( void )
 		close(fd[0]);
 		close(fd[1]);
 		execve(CGI_PHP, cmd, env);
-		this->_status = INSERNAL_SERVER_ERROR;
+		this->_status = INTERNAL_SERVER_ERROR;
 		this->_connection.ft_error("[Error] error executing CGI");
 		clearEnv(env);
 	}
