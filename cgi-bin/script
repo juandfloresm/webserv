@@ -1,5 +1,5 @@
 #! /bin/sh
 PATH_INFO=$(pwd) export PATH_INFO
-SCRIPT_NAME=test.php.cgi export SCRIPT_NAME
+SCRIPT_NAME=test.php export SCRIPT_NAME
 PATH_TRANSLATED=$PATH_INFO/$SCRIPT_NAME export PATH_TRANSLATED
 php-cgi

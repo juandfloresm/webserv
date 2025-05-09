@@ -191,11 +191,11 @@ std::string Response::readDynamicPage( void )
 	env[0] = new char[e.size() + 1];
 	env[0] = strcpy(env[0], e.c_str());
 
-	e = "SCRIPT_NAME=test.php.cgi";
+	e = "SCRIPT_NAME=test.php";
 	env[1] = new char[e.size() + 1];
 	env[1] = strcpy(env[1], e.c_str());
 
-	e = "PATH_TRANSLATED=./cgi-bin/test.php.cgi";
+	e = "PATH_TRANSLATED=./cgi-bin/test.php";
 	env[2] = new char[e.size() + 1];
 	env[2] = strcpy(env[2], e.c_str());
 
