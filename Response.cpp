@@ -165,9 +165,10 @@ char **Response::getEnv( void )
 {
 	char **env = new char*[MAX_ENV];
 
+	std::string base = this->_connection.gets("dynamic_route");
 	std::string path = this->_request.getResource();
 
-	std::string e = "PATH_INFO=./cgi-bin" + path;
+	std::string e = "PATH_INFO=" + base + path;
 	env[0] = new char[e.size() + 1];
 	env[0] = strcpy(env[0], e.c_str());
 
@@ -175,7 +176,7 @@ char **Response::getEnv( void )
 	env[1] = new char[e.size() + 1];
 	env[1] = strcpy(env[1], e.c_str());
 
-	e = "PATH_TRANSLATED=.v/cgi-bin" + path;
+	e = "PATH_TRANSLATED=" + base + path;
 	env[2] = new char[e.size() + 1];
 	env[2] = strcpy(env[2], e.c_str());
 
@@ -191,7 +192,7 @@ char **Response::getEnv( void )
 	env[5] = new char[e.size() + 1];
 	env[5] = strcpy(env[5], e.c_str());
 
-	e = "SCRIPT_FILENAME=./cgi-bin" + path;
+	e = "SCRIPT_FILENAME=" + base + path;
 	env[6] = new char[e.size() + 1];
 	env[6] = strcpy(env[6], e.c_str());
 
