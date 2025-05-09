@@ -214,6 +214,7 @@ void Connection::processClientRequest( int clientSocketFD )
 void Connection::parseHeaders( void )
 {
 	std::string line = "";
+	this->_headers.clear();
 	while (!(line = getMessageLine()).empty())
 	{
 		std::string key, value;

@@ -187,57 +187,68 @@ char **Response::getEnv( void )
 	{
 		std::string e = "PATH_INFO=" + path;
 		env[0] = new char[e.size() + 1];
-		env[0] = strcpy(env[0], e.c_str());
+		if (env[0])
+			env[0] = strcpy(env[0], e.c_str());
 	
 		e = "SCRIPT_NAME=index.php";
 		env[1] = new char[e.size() + 1];
-		env[1] = strcpy(env[1], e.c_str());
+		if (env[1])
+			env[1] = strcpy(env[1], e.c_str());
 	
 		e = "PATH_TRANSLATED=" + base + path;
 		env[2] = new char[e.size() + 1];
-		env[2] = strcpy(env[2], e.c_str());
+		if (env[2])
+			env[2] = strcpy(env[2], e.c_str());
 	
 		e = "GATEWAY_INTERFACE=CGI/1.1";
 		env[3] = new char[e.size() + 1];
-		env[3] = strcpy(env[3], e.c_str());
+		if (env[3])
+			env[3] = strcpy(env[3], e.c_str());
 	
 		e = "REQUEST_METHOD=" + method;
 		env[4] = new char[e.size() + 1];
-		env[4] = strcpy(env[4], e.c_str());
+		if (env[4])
+			env[4] = strcpy(env[4], e.c_str());
 	
 		e = "REDIRECT_STATUS=200";
 		env[5] = new char[e.size() + 1];
-		env[5] = strcpy(env[5], e.c_str());
+		if (env[5])
+			env[5] = strcpy(env[5], e.c_str());
 	
 		e = "SCRIPT_FILENAME=" + base + path;
 		env[6] = new char[e.size() + 1];
-		env[6] = strcpy(env[6], e.c_str());
+		if (env[6])
+			env[6] = strcpy(env[6], e.c_str());
 	
 		e = "SERVER_PROTOCOL=HTTP/1.1";
 		env[7] = new char[e.size() + 1];
-		env[7] = strcpy(env[7], e.c_str());
+		if (env[7])
+			env[7] = strcpy(env[7], e.c_str());
 	
 		e = "SERVER_PORT=80";
 		env[8] = new char[e.size() + 1];
-		env[8] = strcpy(env[8], e.c_str());
+		if (env[8])
+			env[8] = strcpy(env[8], e.c_str());
 	
 		e = "REQUEST_URI=/";
 		env[9] = new char[e.size() + 1];
-		env[9] = strcpy(env[9], e.c_str());
+		if (env[9])
+			env[9] = strcpy(env[9], e.c_str());
 	
 		e = "SERVER_SOFTWARE=zweb/1.1";
 		env[10] = new char[e.size() + 1];
-		env[10] = strcpy(env[10], e.c_str());
+		if (env[10])
+			env[10] = strcpy(env[10], e.c_str());
 
 		e = "CONTENT_TYPE=" + this->_request.header("Content-Type");
-		std::cout << e << std::endl;
 		env[11] = new char[e.size() + 1];
-		env[11] = strcpy(env[11], e.c_str());
+		if (env[11])
+			env[11] = strcpy(env[11], e.c_str());
 
 		e = "CONTENT_LENGTH=" + this->_request.header("Content-Length");
-		std::cout << e << std::endl;
 		env[12] = new char[e.size() + 1];
-		env[12] = strcpy(env[12], e.c_str());
+		if (env[12])
+			env[12] = strcpy(env[12], e.c_str());
 	
 		env[13] = NULL;
 	}
@@ -250,7 +261,6 @@ std::string Response::readDynamicPage( void )
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
 	int	fd[2];
-	char **cmd = NULL;
 	std::string response = "";
 
 	if (pipe(fd) == -1)
@@ -278,6 +288,9 @@ std::string Response::readDynamicPage( void )
 	}
 	else if (!pid)
 	{
+		char **cmd = new char*[2];
+		cmd[0] = (char *) "";
+		cmd[1] = NULL;
 		dup2(this->_connection.getClientSocket(), STDIN_FILENO);
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[0]);
@@ -285,6 +298,7 @@ std::string Response::readDynamicPage( void )
 		execve(CGI_PHP, cmd, env);
 		this->_status = INTERNAL_SERVER_ERROR;
 		this->_connection.ft_error("[Error] error executing CGI");
+		delete [] cmd;
 	}
 	else
 	{

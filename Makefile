@@ -30,7 +30,7 @@ runner: re
 	./$(NAME) $(ARG)
 
 valgrind: re
-	valgrind ./$(NAME) $(ARG)
+	valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)
 
 sanitize: fclean $(OBJ)
 	$(CC) $(FLAGS) -g $(OBJ) -fsanitize=address -o $(NAME)
@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "File Upload"
+	git commit -am "Valgrind checks"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize
