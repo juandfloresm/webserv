@@ -7,7 +7,7 @@
 Response::Response(Status status, int major, int minor, const Connection & connection, const Request & request) : Message(major, minor), _status(status), _connection(connection), _request(request)
 {
 	initStatusDescriptions();
-	sampleStaticResponse();
+	sampleResponse();
 }
 
 
@@ -43,22 +43,14 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-void Response::sampleStaticResponse( void )
+void Response::sampleResponse( void )
 {
 	std::ostringstream ss;
     ss << this->_status;
-	this->_content = readStaticPage();
-	this->_contentLength = this->_content.size();
-	this->_description = this->_statusDescriptions[this->_status];
-	this->_statusString = ss.str();
-	doSend(this->_connection.getClientSocket());
-}
-
-void Response::sampleDynamicResponse( void )
-{
-	std::ostringstream ss;
-    ss << this->_status;
-	this->_content = readDynamicPage();
+	if (this->_request.getResource().find(".php") != std::string::npos)
+		this->_content = readDynamicPage();
+	else
+		this->_content = readStaticPage();
 	this->_contentLength = this->_content.size();
 	this->_description = this->_statusDescriptions[this->_status];
 	this->_statusString = ss.str();
@@ -169,13 +161,66 @@ void Response::clearEnv( char **env )
 	delete [] env;
 }
 
+char **Response::getEnv( void )
+{
+	char **env = new char*[MAX_ENV];
+
+	std::string e = "PATH_INFO=./cgi-bin/index.php";
+	env[0] = new char[e.size() + 1];
+	env[0] = strcpy(env[0], e.c_str());
+
+	e = "SCRIPT_NAME=index.php";
+	env[1] = new char[e.size() + 1];
+	env[1] = strcpy(env[1], e.c_str());
+
+	e = "PATH_TRANSLATED=.v/cgi-bin/index.php";
+	env[2] = new char[e.size() + 1];
+	env[2] = strcpy(env[2], e.c_str());
+
+	e = "GATEWAY_INTERFACE=CGI/1.1";
+	env[3] = new char[e.size() + 1];
+	env[3] = strcpy(env[3], e.c_str());
+
+	e = "REQUEST_METHOD=GET";
+	env[4] = new char[e.size() + 1];
+	env[4] = strcpy(env[4], e.c_str());
+
+	e = "REDIRECT_STATUS=200";
+	env[5] = new char[e.size() + 1];
+	env[5] = strcpy(env[5], e.c_str());
+
+	e = "SCRIPT_FILENAME=./cgi-bin/index.php";
+	env[6] = new char[e.size() + 1];
+	env[6] = strcpy(env[6], e.c_str());
+
+	e = "SERVER_PROTOCOL=HTTP/1.1";
+	env[7] = new char[e.size() + 1];
+	env[7] = strcpy(env[7], e.c_str());
+
+	e = "SERVER_PORT=80";
+	env[8] = new char[e.size() + 1];
+	env[8] = strcpy(env[8], e.c_str());
+
+	e = "REQUEST_URI=/";
+	env[9] = new char[e.size() + 1];
+	env[9] = strcpy(env[9], e.c_str());
+
+	e = "SERVER_SOFTWARE=zweb/1.1";
+	env[10] = new char[e.size() + 1];
+	env[10] = strcpy(env[10], e.c_str());
+
+	env[11] = NULL;
+
+	return env;
+}
+
 std::string Response::readDynamicPage( void )
 {
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
 	int	fd[2];
 	char **cmd = NULL;
-	std::string response;
+	std::string response = "";
 
 	if (pipe(fd) == -1)
 	{
@@ -184,25 +229,7 @@ std::string Response::readDynamicPage( void )
 		return "";
 	}
 
-
-
-	char **env = new char*[MAX_ENV];
-	std::string e = "PATH_INFO=./cgi-bin";
-	env[0] = new char[e.size() + 1];
-	env[0] = strcpy(env[0], e.c_str());
-
-	e = "SCRIPT_NAME=test.php";
-	env[1] = new char[e.size() + 1];
-	env[1] = strcpy(env[1], e.c_str());
-
-	e = "PATH_TRANSLATED=./cgi-bin/test.php";
-	env[2] = new char[e.size() + 1];
-	env[2] = strcpy(env[2], e.c_str());
-
-	env[3] = NULL;
-
-
-
+	char **env = getEnv();
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -220,7 +247,6 @@ std::string Response::readDynamicPage( void )
 		execve(CGI_PHP, cmd, env);
 		this->_status = INSERNAL_SERVER_ERROR;
 		this->_connection.ft_error("[Error] error executing CGI");
-		clearEnv(env);
 	}
 	else
 	{
@@ -231,7 +257,10 @@ std::string Response::readDynamicPage( void )
 		{
 			memset(buffer, 0, CGI_BUFFSIZE);
 			j = read(fd[0], buffer, CGI_BUFFSIZE - 1);
+			std::cout << buffer << std::endl;
 			response += buffer;
+			if (j < CGI_BUFFSIZE)
+				break;
 		}
 		close(fd[0]);
 		close(fd[1]);

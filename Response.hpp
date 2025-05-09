@@ -11,7 +11,7 @@
 # include "Connection.hpp"
 
 # define CRLF "\r\n"
-# define MAX_ENV 4
+# define MAX_ENV 12
 # define CGI_PHP "/usr/bin/php-cgi"
 # define CGI_BUFFSIZE 2048
 
@@ -56,9 +56,9 @@ class Response : public Message
 		std::string readStaticPage( void ) const;
 		std::string readDynamicPage( void );
 		void clearEnv( char **env );
+		char **getEnv( void );
 
-		void sampleStaticResponse( void );
-		void sampleDynamicResponse( void );
+		void sampleResponse( void );
 		void doSend( int fd );
 
 	private:
