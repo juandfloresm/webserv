@@ -38,7 +38,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Take first line out on CGI response"
+	git commit -am "Make php paths dyanmic"
 	git push
 
 .PHONY: all clean fclean re runner valgrind sanitize
