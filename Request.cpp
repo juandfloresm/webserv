@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Request::Request(Method method, std::string resource, std::string raw, int major, int minor) : Message(major, minor), _method(method), _resource(resource), _raw(raw)
+Request::Request(Method method, std::string resource, int major, int minor, Connection & connection) : Message(major, minor), _method(method), _resource(resource), _connection(connection)
 {
 	this->_body = "";
 }
@@ -69,8 +69,7 @@ const std::string Request::getMethodString( void ) const
 
 std::string const Request::header( std::string const header ) const
 {
-	(void) header;
-	return "";
+	return this->_connection.getHeaders()[header];
 }
 
 /*

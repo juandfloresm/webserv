@@ -1,7 +1,7 @@
 #include "Connection.hpp"
 
 const char Connection::CONFIG_SEP = '=';
-
+const char Connection::HEADER_SEP = ':';
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -182,6 +182,7 @@ void Connection::processClientRequest( int clientSocketFD )
 {
 	this->_clientSocket = clientSocketFD;
 	std::string line = getMessageLine();
+	parseHeaders();
 	std::string method, resource, major, minor;
 	std::istringstream f(line);
 	getline(f, method, ' ');
@@ -201,19 +202,39 @@ void Connection::processClientRequest( int clientSocketFD )
 		m = DELETE;
 	else
 	{
-		Request req(m, resource, "", atoi(major.c_str()), atoi(minor.c_str()));
+		Request req(m, resource, atoi(major.c_str()), atoi(minor.c_str()), *this);
 		Response res(NOT_IMPLEMENTED, geti("major_version"), geti("minor_version"), *this, req);
 		return;
 	}
 
-	Request req(m, resource, "", atoi(major.c_str()), atoi(minor.c_str()));
+	Request req(m, resource, atoi(major.c_str()), atoi(minor.c_str()), *this);
 	Response res(OK, geti("major_version"), geti("minor_version"), *this, req);
+}
+
+void Connection::parseHeaders( void )
+{
+	std::string line = "";
+	while (!(line = getMessageLine()).empty())
+	{
+		std::string key, value;
+		std::istringstream f(line);
+		getline(f, key, Connection::HEADER_SEP);
+		getline(f, value, Connection::HEADER_SEP);
+		std::string v = "";
+		for (size_t i = 0; i < value.size(); i++)
+		{
+			if (value[i] == ' ')
+				continue;
+			v.push_back(value[i]);
+		}
+		this->_headers[key] = v;
+	}
 }
 
 std::string Connection::getMessageLine( void )
 {
 	std::string line = "";
-	char c, p = ' ';
+	char c = '\0', p = '\0';
 	while (recv(this->_clientSocket, this->_buffer, 1, 0) > 0)
 	{
 		c = this->_buffer[0];
@@ -230,6 +251,11 @@ std::string Connection::getMessageLine( void )
 		line.push_back(c);
 	}
 	return line;
+}
+
+Header & Connection::getHeaders( void )
+{
+	return this->_headers;
 }
 
 /*

@@ -23,7 +23,12 @@
 # define CR 13
 # define CONFIG "./config/zweb.conf"
 
+typedef std::map<std::string, std::string> Header;
+
 typedef std::map<std::string, std::string> Config;
+
+class Request;
+class Response;
 
 class Connection
 {
@@ -53,6 +58,11 @@ class Connection
 		float getf(std::string key) const;
 		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 
+		void parseHeaders( void );
+		void parseBody( void );
+
+		Header & getHeaders( void );
+
 	private:
 		unsigned int _port;
 		int _serverSocket;
@@ -65,12 +75,15 @@ class Connection
 		Config _config;
 
 		static const char CONFIG_SEP;
+		static const char HEADER_SEP;
 
 		char _buffer[BUFFER];
 
 		struct epoll_event _pollEvent;
 		struct epoll_event _events[MAX_EVENTS];
 		int _epollfd;
+
+		Header _headers;
 };
 
 std::ostream & operator<<( std::ostream & o, Connection const & i );

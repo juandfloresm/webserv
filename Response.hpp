@@ -9,6 +9,7 @@
 # include <sys/wait.h>
 # include "Message.hpp"
 # include "Connection.hpp"
+# include "Request.hpp"
 
 # define CRLF "\r\n"
 # define MAX_ENV 14
@@ -16,6 +17,7 @@
 # define CGI_BUFFSIZE 2048
 
 class Connection;
+class Request;
 
 typedef enum { 
 

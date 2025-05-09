@@ -230,10 +230,12 @@ char **Response::getEnv( void )
 		env[10] = strcpy(env[10], e.c_str());
 
 		e = "CONTENT_TYPE=" + this->_request.header("Content-Type");
+		std::cout << e << std::endl;
 		env[11] = new char[e.size() + 1];
 		env[11] = strcpy(env[11], e.c_str());
 
 		e = "CONTENT_LENGTH=" + this->_request.header("Content-Length");
+		std::cout << e << std::endl;
 		env[12] = new char[e.size() + 1];
 		env[12] = strcpy(env[12], e.c_str());
 	
@@ -276,7 +278,7 @@ std::string Response::readDynamicPage( void )
 	}
 	else if (!pid)
 	{
-		dup2(fd[0], STDIN_FILENO);
+		dup2(this->_connection.getClientSocket(), STDIN_FILENO);
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[0]);
 		close(fd[1]);

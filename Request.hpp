@@ -5,6 +5,9 @@
 # include <string>
 # include <map>
 # include "Message.hpp"
+# include "Connection.hpp"
+
+class Connection;
 
 typedef enum { GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, HEAD, UNKNOWN } Method;
 
@@ -13,7 +16,7 @@ class Request : public Message
 
 	public:
 
-		Request(Method method, std::string resource, std::string raw, int major, int minor);
+		Request(Method method, std::string resource, int major, int minor, Connection & connection);
 		~Request();
 
 		Request & operator=( Request const & rhs );
@@ -28,7 +31,7 @@ class Request : public Message
 		Method _method;
 		std::string _resource;
 		std::string _body;
-		std::string _raw;
+		Connection & _connection;
 		std::map<std::string, std::string> _headers;
 
 };
