@@ -75,6 +75,8 @@ class Response : public Message
 		std::string _content;
 		long _contentLength;
 		const Request & _request;
+
+		std::string getMimeType(const std::string& path) const;
 };
 
 std::ostream & operator<<( std::ostream & o, Response const & i );

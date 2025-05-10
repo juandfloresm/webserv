@@ -89,7 +89,7 @@ const std::string Response::toString( void ) const
 	std::string major = ss.str();
 	ss << getMinorVersion();
 	std::string minor = ss.str();
-	std::string contentType = "text/html";
+	std::string contentType = getMimeType(this->_request.getResource());
 
 	ss.str("");
 	ss.clear();
@@ -361,6 +361,41 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 			parsed += response[i];
 	}
 	return (parsed);
+}
+
+std::string Response::getMimeType(const std::string& path) const {
+	std::string extension = "";
+
+	size_t pos = path.find_last_of('.');
+	if (pos == std::string::npos) {
+		return "aplication/octet-stream"; // No extension found
+	}
+	
+	extension = path.substr(pos + 1);
+
+	for (size_t i = 0; i < extension.length(); i++) {
+		extension[i] = std::tolower(extension[i]);
+	}
+
+	if (extension == "html" || extension == "html") return "text/html";
+	else if (extension == "css") return "text/css";
+	else if (extension == "js") return "aplication/javascript";
+	else if (extension == "json") return "aplication/json";
+	else if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
+	else if (extension == "png") return "image/png";
+	else if (extension == "gif") return "image/gif";
+	else if (extension == "svg") return "image/svg+xml";
+	else if (extension == "ico") return "image/x-icon";
+	else if (extension == "pdf") return "aplication/pdf";
+	else if (extension == "zip") return "aplcation/zip";
+	else if (extension == "xml") return "aplication/xml";
+	else if (extension == "txt") return "text/plain";
+	else if (extension == "mp4") return "video/mp4";
+	else if (extension == "mp3") return "audio/mpeg";
+	else if (extension == "wav") return "audio/wav";
+	else if (extension == "php") return "text/html";
+
+	return "aplication/octet-stream"; // Default MIME type for unknown extensions
 }
 
 /*
