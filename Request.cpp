@@ -7,6 +7,14 @@
 Request::Request(Method method, std::string resource, int major, int minor, Connection & connection) : Message(major, minor), _method(method), _resource(resource), _connection(connection)
 {
 	this->_body = "";
+	this->_queryString = "";
+	std::size_t i = resource.find("?");
+  	if (i != std::string::npos)
+    {
+		this->_resource = resource.substr(0, i);
+		this->_queryString = resource.substr(i + 1);
+	}
+	std::cout << this->_resource << " <> " << this->_queryString << std::endl;
 }
 
 
@@ -84,4 +92,9 @@ Method Request::getMethod( void ) const
 std::string Request::getResource( void ) const
 {
 	return this->_resource;
+}
+
+std::string const Request::getQueryString( void ) const
+{
+	return this->_queryString;
 }

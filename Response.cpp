@@ -250,7 +250,17 @@ char **Response::getEnv( void )
 		if (env[12])
 			env[12] = strcpy(env[12], e.c_str());
 	
-		env[13] = NULL;
+		e = "REMOTE_HOST=" + this->_request.header("Host");
+		env[13] = new char[e.size() + 1];
+		if (env[13])
+			env[13] = strcpy(env[13], e.c_str());
+
+		e = "QUERY_STRING=" + this->_request.getQueryString();
+		env[14] = new char[e.size() + 1];
+		if (env[14])
+			env[14] = strcpy(env[14], e.c_str());
+
+		env[15] = NULL;
 	}
 
 	return env;

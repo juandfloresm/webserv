@@ -27,9 +27,12 @@ class Request : public Message
 		const std::string getMethodString( void ) const;
 		std::string const header( std::string const header ) const;
 
+		std::string const getQueryString( void ) const;
+
 	private:
 		Method _method;
 		std::string _resource;
+		std::string _queryString;
 		std::string _body;
 		Connection & _connection;
 		std::map<std::string, std::string> _headers;
