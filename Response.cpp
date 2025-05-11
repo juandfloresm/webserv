@@ -7,6 +7,7 @@
 Response::Response(Status status, int major, int minor, const Connection & connection, const Request & request) : Message(major, minor), _status(status), _connection(connection), _request(request)
 {
 	initStatusDescriptions();
+	this->_headerSection = "";
 	if (status == OK)
 		sampleResponse();
 	else
@@ -105,12 +106,23 @@ const std::string Response::toString( void ) const
 	r += this->_statusString + " " + getDescription() + CRLF;
 
 	// Headers
-	r += "Content-Type: " + contentType + CRLF;
-	r += "Content-Length: " + contentLength + CRLF;
-	r += CRLF; // Empty line between headers and content
+	if (this->_headerSection.size() > 0)
+	{
+		r += "Content-Length: " + contentLength + CRLF;
+		r += this->_headerSection;
+	}
+	else
+	{
+		r += "Content-Type: " + contentType + CRLF;
+		r += "Content-Length: " + contentLength + CRLF;
+		r += CRLF; // Empty line between headers and content
+	}
 
 	r += this->_content;
 	r += CRLF;
+
+	std::cout << r << std::endl;
+
 
 	return r;
 }
@@ -348,6 +360,8 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 	std::string parsed = "";
 	for (size_t i = 0; i < response.size(); i++)
 	{
+		if (!compile)
+			this->_headerSection += response[i];
 		if (response[i] == 10 || response[i] == 13)
 		{
 			counter++;

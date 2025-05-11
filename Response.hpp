@@ -70,6 +70,7 @@ class Response : public Message
 		Status _status;
 		std::string _statusString;
 		std::string _description;
+		std::string _headerSection;
 		StatusDescription _statusDescriptions;
 		const Connection & _connection;
 		std::string _content;
