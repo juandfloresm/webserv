@@ -127,10 +127,12 @@ void Request::parseHeaders( void )
 		getline(f, key, Request::HEADER_SEP);
 		getline(f, value, Request::HEADER_SEP);
 		std::string v = "";
+		bool init = false;
 		for (size_t i = 0; i < value.size(); i++)
 		{
-			if (value[i] == ' ')
+			if (value[i] == ' ' && !init)
 				continue;
+			init = true;
 			v.push_back(value[i]);
 		}
 		this->_headers[key] = v;

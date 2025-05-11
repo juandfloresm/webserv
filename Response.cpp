@@ -133,23 +133,30 @@ const std::string Response::toString( void ) const
 
 	std::string r = "";
 
-	// Version
 	r += "HTTP/" + major + "." + minor + " ";
 	
-	// Status
-	r += this->_statusString + " " + getDescription() + CRLF;
-
-	// Headers
 	if (this->_headerSection.size() > 0)
 	{
+		std::size_t start = this->_headerSection.find("Status:");
+		if (start != std::string::npos)
+		{
+			std::size_t end = this->_headerSection.find(CRLF, start);
+			std::string top = this->_headerSection.substr(start + 7, end);
+			r += top + CRLF;
+		}
+		else
+		{
+			r += this->_statusString + " " + getDescription() + CRLF;
+		}
 		r += "Content-Length: " + contentLength + CRLF;
 		r += this->_headerSection;
 	}
 	else
 	{
+		r += this->_statusString + " " + getDescription() + CRLF;
 		r += "Content-Type: " + contentType + CRLF;
 		r += "Content-Length: " + contentLength + CRLF;
-		r += CRLF; // Empty line between headers and content
+		r += CRLF;
 	}
 
 	r += this->_content;
@@ -252,7 +259,7 @@ char **Response::getEnv( void )
 		headerList.push_back("HTTP_" + key + "=" + it->second);
 	}
 	headerList.push_back("PATH_INFO=" + path);
-	headerList.push_back("SCRIPT_NAME=index.php"); // TODO: should be dynamic
+	headerList.push_back("SCRIPT_NAME=");
 	headerList.push_back("PATH_TRANSLATED=" + base + path);
 	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	headerList.push_back("REQUEST_METHOD=" + method);
@@ -264,6 +271,17 @@ char **Response::getEnv( void )
 	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
 	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
 	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
+
+	std::string auth = this->_request.header("Authorization");
+	if (auth.length() > 0)
+	{
+		std::string scheme, userId;
+		std::istringstream f(auth);
+		getline(f, scheme, ' ');
+		getline(f, userId, ' ');
+		headerList.push_back("AUTH_TYPE=" + scheme);
+		headerList.push_back("REMOTE_USER=" + userId);
+	}
 
 	char **env = new char*[headerList.size() + 1];
 	if (env != NULL)

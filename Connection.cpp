@@ -37,11 +37,8 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 
 void Connection::processConfig(std::string config)
 {
-	std::cout << std::endl << "....... CONFIG .............." << std::endl << std::endl;
 	readFile(CONFIG, Connection::processConfigLine);
-	std::cout << std::endl << "....... CONFIG DELTA ........" << std::endl << std::endl;
 	readFile(config, Connection::processConfigLine);
-	std::cout << std::endl << "............................." << std::endl << std::endl;
 }
 
 void Connection::processConfigLine( Connection & i, std::string line )
@@ -50,7 +47,6 @@ void Connection::processConfigLine( Connection & i, std::string line )
 	std::istringstream f(line);
 	getline(f, key, Connection::CONFIG_SEP);
 	getline(f, value, Connection::CONFIG_SEP);
-	std::cout << key << ": " << value << std::endl;
 	i._config[key] = value;
 }
 

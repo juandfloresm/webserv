@@ -41,7 +41,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Implementing Basic and Digest security"
+	git commit -am "Implementing Basic authentication scheme"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize
