@@ -5,9 +5,6 @@
 # include <string>
 # include <map>
 
-typedef std::map<std::string, std::string> Header;
-typedef Header::iterator HeaderIterator;
-
 class Message
 {
 
@@ -16,15 +13,16 @@ class Message
 
 		int getMajorVersion( void ) const;
 		int getMinorVersion( void ) const;
+		void setMajorVersion( int major );
+		void setMinorVersion( int minor );
 
 	protected:
+		Message();
 		Message(int major, int minor);
 		Message & operator=( Message const & rhs );
 
 		int _majorVersion;
 		int _minorVersion;
-
-		Header _headers;
 
 };
 

@@ -4,6 +4,10 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
+Message::Message()
+{
+}
+
 Message::Message(int major, int minor) : _majorVersion(major), _minorVersion(minor)
 {
 }
@@ -50,4 +54,14 @@ int Message::getMajorVersion( void ) const
 int Message::getMinorVersion( void ) const
 {
 	return this->_minorVersion;
+}
+
+void Message::setMajorVersion( int major )
+{
+	this->_majorVersion = major;
+}
+
+void Message::setMinorVersion( int minor )
+{
+	this->_minorVersion = minor;
 }

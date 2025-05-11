@@ -4,14 +4,16 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response(Status status, int major, int minor, const Connection & connection, const Request & request) : Message(major, minor), _status(status), _connection(connection), _request(request)
+Response::Response(Status status, int clientSocket, const Connection & connection, Request & request) : Message(), _status(status), _connection(connection), _request(request), _clientSocket(clientSocket)
 {
+	setMajorVersion(connection.geti("major_version"));
+	setMinorVersion(connection.geti("minor_version"));
 	initStatusDescriptions();
 	this->_headerSection = "";
 	if (status == OK)
-		sampleResponse();
+		doResponse();
 	else
-		doSend(this->_connection.getClientSocket());
+		doSend(clientSocket);
 }
 
 
@@ -47,13 +49,13 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-void Response::sampleResponse( void )
+void Response::doResponse( void )
 {
 	if (this->_request.getResource().find(".php") != std::string::npos)
 		this->_content = readDynamicPage();
 	else
 		this->_content = readStaticPage();
-	doSend(this->_connection.getClientSocket());
+	doSend(this->_clientSocket);
 }
 
 void Response::doSend( int fd )
@@ -152,9 +154,6 @@ const std::string Response::toString( void ) const
 
 	r += this->_content;
 	r += CRLF;
-
-	std::cout << r << std::endl;
-
 
 	return r;
 }
@@ -355,7 +354,7 @@ std::string Response::readDynamicPage( void )
 		char **cmd = new char*[2];
 		cmd[0] = (char *) "";
 		cmd[1] = NULL;
-		dup2(this->_connection.getClientSocket(), STDIN_FILENO);
+		dup2(this->_clientSocket, STDIN_FILENO);
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[0]);
 		close(fd[1]);
@@ -422,9 +421,11 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 std::string Response::getMimeType(const std::string& path) const {
 	std::string extension = "";
 
+	if (path.compare("/") == 0)
+		return "text/html";
 	size_t pos = path.find_last_of('.');
 	if (pos == std::string::npos) {
-		return "aplication/octet-stream"; // No extension found
+		return "application/octet-stream"; // No extension found
 	}
 	
 	extension = path.substr(pos + 1);
@@ -435,23 +436,23 @@ std::string Response::getMimeType(const std::string& path) const {
 
 	if (extension == "html" || extension == "html") return "text/html";
 	else if (extension == "css") return "text/css";
-	else if (extension == "js") return "aplication/javascript";
-	else if (extension == "json") return "aplication/json";
+	else if (extension == "js") return "application/javascript";
+	else if (extension == "json") return "application/json";
 	else if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
 	else if (extension == "png") return "image/png";
 	else if (extension == "gif") return "image/gif";
 	else if (extension == "svg") return "image/svg+xml";
 	else if (extension == "ico") return "image/x-icon";
-	else if (extension == "pdf") return "aplication/pdf";
-	else if (extension == "zip") return "aplcation/zip";
-	else if (extension == "xml") return "aplication/xml";
+	else if (extension == "pdf") return "application/pdf";
+	else if (extension == "zip") return "applcation/zip";
+	else if (extension == "xml") return "application/xml";
 	else if (extension == "txt") return "text/plain";
 	else if (extension == "mp4") return "video/mp4";
 	else if (extension == "mp3") return "audio/mpeg";
 	else if (extension == "wav") return "audio/wav";
 	else if (extension == "php") return "text/html";
 
-	return "aplication/octet-stream"; // Default MIME type for unknown extensions
+	return "application/octet-stream"; // Default MIME type for unknown extensions
 }
 
 /*

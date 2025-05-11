@@ -41,7 +41,7 @@ sanitize: fclean $(OBJ)
 
 gitter: fclean
 	git add -A
-	git commit -am "Other meta-parameters"
+	git commit -am "Implementing session"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize

@@ -1,7 +1,7 @@
 #include "Connection.hpp"
 
 const char Connection::CONFIG_SEP = '=';
-const char Connection::HEADER_SEP = ':';
+
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -105,22 +105,6 @@ int Connection::connect()
 	return -1;
 }
 
-/* Deprecated :) */
-void Connection::simpleServer( void )
-{
-	while (true)
-	{
-		this->_clientSocket = accept(this->_serverSocket, (struct sockaddr *) &this->_clientAddress, &this->_clientAddressSize);
-		if (this->_clientSocket != -1)
-			processClientRequest(this->_clientSocket);
-		else
-		{
-			/* Handle accept error */
-			std::cerr << "[Error] accepting client connection" << std::endl;
-		}
-	}
-}
-
 void Connection::eventLoop( void )
 {
 	preparePolling();
@@ -183,82 +167,11 @@ void Connection::preparePolling( void )
 void Connection::processClientRequest( int clientSocketFD )
 {
 	this->_clientSocket = clientSocketFD;
-	std::string line = getMessageLine();
-	parseHeaders();
-	std::string method, resource, major, minor;
-	std::istringstream f(line);
-	getline(f, method, ' ');
-	getline(f, resource, ' ');
-	getline(f, major, '/');
-	getline(f, major, '.');
-	getline(f, minor, '.');
-
-	Method m = UNKNOWN;
-	if (method.find("GET") != std::string::npos)
-		m = GET;
-	else if (method.find("POST") != std::string::npos)
-		m = POST;
-	else if (method.find("POST") != std::string::npos)
-		m = POST;
-	else if (method.find("DELETE") != std::string::npos)
-		m = DELETE;
+	Request req(this->_clientSocket);
+	if (req.getMethod() == UNKNOWN)
+		Response res(NOT_IMPLEMENTED, this->_clientSocket, *this, req);
 	else
-	{
-		Request req(m, resource, atoi(major.c_str()), atoi(minor.c_str()), *this);
-		Response res(NOT_IMPLEMENTED, geti("major_version"), geti("minor_version"), *this, req);
-		return;
-	}
-
-	Request req(m, resource, atoi(major.c_str()), atoi(minor.c_str()), *this);
-	Response res(OK, geti("major_version"), geti("minor_version"), *this, req);
-}
-
-void Connection::parseHeaders( void )
-{
-	std::string line = "";
-	this->_headers.clear();
-	while (!(line = getMessageLine()).empty())
-	{
-		std::string key, value;
-		std::istringstream f(line);
-		getline(f, key, Connection::HEADER_SEP);
-		getline(f, value, Connection::HEADER_SEP);
-		std::string v = "";
-		for (size_t i = 0; i < value.size(); i++)
-		{
-			if (value[i] == ' ')
-				continue;
-			v.push_back(value[i]);
-		}
-		this->_headers[key] = v;
-	}
-}
-
-std::string Connection::getMessageLine( void )
-{
-	std::string line = "";
-	char c = '\0', p = '\0';
-	while (recv(this->_clientSocket, this->_buffer, 1, 0) > 0)
-	{
-		c = this->_buffer[0];
-		if (c == LF || c == CR)
-		{
-			if (p == CR)
-				break;
-			else
-			{
-				p = c;
-				continue;
-			}
-		}
-		line.push_back(c);
-	}
-	return line;
-}
-
-Header & Connection::getHeaders( void )
-{
-	return this->_headers;
+		Response res(OK, this->_clientSocket, *this, req);
 }
 
 /*

@@ -76,7 +76,7 @@ class Response : public Message
 
 	public:
 
-		Response(Status status, int major, int minor, const Connection & connection, const Request & request);
+		Response(Status status, int clientSocket, const Connection & connection, Request & request);
 		~Response();
 
 		Response & operator=( Response const & rhs );
@@ -93,7 +93,7 @@ class Response : public Message
 		void clearEnv( char **env );
 		char **getEnv( void );
 
-		void sampleResponse( void );
+		void doResponse( void );
 		void doSend( int fd );
 
 		std::string const getParsedCGIResponse( std::string const response );
@@ -107,7 +107,8 @@ class Response : public Message
 		const Connection & _connection;
 		std::string _content;
 		long _contentLength;
-		const Request & _request;
+		Request & _request;
+		int _clientSocket;
 
 		std::string getMimeType(const std::string& path) const;
 };
