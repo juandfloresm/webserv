@@ -56,11 +56,26 @@ void Response::doResponse( void )
 		std::string base = this->_connection.gets("dynamic_route");
 		std::string script = this->_request.getResource();
 		std::string binary = this->_request.getResource().find(".php") != std::string::npos ? CGI_PHP : (base + script);
-		this->_content = readDynamicPage(binary);
+		int sock = this->_clientSocket;
+		pid_t pid = fork();
+		if (pid < 0)
+		{
+			this->_status = INTERNAL_SERVER_ERROR;
+			doSend(sock);
+		}
+		else if (pid == 0)
+		{
+			this->_content = readDynamicPage(binary);
+			doSend(sock);
+		}
+		else
+			exit(0);
 	}
 	else
+	{
 		this->_content = readStaticPage();
-	doSend(this->_clientSocket);
+		doSend(this->_clientSocket);
+	}
 }
 
 void Response::doSend( int fd )
@@ -72,6 +87,7 @@ void Response::doSend( int fd )
 	this->_statusString = ss.str();
 	std::string resp = toString();
 	send(fd, resp.c_str(), resp.size(), 0);
+	close(this->_clientSocket);
 }
 
 void Response::initStatusDescriptions( void )
@@ -240,7 +256,6 @@ char **Response::getEnv( void )
 		method = "POST";
 	else if (this->_request.getMethod() == DELETE) {
 		method = "DELETE";
-
 		std::string path = this->_connection.gets("static_route") + this->_request.getResource();
 		if (std::remove(path.c_str()) == 0) {
 			this->_status = OK;

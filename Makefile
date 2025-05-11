@@ -39,9 +39,12 @@ sanitize: fclean $(OBJ)
 	$(CC) $(FLAGS) -g $(OBJ) -fsanitize=address -o $(NAME)
 	./$(NAME) $(ARG)
 
+siege:
+	siege --time=1m --concurrent=1000 http://127.0.0.1:8080/index.php
+
 gitter: fclean
 	git add -A
-	git commit -am "Implementing Perl CGI"
+	git commit -am "Non blocking CGI process"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize
