@@ -14,6 +14,8 @@
 
 # define CRLF "\r\n"
 # define CGI_PHP "/usr/bin/php-cgi"
+# define CGI_PY "/usr/bin/python3"
+# define GCI_PERL "/usr/bin/perl"
 # define CGI_BUFFSIZE 2048
 
 class Connection;
@@ -89,7 +91,7 @@ class Response : public Message
 
 		std::string readError( std::string status ) const;
 		std::string readStaticPage( void ) const;
-		std::string readDynamicPage( void );
+		std::string readDynamicPage( const std::string binary );
 		void clearEnv( char **env );
 		char **getEnv( void );
 

@@ -51,8 +51,13 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 
 void Response::doResponse( void )
 {
-	if (this->_request.getResource().find(".php") != std::string::npos)
-		this->_content = readDynamicPage();
+	if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
+	{
+		std::string base = this->_connection.gets("dynamic_route");
+		std::string script = this->_request.getResource();
+		std::string binary = this->_request.getResource().find(".php") != std::string::npos ? CGI_PHP : (base + script);
+		this->_content = readDynamicPage(binary);
+	}
 	else
 		this->_content = readStaticPage();
 	doSend(this->_clientSocket);
@@ -258,19 +263,20 @@ char **Response::getEnv( void )
 		key = headerTransform(it->first);
 		headerList.push_back("HTTP_" + key + "=" + it->second);
 	}
-	headerList.push_back("PATH_INFO=" + path);
-	headerList.push_back("SCRIPT_NAME=");
+	headerList.push_back("SCRIPT_NAME=" + base + path);
+	headerList.push_back("SCRIPT_FILENAME=" + base + path);
+	headerList.push_back("PATH_INFO=" + base + path);
 	headerList.push_back("PATH_TRANSLATED=" + base + path);
+
+	headerList.push_back("REQUEST_URI=/");
+	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
 	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	headerList.push_back("REQUEST_METHOD=" + method);
 	headerList.push_back("REDIRECT_STATUS=200");
-	headerList.push_back("SCRIPT_FILENAME=" + base + path);
 	headerList.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	headerList.push_back("SERVER_PORT=80");
-	headerList.push_back("REQUEST_URI=/");
 	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
 	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
-	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
 
 	std::string auth = this->_request.header("Authorization");
 	if (auth.length() > 0)
@@ -294,7 +300,7 @@ char **Response::getEnv( void )
 	return env;
 }
 
-std::string Response::readDynamicPage( void )
+std::string Response::readDynamicPage( const std::string binary )
 {
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
@@ -333,7 +339,7 @@ std::string Response::readDynamicPage( void )
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[0]);
 		close(fd[1]);
-		execve(CGI_PHP, cmd, env);
+		execve(binary.c_str(), cmd, env);
 		this->_status = INTERNAL_SERVER_ERROR;
 		this->_connection.ft_error("[Error] error executing CGI");
 		delete [] cmd;
