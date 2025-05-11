@@ -13,7 +13,6 @@
 # include "Request.hpp"
 
 # define CRLF "\r\n"
-# define MAX_ENV 16
 # define CGI_PHP "/usr/bin/php-cgi"
 # define CGI_BUFFSIZE 2048
 

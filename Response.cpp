@@ -203,8 +203,9 @@ std::string Response::readStaticPage( void ) const
 
 void Response::clearEnv( char **env )
 {
-	for (int i = 0; i < MAX_ENV; i++)
-		delete [] env[i];
+	int i = 0;
+	while (env[i])
+		delete [] env[i++];
 	delete [] env;
 }
 
@@ -250,7 +251,6 @@ char **Response::getEnv( void )
 		key = headerTransform(it->first);
 		headerList.push_back("HTTP_" + key + "=" + it->second);
 	}
-
 	headerList.push_back("PATH_INFO=" + path);
 	headerList.push_back("SCRIPT_NAME=index.php"); // TODO: should be dynamic
 	headerList.push_back("PATH_TRANSLATED=" + base + path);
@@ -262,13 +262,10 @@ char **Response::getEnv( void )
 	headerList.push_back("SERVER_PORT=80");
 	headerList.push_back("REQUEST_URI=/");
 	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
-	headerList.push_back("CONTENT_TYPE=" + this->_request.header("Content-Type"));
-	headerList.push_back("CONTENT_LENGTH=" + this->_request.header("Content-Length"));
 	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
 	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
 
 	char **env = new char*[headerList.size() + 1];
-
 	if (env != NULL)
 	{
 		for (size_t i = 0; i < headerList.size(); i++)
