@@ -208,6 +208,13 @@ void Response::clearEnv( char **env )
 	delete [] env;
 }
 
+void Response::setSingleEnv(char **env, std::string const s, int i)
+{
+	env[i] = new char[s.size() + 1];
+	if (env[i])
+		env[i] = strcpy(env[i], s.c_str());	
+}
+
 char **Response::getEnv( void )
 {
 	std::string base = this->_connection.gets("dynamic_route");
@@ -238,82 +245,23 @@ char **Response::getEnv( void )
 
 	if (env != NULL)
 	{
-		std::string e = "PATH_INFO=" + path;
-		env[0] = new char[e.size() + 1];
-		if (env[0])
-			env[0] = strcpy(env[0], e.c_str());
-	
-		e = "SCRIPT_NAME=index.php";
-		env[1] = new char[e.size() + 1];
-		if (env[1])
-			env[1] = strcpy(env[1], e.c_str());
-	
-		e = "PATH_TRANSLATED=" + base + path;
-		env[2] = new char[e.size() + 1];
-		if (env[2])
-			env[2] = strcpy(env[2], e.c_str());
-	
-		e = "GATEWAY_INTERFACE=CGI/1.1";
-		env[3] = new char[e.size() + 1];
-		if (env[3])
-			env[3] = strcpy(env[3], e.c_str());
-	
-		e = "REQUEST_METHOD=" + method;
-		env[4] = new char[e.size() + 1];
-		if (env[4])
-			env[4] = strcpy(env[4], e.c_str());
-	
-		e = "REDIRECT_STATUS=200";
-		env[5] = new char[e.size() + 1];
-		if (env[5])
-			env[5] = strcpy(env[5], e.c_str());
-	
-		e = "SCRIPT_FILENAME=" + base + path;
-		env[6] = new char[e.size() + 1];
-		if (env[6])
-			env[6] = strcpy(env[6], e.c_str());
-	
-		e = "SERVER_PROTOCOL=HTTP/1.1";
-		env[7] = new char[e.size() + 1];
-		if (env[7])
-			env[7] = strcpy(env[7], e.c_str());
-	
-		e = "SERVER_PORT=80";
-		env[8] = new char[e.size() + 1];
-		if (env[8])
-			env[8] = strcpy(env[8], e.c_str());
-	
-		e = "REQUEST_URI=/";
-		env[9] = new char[e.size() + 1];
-		if (env[9])
-			env[9] = strcpy(env[9], e.c_str());
-	
-		e = "SERVER_SOFTWARE=zweb/1.1";
-		env[10] = new char[e.size() + 1];
-		if (env[10])
-			env[10] = strcpy(env[10], e.c_str());
-
-		e = "CONTENT_TYPE=" + this->_request.header("Content-Type");
-		env[11] = new char[e.size() + 1];
-		if (env[11])
-			env[11] = strcpy(env[11], e.c_str());
-
-		e = "CONTENT_LENGTH=" + this->_request.header("Content-Length");
-		env[12] = new char[e.size() + 1];
-		if (env[12])
-			env[12] = strcpy(env[12], e.c_str());
-	
-		e = "REMOTE_HOST=" + this->_request.header("Host");
-		env[13] = new char[e.size() + 1];
-		if (env[13])
-			env[13] = strcpy(env[13], e.c_str());
-
-		e = "QUERY_STRING=" + this->_request.getQueryString();
-		env[14] = new char[e.size() + 1];
-		if (env[14])
-			env[14] = strcpy(env[14], e.c_str());
-
-		env[15] = NULL;
+		int i = 0;
+		setSingleEnv(env, "PATH_INFO=" + path, i++);
+		setSingleEnv(env, "SCRIPT_NAME=index.php", i++);
+		setSingleEnv(env, "PATH_TRANSLATED=" + base + path, i++);
+		setSingleEnv(env, "GATEWAY_INTERFACE=CGI/1.1", i++);
+		setSingleEnv(env, "REQUEST_METHOD=" + method, i++);
+		setSingleEnv(env, "REDIRECT_STATUS=200", i++);
+		setSingleEnv(env, "SCRIPT_FILENAME=" + base + path, i++);
+		setSingleEnv(env, "SERVER_PROTOCOL=HTTP/1.1", i++);
+		setSingleEnv(env, "SERVER_PORT=80", i++);
+		setSingleEnv(env, "REQUEST_URI=/", i++);
+		setSingleEnv(env, "SERVER_SOFTWARE=zweb/1.1", i++);
+		setSingleEnv(env, "CONTENT_TYPE=" + this->_request.header("Content-Type"), i++);
+		setSingleEnv(env, "CONTENT_LENGTH=" + this->_request.header("Content-Length"), i++);
+		setSingleEnv(env, "REMOTE_HOST=" + this->_request.header("Host"), i++);
+		setSingleEnv(env, "QUERY_STRING=" + this->_request.getQueryString(), i++);
+		env[i] = NULL;
 	}
 
 	return env;

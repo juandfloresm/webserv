@@ -97,6 +97,7 @@ class Response : public Message
 		void doSend( int fd );
 
 		std::string const getParsedCGIResponse( std::string const response );
+		void setSingleEnv(char **env, std::string const s, int i);
 
 	private:
 		Status _status;
