@@ -247,7 +247,7 @@ char **Response::getEnv( void )
 	{
 		int i = 0;
 		setSingleEnv(env, "PATH_INFO=" + path, i++);
-		setSingleEnv(env, "SCRIPT_NAME=index.php", i++);
+		setSingleEnv(env, "SCRIPT_NAME=index.php", i++); // TODO: should be dynamic
 		setSingleEnv(env, "PATH_TRANSLATED=" + base + path, i++);
 		setSingleEnv(env, "GATEWAY_INTERFACE=CGI/1.1", i++);
 		setSingleEnv(env, "REQUEST_METHOD=" + method, i++);
