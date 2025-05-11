@@ -5,6 +5,7 @@
 # include <string>
 # include <map>
 # include <sstream>
+# include <algorithm>
 # include <csignal>
 # include <sys/wait.h>
 # include "Message.hpp"
@@ -98,6 +99,8 @@ class Response : public Message
 
 		std::string const getParsedCGIResponse( std::string const response );
 		void setSingleEnv(char **env, std::string const s, int i);
+		std::string headerTransform(std::string s);
+		static unsigned char headerCharTransform(unsigned char c);
 
 	private:
 		Status _status;

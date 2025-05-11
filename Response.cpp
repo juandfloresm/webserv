@@ -241,27 +241,39 @@ char **Response::getEnv( void )
 		return NULL;
 	}
 
-	char **env = new char*[MAX_ENV];
+	Header headers = this->_request.getHeaders();
+	std::vector<std::string> headerList;
+	HeaderIterator it = headers.begin();
+	std::string key;
+	for (; it != headers.end(); it++)
+	{
+		key = headerTransform(it->first);
+		headerList.push_back("HTTP_" + key + "=" + it->second);
+	}
+
+	headerList.push_back("PATH_INFO=" + path);
+	headerList.push_back("SCRIPT_NAME=index.php"); // TODO: should be dynamic
+	headerList.push_back("PATH_TRANSLATED=" + base + path);
+	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	headerList.push_back("REQUEST_METHOD=" + method);
+	headerList.push_back("REDIRECT_STATUS=200");
+	headerList.push_back("SCRIPT_FILENAME=" + base + path);
+	headerList.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	headerList.push_back("SERVER_PORT=80");
+	headerList.push_back("REQUEST_URI=/");
+	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
+	headerList.push_back("CONTENT_TYPE=" + this->_request.header("Content-Type"));
+	headerList.push_back("CONTENT_LENGTH=" + this->_request.header("Content-Length"));
+	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
+	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
+
+	char **env = new char*[headerList.size() + 1];
 
 	if (env != NULL)
 	{
-		int i = 0;
-		setSingleEnv(env, "PATH_INFO=" + path, i++);
-		setSingleEnv(env, "SCRIPT_NAME=index.php", i++); // TODO: should be dynamic
-		setSingleEnv(env, "PATH_TRANSLATED=" + base + path, i++);
-		setSingleEnv(env, "GATEWAY_INTERFACE=CGI/1.1", i++);
-		setSingleEnv(env, "REQUEST_METHOD=" + method, i++);
-		setSingleEnv(env, "REDIRECT_STATUS=200", i++);
-		setSingleEnv(env, "SCRIPT_FILENAME=" + base + path, i++);
-		setSingleEnv(env, "SERVER_PROTOCOL=HTTP/1.1", i++);
-		setSingleEnv(env, "SERVER_PORT=80", i++);
-		setSingleEnv(env, "REQUEST_URI=/", i++);
-		setSingleEnv(env, "SERVER_SOFTWARE=zweb/1.1", i++);
-		setSingleEnv(env, "CONTENT_TYPE=" + this->_request.header("Content-Type"), i++);
-		setSingleEnv(env, "CONTENT_LENGTH=" + this->_request.header("Content-Length"), i++);
-		setSingleEnv(env, "REMOTE_HOST=" + this->_request.header("Host"), i++);
-		setSingleEnv(env, "QUERY_STRING=" + this->_request.getQueryString(), i++);
-		env[i] = NULL;
+		for (size_t i = 0; i < headerList.size(); i++)
+			setSingleEnv(env, headerList[i], i);
+		env[headerList.size()] = NULL;
 	}
 
 	return env;
@@ -401,6 +413,23 @@ std::string Response::getMimeType(const std::string& path) const {
 	else if (extension == "php") return "text/html";
 
 	return "application/octet-stream"; // Default MIME type for unknown extensions
+}
+
+/*
+** --------------------------------- UTILITIES ---------------------------------
+*/
+
+std::string Response::headerTransform(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), Response::headerCharTransform);
+    return s;
+}
+
+unsigned char Response::headerCharTransform(unsigned char c)
+{
+	if (c == '-')
+		c = '_';
+	return std::toupper(c); 
 }
 
 /*
