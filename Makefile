@@ -4,7 +4,7 @@ CC 					:=	c++
 
 FLAGS 				:=	-Wall -Wextra -Werror -pedantic -std=c++98
 
-SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp ConfigParser.cpp Configuration.cpp
+SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp ConfigParser.cpp Configuration.cpp Server.cpp
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
@@ -48,7 +48,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: parsing new.conf...printing directive lines"
+	git commit -am "Configuration: creating server classes"
 	git push
 
 docker-build:
