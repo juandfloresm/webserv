@@ -95,7 +95,7 @@ void Configuration::parse( std::string const file )
 					i--;
 				else if (isTokenValid(i, token, levels))
 				{
-					token.push_back(' ');
+					std::string value = "";
 					while (read(fd, &c, 1) > 0)
 					{
 						if (isEnding(c))
@@ -106,9 +106,9 @@ void Configuration::parse( std::string const file )
 								i--;
 							break;
 						}
-						token.push_back(c);
+						value.push_back(c);
 					}
-					parseDirective(token);
+					parseEntry(i, std::make_pair(token, value));
 				}
 				else if(token.size() > 0)
 				{
@@ -134,19 +134,28 @@ bool Configuration::isTokenValid(int i, std::string token, std::map<int, std::ve
 	return false;
 }
 
-void Configuration::parseDirective( std::string directive )
+void Configuration::parseEntry( int level, Entry directive )
 {
-	if (directive.compare("server ") == 0)
+	(void) level;
+	if (directive.first.compare("server") == 0)
 	{
+		this->_server = Server();
+		this->_servers.push_back(this->_server);
+		this->_parsingServer = true;
 		this->_pad = "";
 		std::cout << std::endl;
-		std::cout << directive << std::endl;
+		std::cout << directive.first << std::endl;
 		std::cout << "===================" << std::endl;
 	}
 	else
 	{
-		std::cout << this->_pad << directive << std::endl;
-		if (directive.find("location") != std::string::npos)
+		this->_parsingServer = false;
+		std::cout << this->_pad << directive.first << ": " << directive.second << std::endl;
+		if (directive.first.compare("listen"))
+		{
+			this->_server.setPort(std::atoi(directive.second.c_str()));
+		}
+		if (directive.first.compare("location") == 0)
 			this->_pad = "  ";
 	}
 }

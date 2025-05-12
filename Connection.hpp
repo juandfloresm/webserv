@@ -15,6 +15,7 @@
 # include <vector>
 # include "Request.hpp"
 # include "Response.hpp"
+# include "Configuration.hpp"
 
 # define MAX_EVENTS 128
 # define MAX_MESSAGE_LEN 512
@@ -41,7 +42,7 @@ class Connection
 {
 
 	public:
-		Connection(std::string config);
+		Connection( std::string config, Configuration & cfg );
 		~Connection();
 
 		void processConfig(std::string config);
@@ -64,6 +65,7 @@ class Connection
 		unsigned int _port;
 
 		Config _config;
+		Configuration & _cfg;
 		static const char CONFIG_SEP;
 
 		SocketDataEvents _serverEvents;

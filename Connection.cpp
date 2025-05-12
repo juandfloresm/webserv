@@ -7,7 +7,7 @@ const char Connection::CONFIG_SEP = '=';
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Connection::Connection(std::string config)
+Connection::Connection(std::string config, Configuration & cfg) : _cfg(cfg)
 {
 	processConfig(config);
 	initServer();
@@ -39,75 +39,6 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
-
-void Connection::processConfig(std::string config)
-{
-	readFile(CONFIG, Connection::processConfigLine);
-	readFile(config, Connection::processConfigLine);
-	// try {
-	// 	ConfigParser parser(config);
-	// 	parser.parse();
-		
-	// 	const ServerBlocks& servers = parser.getServerBlocks();
-		
-	// 	// default values from the first server block
-	// 	if (!servers.empty()) {
-	// 		const ServerBlock& mainServer = servers[0];
-			
-	// 		// default port
-	// 		if (mainServer.hasKey("listen"))
-	// 			_port = atoi(mainServer.getValue("listen").c_str());
-	// 		else
-	// 			_port = 80; // Default port
-				
-	// 		// All directives to flat config map
-	// 		// Compatibility with current code
-	// 		for (ServerBlocks::const_iterator server = servers.begin(); server != servers.end(); ++server) {
-	// 			std::string serverName = server->hasKey("server_name") ? server->getValue("server_name") : "default";
-				
-	// 			// Server level directives
-	// 			const Directive& serverDirectives = server->getDirectives();
-	// 			for (Directive::const_iterator dir = serverDirectives.begin(); dir != serverDirectives.end(); ++dir) {
-	// 				std::string key = serverName + "." + dir->first;
-	// 				_config[key] = dir->second;
-	// 			}
-				
-	// 			// Location level directives
-	// 			const LocationBlocks& locations = server->getLocations();
-	// 			for (LocationBlocks::const_iterator loc = locations.begin(); loc != locations.end(); ++loc) {
-	// 				std::string locationPath = loc->getPath();
-	// 				const Directive& locDirectives = loc->getDirective();
-					
-	// 				// Add a prefix for regex locations to distinguish them
-	// 				std::string locPrefix = loc->isRegex() ? "~" : "";
-					
-	// 				for (Directive::const_iterator dir = locDirectives.begin(); dir != locDirectives.end(); ++dir) {
-	// 					std::string key = serverName + "." + locPrefix + locationPath + "." + dir->first;
-	// 					_config[key] = dir->second;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// } catch (const std::exception& e) {
-	// 	std::cerr << e.what() << std::endl;
-	// 	exit(1);
-	// }
-}
-
-void Connection::processConfigLine( Connection & i, std::string line )
-{
-	std::string key, value;
-	std::istringstream f(line);
-	getline(f, key, Connection::CONFIG_SEP);
-	getline(f, value, Connection::CONFIG_SEP);
-	i._config[key] = value;
-}
-
-void Connection::handleSigint( int sgn )
-{
-	(void) sgn;
-	kill(0, SIGKILL);
-}
 
 void Connection::initServer( void )
 {
@@ -235,6 +166,75 @@ void Connection::processClientRequest( int clientSocketFD )
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
+
+void Connection::handleSigint( int sgn )
+{
+	(void) sgn;
+	kill(0, SIGKILL);
+}
+
+void Connection::processConfig(std::string config)
+{
+	readFile(CONFIG, Connection::processConfigLine);
+	readFile(config, Connection::processConfigLine);
+	// try {
+	// 	ConfigParser parser(config);
+	// 	parser.parse();
+		
+	// 	const ServerBlocks& servers = parser.getServerBlocks();
+		
+	// 	// default values from the first server block
+	// 	if (!servers.empty()) {
+	// 		const ServerBlock& mainServer = servers[0];
+			
+	// 		// default port
+	// 		if (mainServer.hasKey("listen"))
+	// 			_port = atoi(mainServer.getValue("listen").c_str());
+	// 		else
+	// 			_port = 80; // Default port
+				
+	// 		// All directives to flat config map
+	// 		// Compatibility with current code
+	// 		for (ServerBlocks::const_iterator server = servers.begin(); server != servers.end(); ++server) {
+	// 			std::string serverName = server->hasKey("server_name") ? server->getValue("server_name") : "default";
+				
+	// 			// Server level directives
+	// 			const Directive& serverDirectives = server->getDirectives();
+	// 			for (Directive::const_iterator dir = serverDirectives.begin(); dir != serverDirectives.end(); ++dir) {
+	// 				std::string key = serverName + "." + dir->first;
+	// 				_config[key] = dir->second;
+	// 			}
+				
+	// 			// Location level directives
+	// 			const LocationBlocks& locations = server->getLocations();
+	// 			for (LocationBlocks::const_iterator loc = locations.begin(); loc != locations.end(); ++loc) {
+	// 				std::string locationPath = loc->getPath();
+	// 				const Directive& locDirectives = loc->getDirective();
+					
+	// 				// Add a prefix for regex locations to distinguish them
+	// 				std::string locPrefix = loc->isRegex() ? "~" : "";
+					
+	// 				for (Directive::const_iterator dir = locDirectives.begin(); dir != locDirectives.end(); ++dir) {
+	// 					std::string key = serverName + "." + locPrefix + locationPath + "." + dir->first;
+	// 					_config[key] = dir->second;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// } catch (const std::exception& e) {
+	// 	std::cerr << e.what() << std::endl;
+	// 	exit(1);
+	// }
+}
+
+void Connection::processConfigLine( Connection & i, std::string line )
+{
+	std::string key, value;
+	std::istringstream f(line);
+	getline(f, key, Connection::CONFIG_SEP);
+	getline(f, value, Connection::CONFIG_SEP);
+	i._config[key] = value;
+}
 
 void Connection::ft_error(const std::string msg) const
 {

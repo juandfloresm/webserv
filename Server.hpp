@@ -14,8 +14,11 @@ class Server
 		~Server();
 		Server & operator=( Server const & rhs );
 
-	private:
+		int getPort( void ) const;
+		void setPort( int port );
 
+	private:
+		int _port;
 
 };
 

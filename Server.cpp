@@ -6,6 +6,7 @@
 
 Server::Server( )
 {
+	this->_port = 80;
 }
 
 /*
@@ -43,3 +44,13 @@ std::ostream & operator<<( std::ostream & o, Server const & i )
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
+
+int Server::getPort( void ) const
+{
+	return this->_port;
+}
+
+void Server::setPort( int port )
+{
+	this->_port = port;
+}
