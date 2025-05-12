@@ -18,6 +18,8 @@
 # define GCI_PERL "/usr/bin/perl"
 # define CGI_BUFFSIZE 2048
 
+typedef std::map<std::string, std::string> Config;
+
 class Connection;
 class Request;
 
@@ -78,7 +80,7 @@ class Response : public Message
 
 	public:
 
-		Response(Status status, int clientSocket, const Connection & connection, Request & request);
+		Response(Status status, int clientSocket, const Connection & connection, Config & config, Request & request);
 		~Response();
 
 		Response & operator=( Response const & rhs );
@@ -110,6 +112,7 @@ class Response : public Message
 		std::string _headerSection;
 		StatusDescription _statusDescriptions;
 		const Connection & _connection;
+		Config _config;
 		std::string _content;
 		long _contentLength;
 		Request & _request;

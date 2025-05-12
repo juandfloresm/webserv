@@ -4,10 +4,10 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response(Status status, int clientSocket, const Connection & connection, Request & request) : Message(), _status(status), _connection(connection), _request(request), _clientSocket(clientSocket)
+Response::Response(Status status, int clientSocket, const Connection & connection, Config & config, Request & request) : Message(), _status(status), _connection(connection), _config(config), _request(request), _clientSocket(clientSocket)
 {
-	setMajorVersion(connection.geti("major_version"));
-	setMinorVersion(connection.geti("minor_version"));
+	setMajorVersion(connection.geti(this->_config, "major_version"));
+	setMinorVersion(connection.geti(this->_config, "minor_version"));
 	initStatusDescriptions();
 	this->_headerSection = "";
 	if (status == OK)
@@ -53,7 +53,7 @@ void Response::doResponse( void )
 {
 	if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
 	{
-		std::string base = this->_connection.gets("dynamic_route");
+		std::string base = this->_connection.gets(this->_config, "dynamic_route");
 		std::string script = this->_request.getResource();
 		std::string binary = this->_request.getResource().find(".php") != std::string::npos ? CGI_PHP : (base + script);
 		int sock = this->_clientSocket;
@@ -189,7 +189,7 @@ const std::string Response::toString( void ) const
 std::string Response::readError( std::string status ) const
 {
 	std::string line;
-	std::string filePath = this->_connection.gets("error_pages") + '/' + status + ".html";
+	std::string filePath = this->_connection.gets(this->_config, "error_pages") + '/' + status + ".html";
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
@@ -203,7 +203,7 @@ std::string Response::readError( std::string status ) const
 
 std::string Response::readStaticPage( void ) const
 {
-	std::string base = this->_connection.gets("static_route");
+	std::string base = this->_connection.gets(this->_config, "static_route");
 	std::string path = this->_request.getResource();
 
 	if (path.empty() || path[0] != '/')
@@ -246,7 +246,7 @@ void Response::setSingleEnv(char **env, std::string const s, int i)
 
 char **Response::getEnv( void )
 {
-	std::string base = this->_connection.gets("dynamic_route");
+	std::string base = this->_connection.gets(this->_config, "dynamic_route");
 	std::string path = this->_request.getResource();
 	std::string method = "";
 	
@@ -256,7 +256,7 @@ char **Response::getEnv( void )
 		method = "POST";
 	else if (this->_request.getMethod() == DELETE) {
 		method = "DELETE";
-		std::string path = this->_connection.gets("static_route") + this->_request.getResource();
+		std::string path = this->_connection.gets(this->_config, "static_route") + this->_request.getResource();
 		if (std::remove(path.c_str()) == 0) {
 			this->_status = OK;
 		} else {
