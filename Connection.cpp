@@ -1,4 +1,5 @@
 #include "Connection.hpp"
+#include "ConfigParser.hpp"
 
 const char Connection::CONFIG_SEP = '=';
 
@@ -43,6 +44,54 @@ void Connection::processConfig(std::string config)
 {
 	readFile(CONFIG, Connection::processConfigLine);
 	readFile(config, Connection::processConfigLine);
+	// try {
+	// 	ConfigParser parser(config);
+	// 	parser.parse();
+		
+	// 	const ServerBlocks& servers = parser.getServerBlocks();
+		
+	// 	// default values from the first server block
+	// 	if (!servers.empty()) {
+	// 		const ServerBlock& mainServer = servers[0];
+			
+	// 		// default port
+	// 		if (mainServer.hasKey("listen"))
+	// 			_port = atoi(mainServer.getValue("listen").c_str());
+	// 		else
+	// 			_port = 80; // Default port
+				
+	// 		// All directives to flat config map
+	// 		// Compatibility with current code
+	// 		for (ServerBlocks::const_iterator server = servers.begin(); server != servers.end(); ++server) {
+	// 			std::string serverName = server->hasKey("server_name") ? server->getValue("server_name") : "default";
+				
+	// 			// Server level directives
+	// 			const Directive& serverDirectives = server->getDirectives();
+	// 			for (Directive::const_iterator dir = serverDirectives.begin(); dir != serverDirectives.end(); ++dir) {
+	// 				std::string key = serverName + "." + dir->first;
+	// 				_config[key] = dir->second;
+	// 			}
+				
+	// 			// Location level directives
+	// 			const LocationBlocks& locations = server->getLocations();
+	// 			for (LocationBlocks::const_iterator loc = locations.begin(); loc != locations.end(); ++loc) {
+	// 				std::string locationPath = loc->getPath();
+	// 				const Directive& locDirectives = loc->getDirective();
+					
+	// 				// Add a prefix for regex locations to distinguish them
+	// 				std::string locPrefix = loc->isRegex() ? "~" : "";
+					
+	// 				for (Directive::const_iterator dir = locDirectives.begin(); dir != locDirectives.end(); ++dir) {
+	// 					std::string key = serverName + "." + locPrefix + locationPath + "." + dir->first;
+	// 					_config[key] = dir->second;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// } catch (const std::exception& e) {
+	// 	std::cerr << e.what() << std::endl;
+	// 	exit(1);
+	// }
 }
 
 void Connection::processConfigLine( Connection & i, std::string line )
