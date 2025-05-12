@@ -6,6 +6,7 @@
 
 Configuration::Configuration( std::string const configFile )
 {
+	this->_pad = "";
 	parse(configFile);
 }
 
@@ -40,6 +41,11 @@ std::ostream & operator<<( std::ostream & o, Configuration const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+bool Configuration::isSpace(char c)
+{
+	return (c==' ' || c=='\n' || c=='\t' || c=='\v' || c=='\r' || c=='\f');
+}
+
 std::string Configuration::parse( std::string const file )
 {
 	int fd = open(file.c_str(), O_RDONLY);
@@ -50,10 +56,11 @@ std::string Configuration::parse( std::string const file )
 	else 
 	{
 		char c;
+
 		std::map<int, std::vector<std::string> > levels;
-		std::vector<std::string> level0, level1;
+		std::vector<std::string> level0, level1, level2;
+
 		level0.push_back("server");
-		level0.push_back("{");
 
 		level1.push_back("listen");
 		level1.push_back("server_name");
@@ -61,57 +68,55 @@ std::string Configuration::parse( std::string const file )
 		level1.push_back("index");
 		level1.push_back("autoindex");
 		level1.push_back("return");
-		level1.push_back("}");
+		level1.push_back("location");
+
+		level2.push_back("listen");
+		level2.push_back("server_name");
+		level2.push_back("root");
+		level2.push_back("index");
+		level2.push_back("autoindex");
+		level2.push_back("return");
 
 		levels[0] = level0;
 		levels[1] = level1;
+		levels[2] = level2;
 		int i = 0;
 
 		std::string token = "";
+		std::string prevToken = "";
 		while (read(fd, &c, 1) > 0)
 		{
-			if (c==' ' || c=='\n' || c=='\t' || c=='\v' || c=='\r' || c=='\f')
+			if (isSpace(c))
 			{
-				if (token.size() > 0)
+				if (token.compare("{") == 0)
+					i++;
+				else if (token.compare("}") == 0)
+					i--;
+				else if (isTokenValid(i, token, levels))
 				{
-					bool found = false;
-					for (size_t j = 0; j < levels[i].size(); j++)
+					token.push_back(' ');
+					while (read(fd, &c, 1) > 0)
 					{
-						if (token.compare(levels[i][j]) == 0)
+						if (c == '{')
 						{
-							found = true;
+							i++;
 							break;
 						}
-					}
-					if (found)
-					{
-						if (i == 1 && token.compare("}") != 0)
+						else if (c == '}')
 						{
-							token.push_back(' ');
-							bool compute = false;
-							while (read(fd, &c, 1) > 0)
-							{
-								if (c == ';')
-									break;
-								if (c == ' ' && !compute)
-									continue ;
-								compute = true;
-								token.push_back(c);
-							}
-						}
-						
-						if (token.compare("{") == 0)
-							i++;
-						else if (token.compare("}") == 0)
 							i--;
-						else
-							parseDirective(token);
+							break;
+						}
+						else if (c == ';')
+							break;
+						token.push_back(c);
 					}
-					else
-					{
-						std::cout << "Could not find (" << i << ")" << token << std::endl;
-						throw std::exception();
-					}
+					parseDirective(token);
+				}
+				else if(token.size() > 0)
+				{
+					std::cerr << "[Error] Invalid token: [" << token << "]" << std::endl;
+					throw std::exception();
 				}
 				token = "";
 			}
@@ -122,11 +127,31 @@ std::string Configuration::parse( std::string const file )
 	return "";
 }
 
+
+bool Configuration::isTokenValid(int i, std::string token, std::map<int, std::vector<std::string> > levels)
+{
+	for (size_t j = 0; j < levels[i].size(); j++)
+	{
+		if (token.compare(levels[i][j]) == 0)
+			return true;
+	}
+	return false;
+}
+
 void Configuration::parseDirective( std::string directive )
 {
-	if (directive.compare("server") != 0)
+	if (directive.compare("server ") == 0)
 	{
+		this->_pad = "";
+		std::cout << std::endl;
 		std::cout << directive << std::endl;
+		std::cout << "===================" << std::endl;
+	}
+	else
+	{
+		std::cout << this->_pad << directive << std::endl;
+		if (directive.find("location") != std::string::npos)
+			this->_pad = "  ";
 	}
 }
 

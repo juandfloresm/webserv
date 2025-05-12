@@ -18,8 +18,11 @@ class Configuration
 
 		std::string parse( std::string const file );
 		void parseDirective( std::string directive );
+		bool isSpace(char c);
+		bool isTokenValid(int i, std::string token, std::map<int, std::vector<std::string> > levels);
 	
-	protected:
+	private:
+		std::string _pad;
 
 };
 
