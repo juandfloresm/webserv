@@ -24,6 +24,8 @@ class Configuration
 	
 	private:
 		std::string _pad;
+		bool _parsingServer;
+		bool _parsingLocation;
 
 };
 
