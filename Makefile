@@ -52,7 +52,12 @@ gitter: fclean
 	git push
 
 docker-build:
-	docker build -t $(DOCKER_IMAGE) .
+	@if ! docker image inspect $(DOCKER_IMAGE) > /dev/null 2>&1; then \
+		echo "Building Docker image $(DOCKER_IMAGE)..."; \
+		docker build -t $(DOCKER_IMAGE) .; \
+	else \
+		echo "Docker image $(DOCKER_IMAGE) already exists."; \
+	fi
 
 docker-run: docker-build
 	docker run --rm -d -p $(DOCKER_PORT):$(DOCKER_PORT) -v $(shell pwd):/app --name $(DOCKER_CONTAINER) $(DOCKER_IMAGE)
