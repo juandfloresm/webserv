@@ -16,9 +16,10 @@ class Configuration
 		~Configuration();
 		Configuration & operator=( Configuration const & rhs );
 
-		std::string parse( std::string const file );
+		void parse( std::string const file );
 		void parseDirective( std::string directive );
 		bool isSpace(char c);
+		bool isEnding(char c);
 		bool isTokenValid(int i, std::string token, std::map<int, std::vector<std::string> > levels);
 	
 	private:

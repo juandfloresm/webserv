@@ -46,13 +46,16 @@ bool Configuration::isSpace(char c)
 	return (c==' ' || c=='\n' || c=='\t' || c=='\v' || c=='\r' || c=='\f');
 }
 
-std::string Configuration::parse( std::string const file )
+bool Configuration::isEnding(char c)
+{
+	return (c=='{' || c=='}' || c==';');
+}
+
+void Configuration::parse( std::string const file )
 {
 	int fd = open(file.c_str(), O_RDONLY);
 	if (fd < 0)
-	{
 		throw std::exception();
-	}
 	else 
 	{
 		char c;
@@ -70,8 +73,6 @@ std::string Configuration::parse( std::string const file )
 		level1.push_back("return");
 		level1.push_back("location");
 
-		level2.push_back("listen");
-		level2.push_back("server_name");
 		level2.push_back("root");
 		level2.push_back("index");
 		level2.push_back("autoindex");
@@ -80,10 +81,10 @@ std::string Configuration::parse( std::string const file )
 		levels[0] = level0;
 		levels[1] = level1;
 		levels[2] = level2;
+
 		int i = 0;
 
 		std::string token = "";
-		std::string prevToken = "";
 		while (read(fd, &c, 1) > 0)
 		{
 			if (isSpace(c))
@@ -97,18 +98,14 @@ std::string Configuration::parse( std::string const file )
 					token.push_back(' ');
 					while (read(fd, &c, 1) > 0)
 					{
-						if (c == '{')
+						if (isEnding(c))
 						{
-							i++;
+							if (c == '{')
+								i++;
+							else if (c == '}')
+								i--;
 							break;
 						}
-						else if (c == '}')
-						{
-							i--;
-							break;
-						}
-						else if (c == ';')
-							break;
 						token.push_back(c);
 					}
 					parseDirective(token);
@@ -124,7 +121,6 @@ std::string Configuration::parse( std::string const file )
 				token.push_back(c);
 		}
 	}
-	return "";
 }
 
 
