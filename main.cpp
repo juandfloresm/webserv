@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 	if (argc == 2) {
 		try {
 			std::cout << "Starting server with configuration: " << argv[1] << std::endl;
+			Configuration cf("./config/new.conf");
 			Connection c(argv[1]);
 		}
 		catch (const std::exception& e) {

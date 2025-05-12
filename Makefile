@@ -4,7 +4,7 @@ CC 					:=	c++
 
 FLAGS 				:=	-Wall -Wextra -Werror -pedantic -std=c++98
 
-SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp ConfigParser.cpp
+SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp ConfigParser.cpp Configuration.cpp
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
