@@ -44,7 +44,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Non blocking CGI process"
+	git commit -am "Generalize the concept of server (different port)"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize

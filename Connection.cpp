@@ -18,7 +18,10 @@ Connection::Connection(std::string config)
 
 Connection::~Connection()
 {
-	close(this->_serverSocket);
+	SocketDataEvents e = this->_serverEvents;
+	SocketDataEventsIterator it = e.begin();
+	for( it = e.begin(); it != e.end(); it++)
+		close(it->first);
 }
 
 /*
@@ -27,7 +30,8 @@ Connection::~Connection()
 
 std::ostream & operator<<( std::ostream & o, Connection const & i )
 {
-	o << "Server listening on port = " << i.getPort();
+	(void) i;
+	o << "Connection class" << std::endl;
 	return o;
 }
 
@@ -50,51 +54,70 @@ void Connection::processConfigLine( Connection & i, std::string line )
 	i._config[key] = value;
 }
 
+void Connection::handleSigint( int sgn )
+{
+	(void) sgn;
+	kill(0, SIGKILL);
+}
+
 void Connection::initServer( void )
 {
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		ft_error("[Error] Singal problem");
 		return ;
 	}
-	
-	this->_serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
+	if (signal(SIGINT, handleSigint) == SIG_ERR) {
+		ft_error("[Error] Singal problem");
+		return ;
+	}
+	this->_epollfd = epoll_create(MAX_EVENTS);
+	if (this->_epollfd < 0)
+		ft_error("[Error] creating epoll");
+	initServers();
+	eventLoop();
+}
 
-	if (this->_serverSocket != -1)
+void Connection::initServers( void )
+{
+	int serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
+	if (serverSocket != -1)
 	{
-		memset(&this->_serverAddress, '\0', sizeof(sockaddr_in));
-		memset(&this->_clientAddress, '\0', sizeof(sockaddr_in));
-		this->_serverAddress.sin_family = AF_INET;
-		this->_serverAddress.sin_port = htons(geti("port"));
-		this->_serverAddress.sin_addr.s_addr = INADDR_ANY;
-		this->_clientAddressSize = sizeof(this->_clientAddress);
-
 		int _enable = 1;
-		if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) == 0) {
-			if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
+		if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) == 0) {
+			if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
 			{				
-				if (connect() == -1)
-				{
-					/* Handle binding error */
+				if (connect(serverSocket, this->_config) == -1)
 					ft_error("[Error] binding client socket");
-				}
 			}
 		}
 	}
 	else
-	{
-		/* Handle socket error */
 		ft_error("[Error] opening server socket");
-	}
 }
 
-int Connection::connect()
+int Connection::connect( int serverSocket, Config config )
 {
-	if (bind(this->_serverSocket, (struct sockaddr *) &this->_serverAddress, sizeof(this->_serverAddress)) != -1)
+	int port = geti(config, "port");
+	int connections = geti(config, "connections");
+	sockaddr_in serverAddress;
+	memset(&serverAddress, '\0', sizeof(sockaddr_in));
+	serverAddress.sin_family = AF_INET;
+	serverAddress.sin_port = htons(port);
+	serverAddress.sin_addr.s_addr = INADDR_ANY;
+	if (bind(serverSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) != -1)
 	{
-		if (listen(this->_serverSocket, geti("connections")) == 0)
+		if (listen(serverSocket, connections) == 0)
 		{
-			std::cout << "[Info] server is accepting HTTP connections on port: " << geti("port") << std::endl;
-			eventLoop();
+			std::cout << "[Info] server is accepting HTTP connections on port: " << port << std::endl;
+			struct epoll_event pollEvent;
+			pollEvent.events = EPOLLIN;
+			pollEvent.data.fd = serverSocket;
+			SocketData data;
+			data.pollEvent = pollEvent;
+			data.config = config;
+			this->_serverEvents[serverSocket] = data;
+			if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, serverSocket, &pollEvent) == -1)
+				ft_error("[Error] adding new listeding socket to epoll");
 		}
 		return 0;
 	}
@@ -103,36 +126,36 @@ int Connection::connect()
 
 void Connection::eventLoop( void )
 {
-	preparePolling();
 	int newEvents, sockConnectionFD;
 	while(true)
 	{
 		newEvents = epoll_wait(this->_epollfd, this->_events, MAX_EVENTS, -1);
 		if (newEvents == -1)
 			ft_error("[Error] with epoll_wait");
+		int serverSocket = 0;
 		for (int i = 0; i < newEvents; ++i)
 		{
-			if (this->_events[i].data.fd == this->_serverSocket)
+			serverSocket = this->_events[i].data.fd;
+			if (this->_serverEvents.find(serverSocket) != this->_serverEvents.end())
 			{
-				sockConnectionFD = accept(this->_serverSocket, (struct sockaddr *)&this->_clientAddress, &this->_clientAddressSize);
+				sockaddr_in clientAddress;
+				socklen_t clientAddressSize;
+				memset(&clientAddress, '\0', sizeof(sockaddr_in));
+				clientAddressSize = sizeof(clientAddress);
+				sockConnectionFD = accept(this->_events[i].data.fd, (struct sockaddr *)&clientAddress, &clientAddressSize);
+				this->_clientEvents[sockConnectionFD] = this->_serverEvents[serverSocket];
 				if (sockConnectionFD == -1)
-				{
 					ft_error("[Error] accepting new connection");
-				}
-				this->_pollEvent.events = EPOLLIN | EPOLLET;
-				this->_pollEvent.data.fd = sockConnectionFD;
-				if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, sockConnectionFD, &this->_pollEvent) == -1)
-				{
+				this->_serverEvents[serverSocket].pollEvent.events = EPOLLIN | EPOLLET;
+				this->_serverEvents[serverSocket].pollEvent.data.fd = sockConnectionFD;
+				if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, sockConnectionFD, &this->_serverEvents[serverSocket].pollEvent) == -1)
 					ft_error("[Error] adding new event to epoll");
-				}
 			}
 			else
 			{
 				int newSocketFD = this->_events[i].data.fd;
 				if (newSocketFD != -1)
-				{
 					processClientRequest(newSocketFD);
-				}
 				else
 				{
 					epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, newSocketFD, NULL);
@@ -144,30 +167,20 @@ void Connection::eventLoop( void )
 	}
 }
 
-void Connection::preparePolling( void )
-{
-	this->_epollfd = epoll_create(MAX_EVENTS);
-	if (this->_epollfd < 0)
-	{
-		ft_error("[Error] creating epoll");
-	}
-	this->_pollEvent.events = EPOLLIN;
-	this->_pollEvent.data.fd = this->_serverSocket;
-
-	if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, this->_serverSocket, &this->_pollEvent) == -1)
-	{
-		ft_error("[Error] adding new listeding socket to epoll");
-	}
-}
-
 void Connection::processClientRequest( int clientSocketFD )
 {
-	this->_clientSocket = clientSocketFD;
-	Request req(this->_clientSocket);
-	if (req.getMethod() == UNKNOWN)
-		Response res(NOT_IMPLEMENTED, this->_clientSocket, *this, req);
-	else
-		Response res(OK, this->_clientSocket, *this, req);
+	SocketDataEvents e = this->_clientEvents;
+	SocketDataEventsIterator it = e.find(clientSocketFD);
+	if (it != e.end())
+	{
+		Config config = it->second.config;
+		Request req(clientSocketFD);
+		if (req.getMethod() == UNKNOWN)
+			Response res(NOT_IMPLEMENTED, clientSocketFD, *this, config, req);
+		else
+			Response res(OK, clientSocketFD, *this, config, req);
+		e.erase(it);
+	}
 }
 
 /*
@@ -180,9 +193,8 @@ void Connection::ft_error(const std::string msg) const
 	std::cerr << "[Error] on the event loop" << std::endl;
 }
 
-std::string Connection::gets(std::string key) const
+std::string Connection::gets(Config m, std::string key) const
 {
-	Config m = this->_config;
 	if (m.find(key) == m.end()) {
 		return "";
 	} else {
@@ -190,9 +202,8 @@ std::string Connection::gets(std::string key) const
 	}
 }
 
-int Connection::geti(std::string key) const
+int Connection::geti(Config m, std::string key) const
 {
-	Config m = this->_config;
 	if (m.find(key) == m.end()) {
 		return 0;
 	} else {
@@ -200,9 +211,8 @@ int Connection::geti(std::string key) const
 	}
 }
 
-float Connection::getf(std::string key) const
+float Connection::getf(Config m, std::string key) const
 {
-	Config m = this->_config;
 	if (m.find(key) == m.end()) {
 		return 0;
 	} else {
@@ -234,17 +244,3 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-int Connection::getPort( void ) const
-{
-	return this->_port;
-}
-
-int Connection::getServerSocket() const
-{
-	return this->_serverSocket;
-}
-
-int Connection::getClientSocket() const
-{
-	return this->_clientSocket;
-}
