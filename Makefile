@@ -4,7 +4,7 @@ CC 					:=	c++
 
 FLAGS 				:=	-Wall -Wextra -Werror -pedantic -std=c++98
 
-SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp
+SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp Configuration.cpp
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
@@ -48,7 +48,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Generalize the concept of server (different port)"
+	git commit -am "Configuration: support multiple servers"
 	git push
 
 docker-build:
