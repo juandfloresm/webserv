@@ -9,7 +9,7 @@ class Configuration
 {
 
 	public:
-		Configuration();
+		Configuration( std::string const configFile  );
 		~Configuration();
 		Configuration & operator=( Configuration const & rhs );
 	

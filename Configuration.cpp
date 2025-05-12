@@ -4,8 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Configuration::Configuration()
+Configuration::Configuration( std::string const configFile )
 {
+	(void) configFile;
 }
 
 /*
