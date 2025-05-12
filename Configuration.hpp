@@ -4,14 +4,20 @@
 # include <iostream>
 # include <string>
 # include <map>
+# include <vector>
+# include <fcntl.h>
+# include <unistd.h>
 
 class Configuration
 {
 
 	public:
-		Configuration( std::string const configFile  );
+		Configuration( std::string const configFile );
 		~Configuration();
 		Configuration & operator=( Configuration const & rhs );
+
+		std::string parse( std::string const file );
+		void parseDirective( std::string directive );
 	
 	protected:
 

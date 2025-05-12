@@ -48,7 +48,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: support multiple servers"
+	git commit -am "Configuration: parsing new.conf...printing directive lines"
 	git push
 
 docker-build:
