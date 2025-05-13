@@ -46,9 +46,17 @@ bool Configuration::isSpace(char c)
 	return (c==' ' || c=='\n' || c=='\t' || c=='\v' || c=='\r' || c=='\f');
 }
 
-bool Configuration::isEnding(char c)
+bool Configuration::isEnding(char c, int * i)
 {
-	return (c=='{' || c=='}' || c==';');
+	if (c=='{' || c=='}' || c==';')
+	{
+		if (c == '{')
+			(*i)++;
+		else if (c == '}')
+			(*i)--;
+		return true;
+	}
+	return false;
 }
 
 void Configuration::parse( std::string const file )
@@ -98,14 +106,8 @@ void Configuration::parse( std::string const file )
 					std::string value = "";
 					while (read(fd, &c, 1) > 0)
 					{
-						if (isEnding(c))
-						{
-							if (c == '{')
-								i++;
-							else if (c == '}')
-								i--;
+						if (isEnding(c, &i))
 							break;
-						}
 						value.push_back(c);
 					}
 					parseEntry(std::make_pair(token, value));
@@ -156,6 +158,8 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 {
 	if (directive.first.compare("listen") == 0)
 		cxt.setPort(std::atoi(directive.second.c_str()));
+	else if (directive.first.compare("path") == 0)
+		cxt.setPath(directive.second);
 	else if (directive.first.compare("root") == 0)
 		cxt.setRoot(directive.second);
 	else if (directive.first.compare("server_name") == 0)

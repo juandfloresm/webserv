@@ -6,7 +6,7 @@
 
 Location::Location( )
 {
-
+	this->_path = "/";
 }
 
 /*
@@ -26,6 +26,7 @@ Location::~Location()
 Location & Location::operator=( Location const & rhs )
 {
 	this->_root = rhs.getRoot();
+	this->_path = rhs.getPath();
 	return *this;
 }
 

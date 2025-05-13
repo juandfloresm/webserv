@@ -20,6 +20,9 @@ class Location : public Context
 
 	private:
 		std::string _path;
+		
+		// NOT WIRED
+		std::vector<std::string> _methods;
 
 };
 

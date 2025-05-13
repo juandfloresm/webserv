@@ -87,6 +87,9 @@ void Context::setAutoIndex( bool autoIndex )
 	this->_autoIndex = autoIndex;
 }
 
+/*
+** --------------------------------- VIRTUAL ---------------------------------
+*/
 
 int Context::getPort( void ) const
 {
@@ -106,4 +109,14 @@ std::vector<std::string> Context::getServerNames( void ) const
 void Context::setServerName( std::string serverName )
 {
 	(void) serverName;
+}
+
+std::string Context::getPath( void ) const
+{
+	return "/";
+}
+
+void Context::setPath( std::string path )
+{
+	(void) path;
 }

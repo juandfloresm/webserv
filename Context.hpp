@@ -28,13 +28,18 @@ class Context
 		virtual std::vector<std::string> getServerNames( void ) const;
 		virtual void setServerName( std::string serverName );
 
+		virtual std::string getPath( void ) const;
+		virtual void setPath( std::string path );
+
 	protected:
 		std::string _root;
-		std::pair<int, std::string> _errorPage;
 		std::vector<std::string> _return;
 		std::vector<std::string> _index;
 		bool _autoIndex;
-
+		
+		// NOT WIRED
+		std::pair<int, std::string> _errorPage;
+		long _clientMaxBodySize;
 };
 
 std::ostream & operator<<( std::ostream & o, Context const & i );

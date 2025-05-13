@@ -27,7 +27,7 @@ class Configuration
 		void parse( std::string const file );
 		void parseEntry( Entry directive );
 		bool isSpace(char c);
-		bool isEnding(char c);
+		bool isEnding(char c, int * i);
 		bool isTokenValid(int i, std::string token, std::map<int, std::vector<std::string> > levels);
 		ServerList & getServerList( void );
 		void parseContext( Context & cxt, Entry directive );

@@ -49,7 +49,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup"
+	git commit -am "Configuration: supporting fields"
 	git push
 
 docker-build:
