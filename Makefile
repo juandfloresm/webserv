@@ -50,7 +50,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: creating server classes"
+	git commit -am "Configuration: supporting multiple servers on multiple ports. Static files on port 80, dynamic files on port 8080"
 	git push
 
 docker-build:
