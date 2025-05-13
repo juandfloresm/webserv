@@ -30,6 +30,7 @@ typedef struct _data
 	EpollEvent pollEvent;
 	int serverSocket;
 	int clientSocket;
+	int port;
 } SocketData;
 
 typedef std::map<int, SocketData> SocketDataEvents;
@@ -42,13 +43,13 @@ class Connection
 {
 
 	public:
-		Connection( std::string config, Configuration & cfg );
+		Connection( Configuration & cfg );
 		~Connection();
 
 		void processConfig(std::string config);
 		static void processConfigLine( Connection & i, std::string line );
 		void initServer( void );
-		int connect( int serverSocket, Config config );
+		int connect( int serverSocket, int port, int connections );
 		void initServers( void );
 		void eventLoop( void );
 
@@ -60,6 +61,7 @@ class Connection
 		float getf(Config m, std::string key) const;
 		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 		static void handleSigint( int sgn );
+		Configuration & getConfiguration( void ) const;
 
 	private:
 		unsigned int _port;

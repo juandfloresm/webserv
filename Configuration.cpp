@@ -4,9 +4,8 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Configuration::Configuration( std::string const configFile )
+Configuration::Configuration( std::string const configFile ) 
 {
-	this->_pad = "";
 	parse(configFile);
 }
 
@@ -16,6 +15,7 @@ Configuration::Configuration( std::string const configFile )
 
 Configuration::~Configuration()
 {
+
 }
 
 
@@ -66,11 +66,11 @@ void Configuration::parse( std::string const file )
 		level0.push_back("server");
 
 		level1.push_back("listen");
-		level1.push_back("server_name");
 		level1.push_back("root");
+		level1.push_back("server_name");
+		level1.push_back("return");
 		level1.push_back("index");
 		level1.push_back("autoindex");
-		level1.push_back("return");
 		level1.push_back("location");
 
 		level2.push_back("root");
@@ -108,7 +108,7 @@ void Configuration::parse( std::string const file )
 						}
 						value.push_back(c);
 					}
-					parseEntry(i, std::make_pair(token, value));
+					parseEntry(std::make_pair(token, value));
 				}
 				else if(token.size() > 0)
 				{
@@ -134,32 +134,65 @@ bool Configuration::isTokenValid(int i, std::string token, std::map<int, std::ve
 	return false;
 }
 
-void Configuration::parseEntry( int level, Entry directive )
+void Configuration::parseEntry( Entry directive )
 {
-	(void) level;
 	if (directive.first.compare("server") == 0)
 	{
-		this->_server = Server();
-		this->_servers.push_back(this->_server);
+		this->_servers.push_back(Server());
 		this->_parsingServer = true;
-		this->_pad = "";
-		std::cout << std::endl;
-		std::cout << directive.first << std::endl;
-		std::cout << "===================" << std::endl;
 	}
-	else
+	else if (directive.first.compare("location") == 0)
 	{
+		this->_servers.back().setLocation(Location());
 		this->_parsingServer = false;
-		std::cout << this->_pad << directive.first << ": " << directive.second << std::endl;
-		if (directive.first.compare("listen"))
-		{
-			this->_server.setPort(std::atoi(directive.second.c_str()));
-		}
-		if (directive.first.compare("location") == 0)
-			this->_pad = "  ";
+	}
+	else if (this->_parsingServer)
+		parseContext(this->_servers.back(), directive);
+	else
+		parseContext(this->_servers.back().getLocations().back(), directive);
+}
+
+void Configuration::parseContext( Context & cxt, Entry directive )
+{
+	if (directive.first.compare("listen") == 0)
+		cxt.setPort(std::atoi(directive.second.c_str()));
+	else if (directive.first.compare("root") == 0)
+		cxt.setRoot(directive.second);
+	else if (directive.first.compare("server_name") == 0)
+	{
+		std::istringstream f(directive.second);
+		std::string s;
+		while (getline(f, s, ' '))
+			cxt.setServerName(s);
+	}
+	else if (directive.first.compare("return") == 0)
+	{
+		std::istringstream f(directive.second);
+		std::string s;
+		while (getline(f, s, ' '))
+			cxt.setReturn(s);
+	}
+	else if (directive.first.compare("index") == 0)
+	{
+		std::istringstream f(directive.second);
+		std::string s;
+		cxt.getIndex().clear();
+		while (getline(f, s, ' '))
+			cxt.setIndex(s);
+	}
+	else if (directive.first.compare("autoindex") == 0)
+	{
+		if (directive.second.compare("on") == 0)
+			cxt.setAutoIndex(true);
+		else
+			cxt.setAutoIndex(false);
 	}
 }
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
+ServerList & Configuration::getServerList( void )
+{
+	return this->_servers;
+}

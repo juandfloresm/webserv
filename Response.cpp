@@ -4,10 +4,10 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response(Status status, int clientSocket, const Connection & connection, Config & config, Request & request) : Message(), _status(status), _connection(connection), _config(config), _request(request), _clientSocket(clientSocket)
+Response::Response(Status status, int clientSocket, const Connection & connection, int port, Request & request) : Message(), _status(status), _clientSocket(clientSocket), _connection(connection), _port(port), _request(request)
 {
-	setMajorVersion(connection.geti(this->_config, "major_version"));
-	setMinorVersion(connection.geti(this->_config, "minor_version"));
+	setMajorVersion(MAJOR_VERSION);
+	setMinorVersion(MINOR_VERSION);
 	initStatusDescriptions();
 	this->_headerSection = "";
 	if (status == OK)
@@ -51,9 +51,10 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 
 void Response::doResponse( void )
 {
+	this->matchServer();
 	if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
 	{
-		std::string base = this->_connection.gets(this->_config, "dynamic_route");
+		std::string base = this->_server.getRoot();
 		std::string script = this->_request.getResource();
 		std::string binary = this->_request.getResource().find(".php") != std::string::npos ? CGI_PHP : (base + script);
 		int sock = this->_clientSocket;
@@ -75,6 +76,18 @@ void Response::doResponse( void )
 	{
 		this->_content = readStaticPage();
 		doSend(this->_clientSocket);
+	}
+}
+
+void Response::matchServer( void )
+{
+	Configuration & cfg = this->_connection.getConfiguration();
+	ServerList list = cfg.getServerList();
+	ServerList::iterator it = list.begin();
+	for(; it < list.end(); it++)
+	{
+		if (it->getPort() == this->_port)
+			this->_server = *it;
 	}
 }
 
@@ -189,7 +202,8 @@ const std::string Response::toString( void ) const
 std::string Response::readError( std::string status ) const
 {
 	std::string line;
-	std::string filePath = this->_connection.gets(this->_config, "error_pages") + '/' + status + ".html";
+	std::string base = this->_server.getRoot();
+	std::string filePath = base + '/' + status + ".html";
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
@@ -203,7 +217,7 @@ std::string Response::readError( std::string status ) const
 
 std::string Response::readStaticPage( void ) const
 {
-	std::string base = this->_connection.gets(this->_config, "static_route");
+	std::string base = this->_server.getRoot();
 	std::string path = this->_request.getResource();
 
 	if (path.empty() || path[0] != '/')
@@ -211,7 +225,7 @@ std::string Response::readStaticPage( void ) const
 	
 	bool isDirectory = (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
 	if (isDirectory)
-		path += "index.html"; // Default file
+		path += "index.html";
 
 	std::string filePath = base + path;
 	std::cout << "Serving file: " << filePath << std::endl;
@@ -246,7 +260,7 @@ void Response::setSingleEnv(char **env, std::string const s, int i)
 
 char **Response::getEnv( void )
 {
-	std::string base = this->_connection.gets(this->_config, "dynamic_route");
+	std::string base = this->_server.getRoot();
 	std::string path = this->_request.getResource();
 	std::string method = "";
 	
@@ -256,7 +270,7 @@ char **Response::getEnv( void )
 		method = "POST";
 	else if (this->_request.getMethod() == DELETE) {
 		method = "DELETE";
-		std::string path = this->_connection.gets(this->_config, "static_route") + this->_request.getResource();
+		std::string path = base + this->_request.getResource();
 		if (std::remove(path.c_str()) == 0) {
 			this->_status = OK;
 		} else {
@@ -282,7 +296,6 @@ char **Response::getEnv( void )
 	headerList.push_back("SCRIPT_FILENAME=" + base + path);
 	headerList.push_back("PATH_INFO=" + base + path);
 	headerList.push_back("PATH_TRANSLATED=" + base + path);
-
 	headerList.push_back("REQUEST_URI=/");
 	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
 	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");

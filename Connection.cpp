@@ -7,9 +7,9 @@ const char Connection::CONFIG_SEP = '=';
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Connection::Connection(std::string config, Configuration & cfg) : _cfg(cfg)
+Connection::Connection( Configuration & cfg ) : _cfg(cfg)
 {
-	processConfig(config);
+	// processConfig(config);
 	initServer();
 }
 
@@ -59,26 +59,29 @@ void Connection::initServer( void )
 
 void Connection::initServers( void )
 {
-	int serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-	if (serverSocket != -1)
+	ServerList list = this->_cfg.getServerList();
+	ServerListIterator it = list.begin();
+	for (; it < list.end(); it++)
 	{
-		int _enable = 1;
-		if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) == 0) {
-			if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
-			{				
-				if (connect(serverSocket, this->_config) == -1)
-					ft_error("[Error] binding client socket");
+		int serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
+		if (serverSocket != -1)
+		{
+			int _enable = 1;
+			if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) == 0) {
+				if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
+				{				
+					if (connect(serverSocket, it->getPort(), 10) == -1) // TODO
+						ft_error("[Error] binding client socket");
+				}
 			}
 		}
+		else
+			ft_error("[Error] opening server socket");
 	}
-	else
-		ft_error("[Error] opening server socket");
 }
 
-int Connection::connect( int serverSocket, Config config )
+int Connection::connect( int serverSocket, int port, int connections )
 {
-	int port = geti(config, "port");
-	int connections = geti(config, "connections");
 	sockaddr_in serverAddress;
 	memset(&serverAddress, '\0', sizeof(sockaddr_in));
 	serverAddress.sin_family = AF_INET;
@@ -94,7 +97,7 @@ int Connection::connect( int serverSocket, Config config )
 			pollEvent.data.fd = serverSocket;
 			SocketData data;
 			data.pollEvent = pollEvent;
-			data.config = config;
+			data.port = port;
 			this->_serverEvents[serverSocket] = data;
 			if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, serverSocket, &pollEvent) == -1)
 				ft_error("[Error] adding new listeding socket to epoll");
@@ -153,12 +156,11 @@ void Connection::processClientRequest( int clientSocketFD )
 	SocketDataEventsIterator it = e.find(clientSocketFD);
 	if (it != e.end())
 	{
-		Config config = it->second.config;
 		Request req(clientSocketFD);
 		if (req.getMethod() == UNKNOWN)
-			Response res(NOT_IMPLEMENTED, clientSocketFD, *this, config, req);
+			Response res(NOT_IMPLEMENTED, clientSocketFD, *this, it->second.port, req);
 		else
-			Response res(OK, clientSocketFD, *this, config, req);
+			Response res(OK, clientSocketFD, *this, it->second.port, req);
 		e.erase(it);
 	}
 }
@@ -293,3 +295,7 @@ void Connection::readFile( std::string file, void (*f)( Connection & i, std::str
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+Configuration & Connection::getConfiguration( void ) const
+{
+	return this->_cfg;
+}

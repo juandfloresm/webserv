@@ -4,11 +4,13 @@ CC 					:=	c++
 
 FLAGS 				:=	-Wall -Wextra -Werror -pedantic -std=c++98
 
-SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp ConfigParser.cpp Configuration.cpp Server.cpp
+SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
+						ConfigParser.cpp \
+						Configuration.cpp Context.cpp Server.cpp Location.cpp
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
-ARG					:=	./config/my.conf
+ARG					:=	./config/zweb.conf
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -26,12 +28,12 @@ clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME)
+	sudo pkill webserv ; rm -f $(NAME)
 
 re: fclean all
 
 runner: re
-	./$(NAME) $(ARG)
+	sudo ./$(NAME) $(ARG)
 
 valgrind: re
 	valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)

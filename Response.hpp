@@ -11,12 +11,15 @@
 # include "Message.hpp"
 # include "Connection.hpp"
 # include "Request.hpp"
+# include "Server.hpp"
 
 # define CRLF "\r\n"
 # define CGI_PHP "/usr/bin/php-cgi"
 # define CGI_PY "/usr/bin/python3"
 # define GCI_PERL "/usr/bin/perl"
 # define CGI_BUFFSIZE 2048
+# define MAJOR_VERSION 1
+# define MINOR_VERSION 1
 
 typedef std::map<std::string, std::string> Config;
 
@@ -80,7 +83,7 @@ class Response : public Message
 
 	public:
 
-		Response(Status status, int clientSocket, const Connection & connection, Config & config, Request & request);
+		Response(Status status, int clientSocket, const Connection & connection, int port, Request & request);
 		~Response();
 
 		Response & operator=( Response const & rhs );
@@ -104,19 +107,21 @@ class Response : public Message
 		void setSingleEnv(char **env, std::string const s, int i);
 		std::string headerTransform(std::string s);
 		static unsigned char headerCharTransform(unsigned char c);
+		void matchServer( void );
 
 	private:
-		Status _status;
 		std::string _statusString;
 		std::string _description;
 		std::string _headerSection;
 		StatusDescription _statusDescriptions;
-		const Connection & _connection;
-		Config _config;
 		std::string _content;
 		long _contentLength;
-		Request & _request;
+		Status _status;
 		int _clientSocket;
+		const Connection & _connection;
+		int _port;
+		Request & _request;
+		Server _server;
 
 		std::string getMimeType(const std::string& path) const;
 };

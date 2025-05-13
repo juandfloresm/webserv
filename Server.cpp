@@ -24,7 +24,9 @@ Server::~Server()
 
 Server & Server::operator=( Server const & rhs )
 {
-	(void) rhs;
+	this->_port = rhs.getPort();
+	this->_serverNames = rhs.getServerNames();
+	this->_root = rhs.getRoot();
 	return *this;
 }
 
@@ -53,4 +55,24 @@ int Server::getPort( void ) const
 void Server::setPort( int port )
 {
 	this->_port = port;
+}
+
+std::vector<std::string> Server::getServerNames( void ) const
+{
+	return this->_serverNames;
+}
+
+void Server::setServerName( std::string serverName )
+{
+	this->_serverNames.push_back(serverName);
+}
+
+std::vector<Location> Server::getLocations( void ) const
+{
+	return this->_locations;
+}
+
+void Server::setLocation( Location location )
+{
+	this->_locations.push_back(location);
 }

@@ -3,15 +3,18 @@
 
 # include <iostream>
 # include <string>
+# include <sstream>
 # include <map>
 # include <vector>
 # include <utility>
 # include <cstdlib>
 # include <fcntl.h>
 # include <unistd.h>
-# include "./Server.hpp"
+# include "Server.hpp"
 
 typedef std::pair<std::string, std::string> Entry;
+typedef std::vector<Server> ServerList;
+typedef ServerList::iterator ServerListIterator;
 
 class Configuration
 {
@@ -22,16 +25,16 @@ class Configuration
 		Configuration & operator=( Configuration const & rhs );
 
 		void parse( std::string const file );
-		void parseEntry( int level, Entry directive );
+		void parseEntry( Entry directive );
 		bool isSpace(char c);
 		bool isEnding(char c);
 		bool isTokenValid(int i, std::string token, std::map<int, std::vector<std::string> > levels);
+		ServerList & getServerList( void );
+		void parseContext( Context & cxt, Entry directive );
 	
 	private:
-		std::string _pad;
 		bool _parsingServer;
-		Server _server;
-		std::vector<Server> _servers;
+		ServerList _servers;
 
 };
 
