@@ -68,9 +68,8 @@ void Response::doResponse( void )
 		{
 			this->_content = readDynamicPage(binary);
 			doSend(sock);
-		}
-		else
 			exit(0);
+		}
 	}
 	else
 	{
