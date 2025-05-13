@@ -13,7 +13,10 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 	if (status == OK)
 		doResponse();
 	else
+	{
+		matchServer();
 		doSend(clientSocket);
+	}
 }
 
 
@@ -49,9 +52,20 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+void Response::matchServer( void )
+{
+	Configuration & cfg = this->_connection.getConfiguration();
+	ServerList list = cfg.getServerList();
+	ServerList::iterator it = list.begin();
+	for(; it < list.end(); it++)
+	{
+		if (it->getPort() == this->_port)
+			this->_server = *it;
+	}
+}
+
 void Response::doResponse( void )
 {
-	this->matchServer();
 	if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
 	{
 		std::string base = this->_server.getRoot();
@@ -78,18 +92,6 @@ void Response::doResponse( void )
 	}
 }
 
-void Response::matchServer( void )
-{
-	Configuration & cfg = this->_connection.getConfiguration();
-	ServerList list = cfg.getServerList();
-	ServerList::iterator it = list.begin();
-	for(; it < list.end(); it++)
-	{
-		if (it->getPort() == this->_port)
-			this->_server = *it;
-	}
-}
-
 void Response::doSend( int fd )
 {
 	this->_contentLength = this->_content.size();
@@ -100,54 +102,6 @@ void Response::doSend( int fd )
 	std::string resp = toString();
 	send(fd, resp.c_str(), resp.size(), 0);
 	close(this->_clientSocket);
-}
-
-void Response::initStatusDescriptions( void )
-{
-	/* 100 - 199 (Informational) */
-	this->_statusDescriptions[CONTINUE] = "Continue";
-	this->_statusDescriptions[SWITCHING_PROTOCOLOS] = "Switching Protocols";
-
-	/* 200 - 299 .............................. */
-	this->_statusDescriptions[OK] = "OK";
-	this->_statusDescriptions[CREATED] = "Created";
-	this->_statusDescriptions[ACCEPTED] = "Accepted";
-	this->_statusDescriptions[NO_CONTENT] = "No Content";
-	this->_statusDescriptions[PARTIAL_CONTENT] = "Partial Content";
-
-	/* 300 - 399 .............................. */
-	this->_statusDescriptions[MULTIPLE_CHOICES] = "Multiple Choices";
-	this->_statusDescriptions[MOVED_PERMANENTLY] = "Moved Permanently";
-	this->_statusDescriptions[FOUND] = "Found";
-	this->_statusDescriptions[SEE_OTHER] = "See Other";
-	this->_statusDescriptions[NOT_MODIFIED] = "Not Modified";
-	this->_statusDescriptions[TEMPORARY_REDIRECT] = "Temporary Redirect";
-	this->_statusDescriptions[PERMANENET_REDIRECT] = "Permanent Redirect";
-
-	/* 400 - 499 .............................. */
-	this->_statusDescriptions[BAD_REQUEST] = "Bad Request";
-	this->_statusDescriptions[UNAUTHORIZED] = "Unauthorized";
-	this->_statusDescriptions[FORBIDDEN] = "Forbidden";
-	this->_statusDescriptions[NOT_FOUND] = "Not Found";
-	this->_statusDescriptions[METHOD_NOT_ALLOWED] = "Method Not Allowed";
-	this->_statusDescriptions[NOT_ACCEPTABLE] = "Not Acceptable";
-	this->_statusDescriptions[REQUEST_TIMEOUT] = "Request Timeout";
-	this->_statusDescriptions[CONFLICT] = "Conlifct";
-	this->_statusDescriptions[GONE] = "Gone";
-	this->_statusDescriptions[LENGTH_REQUIRED] = "Length Required";
-	this->_statusDescriptions[PAYLOAD_TOO_LARGE] = "Payload Too Large";
-	this->_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
-	this->_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
-	this->_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";
-	this->_statusDescriptions[TOO_MANY_REQUESTS] = "Too Many Requests";
-
-	/* 500 - 599 .............................. */
-	this->_statusDescriptions[INTERNAL_SERVER_ERROR] = "Internal Server Error";
-	this->_statusDescriptions[NOT_IMPLEMENTED] = "Not Implemented";
-	this->_statusDescriptions[BAD_GATEWAY] = "Bad Gateway";
-	this->_statusDescriptions[SERVICE_UNAVAILABLE] = "Service Unavailable";
-	this->_statusDescriptions[GATEWAY_TIMEOUT] = "Gateway Timeout";
-	this->_statusDescriptions[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
 }
 
 const std::string Response::toString( void ) const
@@ -178,9 +132,7 @@ const std::string Response::toString( void ) const
 			r += top + CRLF;
 		}
 		else
-		{
 			r += this->_statusString + " " + getDescription() + CRLF;
-		}
 		r += "Content-Length: " + contentLength + CRLF;
 		r += this->_headerSection;
 	}
@@ -240,91 +192,6 @@ std::string Response::readStaticPage( void ) const
 	content << file.rdbuf();
 	file.close();
 	return content.str();
-}
-
-void Response::clearEnv( char **env )
-{
-	int i = 0;
-	while (env[i])
-		delete [] env[i++];
-	delete [] env;
-}
-
-void Response::setSingleEnv(char **env, std::string const s, int i)
-{
-	env[i] = new char[s.size() + 1];
-	if (env[i])
-		env[i] = strcpy(env[i], s.c_str());	
-}
-
-char **Response::getEnv( void )
-{
-	std::string base = this->_server.getRoot();
-	std::string path = this->_request.getResource();
-	std::string method = "";
-	
-	if (this->_request.getMethod() == GET)
-		method = "GET";
-	else if (this->_request.getMethod() == POST)
-		method = "POST";
-	else if (this->_request.getMethod() == DELETE) {
-		method = "DELETE";
-		std::string path = base + this->_request.getResource();
-		if (std::remove(path.c_str()) == 0) {
-			this->_status = OK;
-		} else {
-			this->_status = NOT_FOUND;
-		}
-	}
-	else
-	{
-		this->_status = NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	Header headers = this->_request.getHeaders();
-	std::vector<std::string> headerList;
-	HeaderIterator it = headers.begin();
-	std::string key;
-	for (; it != headers.end(); it++)
-	{
-		key = headerTransform(it->first);
-		headerList.push_back("HTTP_" + key + "=" + it->second);
-	}
-	headerList.push_back("SCRIPT_NAME=" + base + path);
-	headerList.push_back("SCRIPT_FILENAME=" + base + path);
-	headerList.push_back("PATH_INFO=" + base + path);
-	headerList.push_back("PATH_TRANSLATED=" + base + path);
-	headerList.push_back("REQUEST_URI=/");
-	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
-	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	headerList.push_back("REQUEST_METHOD=" + method);
-	headerList.push_back("REDIRECT_STATUS=200");
-	headerList.push_back("SERVER_PROTOCOL=HTTP/1.1");
-	headerList.push_back("SERVER_PORT=80");
-	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
-	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
-
-	std::string auth = this->_request.header("Authorization");
-	if (auth.length() > 0)
-	{
-		std::string scheme, userId;
-		std::istringstream f(auth);
-		getline(f, scheme, ' ');
-		getline(f, userId, ' ');
-		headerList.push_back("AUTH_TYPE=" + scheme);
-		headerList.push_back("REMOTE_USER=" + userId);
-	}
-
-	char **env = new char*[headerList.size() + 1];
-	if (env != NULL)
-	{
-		for (size_t i = 0; i < headerList.size(); i++)
-			setSingleEnv(env, headerList[i], i);
-		env[headerList.size()] = NULL;
-	}
-
-	return env;
 }
 
 std::string Response::readDynamicPage( const std::string binary )
@@ -426,6 +293,144 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 	return (parsed);
 }
 
+/*
+** --------------------------------- UTILITIES ---------------------------------
+*/
+
+void Response::clearEnv( char **env )
+{
+	int i = 0;
+	while (env[i])
+		delete [] env[i++];
+	delete [] env;
+}
+
+void Response::setSingleEnv(char **env, std::string const s, int i)
+{
+	env[i] = new char[s.size() + 1];
+	if (env[i])
+		env[i] = strcpy(env[i], s.c_str());	
+}
+
+char **Response::getEnv( void )
+{
+	std::string base = this->_server.getRoot();
+	std::string path = this->_request.getResource();
+	std::string method = "";
+	
+	if (this->_request.getMethod() == GET)
+		method = "GET";
+	else if (this->_request.getMethod() == POST)
+		method = "POST";
+	else if (this->_request.getMethod() == DELETE) {
+		method = "DELETE";
+		std::string path = base + this->_request.getResource();
+		if (std::remove(path.c_str()) == 0) {
+			this->_status = OK;
+		} else {
+			this->_status = NOT_FOUND;
+		}
+	}
+	else
+	{
+		this->_status = NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	Header headers = this->_request.getHeaders();
+	std::vector<std::string> headerList;
+	HeaderIterator it = headers.begin();
+	std::string key;
+	for (; it != headers.end(); it++)
+	{
+		key = headerTransform(it->first);
+		headerList.push_back("HTTP_" + key + "=" + it->second);
+	}
+	headerList.push_back("SCRIPT_NAME=" + base + path);
+	headerList.push_back("SCRIPT_FILENAME=" + base + path);
+	headerList.push_back("PATH_INFO=" + base + path);
+	headerList.push_back("PATH_TRANSLATED=" + base + path);
+	headerList.push_back("REQUEST_URI=/");
+	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
+	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	headerList.push_back("REQUEST_METHOD=" + method);
+	headerList.push_back("REDIRECT_STATUS=200");
+	headerList.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	headerList.push_back("SERVER_PORT=80");
+	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
+	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
+
+	std::string auth = this->_request.header("Authorization");
+	if (auth.length() > 0)
+	{
+		std::string scheme, userId;
+		std::istringstream f(auth);
+		getline(f, scheme, ' ');
+		getline(f, userId, ' ');
+		headerList.push_back("AUTH_TYPE=" + scheme);
+		headerList.push_back("REMOTE_USER=" + userId);
+	}
+
+	char **env = new char*[headerList.size() + 1];
+	if (env != NULL)
+	{
+		for (size_t i = 0; i < headerList.size(); i++)
+			setSingleEnv(env, headerList[i], i);
+		env[headerList.size()] = NULL;
+	}
+
+	return env;
+}
+
+void Response::initStatusDescriptions( void )
+{
+	/* 100 - 199 (Informational) */
+	this->_statusDescriptions[CONTINUE] = "Continue";
+	this->_statusDescriptions[SWITCHING_PROTOCOLOS] = "Switching Protocols";
+
+	/* 200 - 299 .............................. */
+	this->_statusDescriptions[OK] = "OK";
+	this->_statusDescriptions[CREATED] = "Created";
+	this->_statusDescriptions[ACCEPTED] = "Accepted";
+	this->_statusDescriptions[NO_CONTENT] = "No Content";
+	this->_statusDescriptions[PARTIAL_CONTENT] = "Partial Content";
+
+	/* 300 - 399 .............................. */
+	this->_statusDescriptions[MULTIPLE_CHOICES] = "Multiple Choices";
+	this->_statusDescriptions[MOVED_PERMANENTLY] = "Moved Permanently";
+	this->_statusDescriptions[FOUND] = "Found";
+	this->_statusDescriptions[SEE_OTHER] = "See Other";
+	this->_statusDescriptions[NOT_MODIFIED] = "Not Modified";
+	this->_statusDescriptions[TEMPORARY_REDIRECT] = "Temporary Redirect";
+	this->_statusDescriptions[PERMANENET_REDIRECT] = "Permanent Redirect";
+
+	/* 400 - 499 .............................. */
+	this->_statusDescriptions[BAD_REQUEST] = "Bad Request";
+	this->_statusDescriptions[UNAUTHORIZED] = "Unauthorized";
+	this->_statusDescriptions[FORBIDDEN] = "Forbidden";
+	this->_statusDescriptions[NOT_FOUND] = "Not Found";
+	this->_statusDescriptions[METHOD_NOT_ALLOWED] = "Method Not Allowed";
+	this->_statusDescriptions[NOT_ACCEPTABLE] = "Not Acceptable";
+	this->_statusDescriptions[REQUEST_TIMEOUT] = "Request Timeout";
+	this->_statusDescriptions[CONFLICT] = "Conlifct";
+	this->_statusDescriptions[GONE] = "Gone";
+	this->_statusDescriptions[LENGTH_REQUIRED] = "Length Required";
+	this->_statusDescriptions[PAYLOAD_TOO_LARGE] = "Payload Too Large";
+	this->_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
+	this->_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+	this->_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";
+	this->_statusDescriptions[TOO_MANY_REQUESTS] = "Too Many Requests";
+
+	/* 500 - 599 .............................. */
+	this->_statusDescriptions[INTERNAL_SERVER_ERROR] = "Internal Server Error";
+	this->_statusDescriptions[NOT_IMPLEMENTED] = "Not Implemented";
+	this->_statusDescriptions[BAD_GATEWAY] = "Bad Gateway";
+	this->_statusDescriptions[SERVICE_UNAVAILABLE] = "Service Unavailable";
+	this->_statusDescriptions[GATEWAY_TIMEOUT] = "Gateway Timeout";
+	this->_statusDescriptions[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
+}
+
+
 std::string Response::getMimeType(const std::string& path) const {
 	std::string extension = "";
 
@@ -462,10 +467,6 @@ std::string Response::getMimeType(const std::string& path) const {
 
 	return "application/octet-stream"; // Default MIME type for unknown extensions
 }
-
-/*
-** --------------------------------- UTILITIES ---------------------------------
-*/
 
 std::string Response::headerTransform(std::string s)
 {

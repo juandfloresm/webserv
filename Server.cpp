@@ -78,3 +78,13 @@ void Server::setLocation( Location location )
 {
 	this->_locations.push_back(location);
 }
+
+bool Server::isDefault( void ) const
+{
+	return this->_default;
+}
+
+void Server::setDefault( bool default )
+{
+	this->_default = default;
+}

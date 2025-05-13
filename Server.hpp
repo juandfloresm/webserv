@@ -21,9 +21,12 @@ class Server : public Context
 		void setServerName( std::string serverName );
 		std::vector<Location> getLocations( void ) const;
 		void setLocation( Location location );
+		bool isDefault( void ) const;
+		void setDefault( bool default );
 
 	private:
 		int _port;
+		bool _default;
 		std::vector<std::string> _serverNames;
 		std::vector<Location> _locations;
 };
