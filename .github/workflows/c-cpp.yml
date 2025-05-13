@@ -1,0 +1,22 @@
+name: C++ Tests on tester Branch
+
+on:
+  push:
+    branches: [tester]
+
+jobs:
+  test-request:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install build tools
+      run: sudo apt-get update && sudo apt-get install -y g++ make
+
+    - name: Build test binary
+      run: make -C tests
+
+    - name: Run tests
+      run: ./tests/test_request
+
