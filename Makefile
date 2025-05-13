@@ -5,7 +5,6 @@ CC 					:=	c++
 FLAGS 				:=	-Wall -Wextra -Werror -pedantic -std=c++98
 
 SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
-						ConfigParser.cpp \
 						Configuration.cpp Context.cpp Server.cpp Location.cpp
 
 OBJ 				:=	$(SRC:.cpp=.o)
@@ -50,7 +49,7 @@ siege:
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: supporting multiple servers on multiple ports. Static files on port 80, dynamic files on port 8080"
+	git commit -am "Cleanup"
 	git push
 
 docker-build:

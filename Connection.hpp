@@ -46,8 +46,6 @@ class Connection
 		Connection( Configuration & cfg );
 		~Connection();
 
-		void processConfig(std::string config);
-		static void processConfigLine( Connection & i, std::string line );
 		void initServer( void );
 		int connect( int serverSocket, int port, int connections );
 		void initServers( void );
@@ -56,10 +54,6 @@ class Connection
 		void processClientRequest( int clientSocketFD );
 		
 		void ft_error(const std::string msg) const;
-		std::string gets(Config m, std::string key) const;
-		int geti(Config m, std::string key) const;
-		float getf(Config m, std::string key) const;
-		void readFile( std::string file, void (*f)( Connection & i, std::string line ) );
 		static void handleSigint( int sgn );
 		Configuration & getConfiguration( void ) const;
 

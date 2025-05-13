@@ -1,5 +1,4 @@
 #include "Connection.hpp"
-#include "ConfigParser.hpp"
 
 const char Connection::CONFIG_SEP = '=';
 
@@ -9,7 +8,6 @@ const char Connection::CONFIG_SEP = '=';
 
 Connection::Connection( Configuration & cfg ) : _cfg(cfg)
 {
-	// processConfig(config);
 	initServer();
 }
 
@@ -175,120 +173,10 @@ void Connection::handleSigint( int sgn )
 	kill(0, SIGKILL);
 }
 
-void Connection::processConfig(std::string config)
-{
-	readFile(CONFIG, Connection::processConfigLine);
-	readFile(config, Connection::processConfigLine);
-	// try {
-	// 	ConfigParser parser(config);
-	// 	parser.parse();
-		
-	// 	const ServerBlocks& servers = parser.getServerBlocks();
-		
-	// 	// default values from the first server block
-	// 	if (!servers.empty()) {
-	// 		const ServerBlock& mainServer = servers[0];
-			
-	// 		// default port
-	// 		if (mainServer.hasKey("listen"))
-	// 			_port = atoi(mainServer.getValue("listen").c_str());
-	// 		else
-	// 			_port = 80; // Default port
-				
-	// 		// All directives to flat config map
-	// 		// Compatibility with current code
-	// 		for (ServerBlocks::const_iterator server = servers.begin(); server != servers.end(); ++server) {
-	// 			std::string serverName = server->hasKey("server_name") ? server->getValue("server_name") : "default";
-				
-	// 			// Server level directives
-	// 			const Directive& serverDirectives = server->getDirectives();
-	// 			for (Directive::const_iterator dir = serverDirectives.begin(); dir != serverDirectives.end(); ++dir) {
-	// 				std::string key = serverName + "." + dir->first;
-	// 				_config[key] = dir->second;
-	// 			}
-				
-	// 			// Location level directives
-	// 			const LocationBlocks& locations = server->getLocations();
-	// 			for (LocationBlocks::const_iterator loc = locations.begin(); loc != locations.end(); ++loc) {
-	// 				std::string locationPath = loc->getPath();
-	// 				const Directive& locDirectives = loc->getDirective();
-					
-	// 				// Add a prefix for regex locations to distinguish them
-	// 				std::string locPrefix = loc->isRegex() ? "~" : "";
-					
-	// 				for (Directive::const_iterator dir = locDirectives.begin(); dir != locDirectives.end(); ++dir) {
-	// 					std::string key = serverName + "." + locPrefix + locationPath + "." + dir->first;
-	// 					_config[key] = dir->second;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// } catch (const std::exception& e) {
-	// 	std::cerr << e.what() << std::endl;
-	// 	exit(1);
-	// }
-}
-
-void Connection::processConfigLine( Connection & i, std::string line )
-{
-	std::string key, value;
-	std::istringstream f(line);
-	getline(f, key, Connection::CONFIG_SEP);
-	getline(f, value, Connection::CONFIG_SEP);
-	i._config[key] = value;
-}
-
 void Connection::ft_error(const std::string msg) const
 {
 	perror(msg.c_str());
 	std::cerr << "[Error] on the event loop" << std::endl;
-}
-
-std::string Connection::gets(Config m, std::string key) const
-{
-	if (m.find(key) == m.end()) {
-		return "";
-	} else {
-		return m[key];
-	}
-}
-
-int Connection::geti(Config m, std::string key) const
-{
-	if (m.find(key) == m.end()) {
-		return 0;
-	} else {
-		return atoi(m[key].c_str());
-	}
-}
-
-float Connection::getf(Config m, std::string key) const
-{
-	if (m.find(key) == m.end()) {
-		return 0;
-	} else {
-		return atof(m[key].c_str());
-	}
-}
-
-void Connection::readFile( std::string file, void (*f)( Connection & i, std::string line ) )
-{
-	std::ifstream ifs(file.c_str());
-	if (ifs.good())
-	{
-		int reading = 0;
-		std::string	line;
-		while (getline(ifs, line))
-		{
-			reading = 1;
-			f(*this, line);
-		}
-		if (!reading)
-			std::cerr << "Error: The file is empty" << std::endl;
-		ifs.close();
-	}
-	else
-		std::cerr << "Error: could not open file" << std::endl;
 }
 
 /*

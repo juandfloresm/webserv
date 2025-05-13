@@ -30,6 +30,7 @@ class Context
 
 	protected:
 		std::string _root;
+		std::pair<int, std::string> _errorPage;
 		std::vector<std::string> _return;
 		std::vector<std::string> _index;
 		bool _autoIndex;
