@@ -11,12 +11,22 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 	initStatusDescriptions();
 	this->_headerSection = "";
 	if (status == OK)
-		doResponse();
-	else
 	{
-		matchServer();
-		doSend(clientSocket);
+		try {
+			matchServer();
+			doResponse();
+		} catch ( Response::BadGatewayException & bge ) {
+			this->_connection.ft_error(bge.what());
+			this->_status = BAD_GATEWAY;
+			doSend(clientSocket);
+		} catch ( Response::NotFoundException & bge ) {
+			this->_connection.ft_error(bge.what());
+			this->_status = NOT_FOUND;
+			doSend(clientSocket);
+		}
 	}
+	else
+		doSend(clientSocket);
 }
 
 
@@ -56,12 +66,34 @@ void Response::matchServer( void )
 {
 	Configuration & cfg = this->_connection.getConfiguration();
 	ServerList list = cfg.getServerList();
+	ServerList match = cfg.getServerList();
 	ServerList::iterator it = list.begin();
-	for(; it < list.end(); it++)
-	{
+
+	for(; it < list.end(); it++) // ................................... by PORT
 		if (it->getPort() == this->_port)
-			this->_server = *it;
+			match.push_back(*it);
+
+	if (match.size() == 0)
+		this->_server = match.back();
+	else if (match.size() > 0)
+	{
+		for(it = match.begin(); it < match.end(); it++) // ..... by SERVER_NAME
+		{
+			std::vector<std::string> list = it->getServerNames();
+			std::vector<std::string>::iterator sit = list.begin();
+			for(; sit < list.end(); sit++)
+			{
+				if ((*sit).compare(this->_request.header("Host")) == 0)
+				{
+					this->_server = *it;
+					return ;
+				}
+			}
+		}
+		this->_server = match.at(0); // ..................... by DEFAULT_SERVER
 	}
+
+	throw Response::BadGatewayException();
 }
 
 void Response::doResponse( void )
@@ -174,20 +206,31 @@ std::string Response::readStaticPage( void ) const
 	if (path.empty() || path[0] != '/')
 		path = "/" + path;
 	
+	std::string filePath = base + path;
+	
 	bool isDirectory = (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
 	if (isDirectory)
-		path += "index.html";
-
-	std::string filePath = base + path;
-	std::cout << "Serving file: " << filePath << std::endl;
-
-
-	std::ifstream file(filePath.c_str(), std::ios::binary);
-	if (!file.is_open()) {
-		std::cerr << "[Error] No error file match " << filePath << std::endl;
-		return readError("404");
+	{
+		std::vector<std::string> list = this->_server.getIndex();
+		std::vector<std::string>::iterator sit = list.begin();
+		bool found = false;
+		for(; sit < list.end(); sit++)
+		{
+			std::cout << *sit << std::endl;
+			if (access((filePath + *sit).c_str(), F_OK) == 0)
+			{
+				filePath += *sit;
+				found = true;
+				break;
+			}
+		}
+		if(!found)
+			filePath += DEFAULT_PAGE;
 	}
-
+	std::cout << "Serving file: " << filePath << std::endl;
+	std::ifstream file(filePath.c_str(), std::ios::binary);
+	if (!file.is_open())
+		throw NotFoundException();
 	std::ostringstream content;
 	content << file.rdbuf();
 	file.close();

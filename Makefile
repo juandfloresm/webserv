@@ -9,7 +9,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
-ARG					:=	./config/zweb.conf
+ARG					:=	./config/1_same_port.conf
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -85,7 +85,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: adding "default" flag to Server class"
+	git commit -am "Configuration: for the same port, we are not matching the first server_name that matches the Host header. Otherwise the default server is the first server matching the port"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

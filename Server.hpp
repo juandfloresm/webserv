@@ -12,6 +12,7 @@ class Server : public Context
 {
 	public:
 		Server( );
+		Server( const Server & server );
 		~Server();
 		Server & operator=( Server const & rhs );
 
@@ -22,7 +23,7 @@ class Server : public Context
 		std::vector<Location> getLocations( void ) const;
 		void setLocation( Location location );
 		bool isDefault( void ) const;
-		void setDefault( bool default );
+		void setDefault( bool _default );
 
 	private:
 		int _port;

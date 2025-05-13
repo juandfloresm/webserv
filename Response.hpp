@@ -21,6 +21,8 @@
 # define MAJOR_VERSION 1
 # define MINOR_VERSION 1
 
+# define DEFAULT_PAGE "index.html"
+
 typedef std::map<std::string, std::string> Config;
 
 class Connection;
@@ -108,6 +110,16 @@ class Response : public Message
 		std::string headerTransform(std::string s);
 		static unsigned char headerCharTransform(unsigned char c);
 		void matchServer( void );
+
+		class BadGatewayException : public std::exception {
+			public:
+				const char * what () { return "Bad Gateway"; }
+		};
+
+		class NotFoundException : public std::exception {
+			public:
+				const char * what () { return "Not Found"; }
+		};
 
 	private:
 		std::string _statusString;

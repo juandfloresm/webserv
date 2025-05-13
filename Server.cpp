@@ -9,7 +9,11 @@ Server::Server( )
 	this->_port = 80;
 	this->_default = false;
 	this->_serverNames.push_back("localhost");
-	this->_serverNames.push_back("127.0.0.1");
+}
+
+Server::Server( const Server & server )
+{
+	*this = server;
 }
 
 /*
@@ -29,6 +33,7 @@ Server & Server::operator=( Server const & rhs )
 {
 	this->_port = rhs.getPort();
 	this->_serverNames = rhs.getServerNames();
+	this->_index = rhs.getIndex();
 	this->_root = rhs.getRoot();
 	return *this;
 }
@@ -85,7 +90,7 @@ bool Server::isDefault( void ) const
 	return this->_default;
 }
 
-void Server::setDefault( bool default )
+void Server::setDefault( bool _default )
 {
-	this->_default = default;
+	this->_default = _default;
 }

@@ -27,6 +27,7 @@ Context::~Context()
 Context & Context::operator=( Context const & rhs )
 {
 	this->_root = rhs.getRoot();
+	this->_index = rhs.getIndex();
 	return *this;
 }
 
@@ -74,7 +75,7 @@ std::vector<std::string> Context::getIndex( void ) const
 
 void Context::setIndex( std::string index )
 {
-	this->_return.push_back(index);
+	this->_index.push_back(index);
 }
 
 bool Context::getAutoIndex( void ) const
