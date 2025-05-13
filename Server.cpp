@@ -7,6 +7,7 @@
 Server::Server( )
 {
 	this->_port = 80;
+	this->_default = false;
 	this->_serverNames.push_back("localhost");
 	this->_serverNames.push_back("127.0.0.1");
 }
