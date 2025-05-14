@@ -166,6 +166,9 @@ const std::string Response::toString( void ) const
 	std::string minor = ss.str();
 	std::string contentType = getMimeType(this->_request.getResource());
 
+	if (isDirectory() && this->_server.getAutoIndex())
+		contentType = "text/html";
+
 	ss.str("");
 	ss.clear();
 	ss << this->_contentLength;
@@ -224,31 +227,43 @@ std::string Response::readDirectory( void ) const
 	std::string path = this->_request.getResource();
 	std::string filePath = base + path;
 	std::string result = "<h1>Directory: " + filePath + "</h1><ul>";
-	std::string current = "";
 	struct dirent* file;
 	DIR* fd;
+
+	std::vector<std::string> dirs;
+	std::vector<std::string> files;
 
 	fd = opendir(filePath.c_str());
 	if (fd == NULL)
 		throw ForbiddenException();
+	if (chdir(filePath.c_str()) != 0)
+		throw ForbiddenException();
+
 	while ((file = readdir(fd)))
 	{
 		struct stat buffer;
 		int status;
-		current = filePath + file->d_name;
-		status = stat(current.c_str(), &buffer);
+		status = stat(file->d_name, &buffer);
 		if (status == -1)
-		{
-			std::cerr << "[Error][Error] Forbidden" << filePath << std::endl;
 			throw ForbiddenException();
-		}
 		if ( buffer.st_mode & S_IFREG )
-			result += ("<li>&#128462; <a href=\"" + (path + file->d_name) + "\">" + file->d_name + "</a></li>");
+			files.push_back(file->d_name);
 		else
-			result += ("<li>&#128193; <a href=\"" + (path + file->d_name) + "\">" + file->d_name + "</a></li>");
+			dirs.push_back(file->d_name);
 	}
 
  	closedir(fd);
+
+	if (path[path.size() - 1] != '/')
+		path += "/";
+
+	std::sort(dirs.begin(), dirs.end());
+	for (std::vector<std::string>::iterator it = dirs.begin(); it < dirs.end(); it++)
+		result += ("<li>&#128193; <a href=\"" + (path + *it) + "\">" + *it + "</a></li>");
+	std::sort(files.begin(), files.end());
+	for (std::vector<std::string>::iterator it = files.begin(); it < files.end(); it++)
+		result += ("<li>&#128462; <a href=\"" + (path + *it) + "\">" + *it + "</a></li>");
+
 	result += "</ul>";
 	return result;
 }

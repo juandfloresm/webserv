@@ -13,10 +13,7 @@ Configuration::Configuration( std::string const configFile )
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Configuration::~Configuration()
-{
-
-}
+Configuration::~Configuration(){}
 
 
 /*
@@ -80,9 +77,7 @@ void Configuration::parse( std::string const file )
 		level1.push_back("error_page");
 		level1.push_back("return");
 		level1.push_back("autoindex");
-
 		level1.push_back("location");
-
 		level2.push_back("root");
 		level2.push_back("index");
 		level2.push_back("autoindex");

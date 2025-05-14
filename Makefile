@@ -33,8 +33,6 @@ re: fclean all
 
 runner: re
 	chmod -R 775 .
-	chmod -R 775 ./html
-	chmod -R 775 ./html/errors
 	sudo ./$(NAME) $(ARG)
 
 valgrind: re
@@ -88,7 +86,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: 'autoindex on' overrides 'index'. List unsorted. Permission issues drilling down other directories."
+	git commit -am "Configuration: List sorted. No permission issues drilling down."
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
