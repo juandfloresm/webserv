@@ -7,7 +7,12 @@
 # include <sstream>
 # include <algorithm>
 # include <csignal>
+
 # include <sys/wait.h>
+# include <dirent.h>
+# include <errno.h>
+# include <sys/stat.h>
+
 # include "Message.hpp"
 # include "Connection.hpp"
 # include "Request.hpp"
@@ -113,15 +118,25 @@ class Response : public Message
 
 		void redirectCode( int code, std::string page );
 		void throwErrorCode( int code, std::string page );
+		std::string readDirectory( void ) const;
+		bool isDirectory( void ) const;
 
+		/* 400 */
 		class NotFoundException : public std::exception {
 			public:
 				const char * what () { return "Not Found"; }
 		};
+		/* 403 */
+		class ForbiddenException : public std::exception {
+			public:
+				const char * what () { return "Forbidden"; }
+		};
+		/* 500 */
 		class InternalServerException : public std::exception {
 			public:
 				const char * what () { return "Internal Server Error"; }
 		};
+		/* 502 */
 		class BadGatewayException : public std::exception {
 			public:
 				const char * what () { return "Bad Gateway"; }

@@ -9,7 +9,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
-ARG					:=	./config/1_same_port.conf
+ARG					:=	./config/zweb.conf
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -32,6 +32,9 @@ fclean: clean
 re: fclean all
 
 runner: re
+	chmod -R 775 .
+	chmod -R 775 ./html
+	chmod -R 775 ./html/errors
 	sudo ./$(NAME) $(ARG)
 
 valgrind: re
@@ -85,7 +88,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: 'error_page' and 'return' error"
+	git commit -am "Configuration: 'autoindex on' overrides 'index'. List unsorted. Permission issues drilling down other directories."
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

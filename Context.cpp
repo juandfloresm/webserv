@@ -30,6 +30,7 @@ Context & Context::operator=( Context const & rhs )
 	this->_index = rhs.getIndex();
 	this->_errorPage = rhs.getErrorPage();
 	this->_return = rhs.getReturn();
+	this->_autoIndex = rhs.getAutoIndex();
 	return *this;
 }
 

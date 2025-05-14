@@ -38,6 +38,7 @@ Server & Server::operator=( Server const & rhs )
 	this->_errorPage = rhs.getErrorPage();
 	this->_return.first = rhs.getReturn().first;
 	this->_return.second = rhs.getReturn().second;
+	this->_autoIndex = rhs.getAutoIndex();
 	return *this;
 }
 

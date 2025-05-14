@@ -16,17 +16,21 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 		try {
 			matchServer();
 			doResponse();
+		} catch ( Response::NotFoundException & nfe ) {
+			this->_connection.ft_error(nfe.what());
+			this->_status = NOT_FOUND;
+			doSend(clientSocket);
+		} catch ( Response::ForbiddenException & fe ) {
+			this->_connection.ft_error(fe.what());
+			this->_status = FORBIDDEN;
+			doSend(clientSocket);
+		} catch ( Response::InternalServerException & ise ) {
+			this->_connection.ft_error(ise.what());
+			this->_status = INTERNAL_SERVER_ERROR;
+			doSend(clientSocket);
 		} catch ( Response::BadGatewayException & bge ) {
 			this->_connection.ft_error(bge.what());
 			this->_status = BAD_GATEWAY;
-			doSend(clientSocket);
-		} catch ( Response::NotFoundException & bge ) {
-			this->_connection.ft_error(bge.what());
-			this->_status = NOT_FOUND;
-			doSend(clientSocket);
-		} catch ( Response::InternalServerException & bge ) {
-			this->_connection.ft_error(bge.what());
-			this->_status = INTERNAL_SERVER_ERROR;
 			doSend(clientSocket);
 		}
 	}
@@ -39,9 +43,7 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Response::~Response()
-{
-}
+Response::~Response() {}
 
 
 /*
@@ -104,8 +106,12 @@ void Response::matchServer( void )
 void Response::doResponse( void )
 {
 	int code = this->_server.getReturn().first;
-	std::cout << code << std::endl;
-	if(code != 0)
+	if (this->_server.getAutoIndex() && isDirectory())
+	{
+		this->_content = readDirectory();
+		doSend(this->_clientSocket);
+	}
+	else if(code != 0)
 	{
 		std::string page = this->_server.getReturn().second;
 		if (code < static_cast<int>(BAD_REQUEST))
@@ -189,10 +195,7 @@ const std::string Response::toString( void ) const
 		r += "Content-Type: " + contentType + CRLF;
 		r += "Content-Length: " + contentLength + CRLF;
 		if (this->_page.size() > 0)
-		{
-			std::cout << "Location: " + this->_page << std::endl;
 			r += "Location: " + this->_page + CRLF;
-		}
 		r += CRLF;
 	}
 
@@ -215,6 +218,41 @@ std::string Response::readError( std::string filePath ) const
 	return content.str();
 }
 
+std::string Response::readDirectory( void ) const
+{
+	std::string base = this->_server.getRoot();
+	std::string path = this->_request.getResource();
+	std::string filePath = base + path;
+	std::string result = "<h1>Directory: " + filePath + "</h1><ul>";
+	std::string current = "";
+	struct dirent* file;
+	DIR* fd;
+
+	fd = opendir(filePath.c_str());
+	if (fd == NULL)
+		throw ForbiddenException();
+	while ((file = readdir(fd)))
+	{
+		struct stat buffer;
+		int status;
+		current = filePath + file->d_name;
+		status = stat(current.c_str(), &buffer);
+		if (status == -1)
+		{
+			std::cerr << "[Error][Error] Forbidden" << filePath << std::endl;
+			throw ForbiddenException();
+		}
+		if ( buffer.st_mode & S_IFREG )
+			result += ("<li>&#128462; <a href=\"" + (path + file->d_name) + "\">" + file->d_name + "</a></li>");
+		else
+			result += ("<li>&#128193; <a href=\"" + (path + file->d_name) + "\">" + file->d_name + "</a></li>");
+	}
+
+ 	closedir(fd);
+	result += "</ul>";
+	return result;
+}
+
 std::string Response::readStaticPage( void ) const
 {
 	std::string base = this->_server.getRoot();
@@ -225,15 +263,13 @@ std::string Response::readStaticPage( void ) const
 	
 	std::string filePath = base + path;
 	
-	bool isDirectory = (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
-	if (isDirectory)
+	if (isDirectory())
 	{
 		std::vector<std::string> list = this->_server.getIndex();
 		std::vector<std::string>::iterator sit = list.begin();
 		bool found = false;
 		for(; sit < list.end(); sit++)
 		{
-			std::cout << *sit << std::endl;
 			if (access((filePath + *sit).c_str(), F_OK) == 0)
 			{
 				filePath += *sit;
@@ -244,6 +280,7 @@ std::string Response::readStaticPage( void ) const
 		if(!found)
 			filePath += DEFAULT_PAGE;
 	}
+
 	std::cout << "Serving file: " << filePath << std::endl;
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open())
@@ -357,6 +394,14 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
+bool Response::isDirectory( void ) const
+{
+	std::string path = this->_request.getResource();
+	return path.find(".") == std::string::npos;
+	// TODO: better determine if the path is a directory...
+	// return (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
+}
+
 void Response::redirectCode( int code, std::string page )
 {
 	this->_status = static_cast<Status>(code);
@@ -407,11 +452,10 @@ char **Response::getEnv( void )
 	else if (this->_request.getMethod() == DELETE) {
 		method = "DELETE";
 		std::string path = base + this->_request.getResource();
-		if (std::remove(path.c_str()) == 0) {
+		if (std::remove(path.c_str()) == 0)
 			this->_status = OK;
-		} else {
+		else
 			this->_status = NOT_FOUND;
-		}
 	}
 	else
 	{
