@@ -16,22 +16,14 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 		try {
 			matchServer();
 			doResponse();
-		} catch ( Response::NotFoundException & nfe ) {
-			this->_connection.ft_error(nfe.what());
-			this->_status = NOT_FOUND;
-			doSend(clientSocket);
-		} catch ( Response::ForbiddenException & fe ) {
-			this->_connection.ft_error(fe.what());
-			this->_status = FORBIDDEN;
-			doSend(clientSocket);
-		} catch ( Response::InternalServerException & ise ) {
-			this->_connection.ft_error(ise.what());
-			this->_status = INTERNAL_SERVER_ERROR;
-			doSend(clientSocket);
-		} catch ( Response::BadGatewayException & bge ) {
-			this->_connection.ft_error(bge.what());
-			this->_status = BAD_GATEWAY;
-			doSend(clientSocket);
+		} catch ( Response::NotFoundException & e ) {
+			errorHandler(NOT_FOUND, e);
+		} catch ( Response::ForbiddenException & e ) {
+			errorHandler(FORBIDDEN, e);
+		} catch ( Response::InternalServerException & e ) {
+			errorHandler(INTERNAL_SERVER_ERROR, e);
+		} catch ( Response::BadGatewayException & e ) {
+			errorHandler(BAD_GATEWAY, e);
 		}
 	}
 	else
@@ -409,12 +401,19 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
+void Response::errorHandler( Status status, std::exception e )
+{
+	this->_connection.ft_error(e.what());
+	this->_status = status;
+	if (this->_server.getErrorPage().first == static_cast<int>(status))
+		this->_content = readError(this->_server.getErrorPage().second);
+	doSend(this->_clientSocket);
+}
+
 bool Response::isDirectory( void ) const
 {
 	std::string path = this->_request.getResource();
 	return path.find(".") == std::string::npos;
-	// TODO: better determine if the path is a directory...
-	// return (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
 }
 
 void Response::redirectCode( int code, std::string page )

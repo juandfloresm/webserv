@@ -121,6 +121,8 @@ class Response : public Message
 		std::string readDirectory( void ) const;
 		bool isDirectory( void ) const;
 
+		void errorHandler( Status status, std::exception e );
+
 		/* 400 */
 		class NotFoundException : public std::exception {
 			public:

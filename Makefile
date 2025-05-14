@@ -86,7 +86,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: List sorted. No permission issues drilling down."
+	git commit -am "Configuration: 'error_page' directive works without the need to have a 'return' directive"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

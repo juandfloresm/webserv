@@ -7,7 +7,6 @@
 Context::Context( )
 {
 	this->_root = "./html";
-	this->_index.push_back("index.html");
 	this->_autoIndex = false;
 }
 
