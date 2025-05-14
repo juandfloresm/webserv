@@ -10,6 +10,7 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 	setMinorVersion(MINOR_VERSION);
 	initStatusDescriptions();
 	this->_headerSection = "";
+	this->_page = "";
 	if (status == OK)
 	{
 		try {
@@ -22,6 +23,10 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 		} catch ( Response::NotFoundException & bge ) {
 			this->_connection.ft_error(bge.what());
 			this->_status = NOT_FOUND;
+			doSend(clientSocket);
+		} catch ( Response::InternalServerException & bge ) {
+			this->_connection.ft_error(bge.what());
+			this->_status = INTERNAL_SERVER_ERROR;
 			doSend(clientSocket);
 		}
 	}
@@ -98,7 +103,17 @@ void Response::matchServer( void )
 
 void Response::doResponse( void )
 {
-	if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
+	int code = this->_server.getReturn().first;
+	std::cout << code << std::endl;
+	if(code != 0)
+	{
+		std::string page = this->_server.getReturn().second;
+		if (code < static_cast<int>(BAD_REQUEST))
+			redirectCode(code, page);
+		else
+			throwErrorCode(code, page);
+	}
+	else if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
 	{
 		std::string base = this->_server.getRoot();
 		std::string script = this->_request.getResource();
@@ -173,6 +188,11 @@ const std::string Response::toString( void ) const
 		r += this->_statusString + " " + getDescription() + CRLF;
 		r += "Content-Type: " + contentType + CRLF;
 		r += "Content-Length: " + contentLength + CRLF;
+		if (this->_page.size() > 0)
+		{
+			std::cout << "Location: " + this->_page << std::endl;
+			r += "Location: " + this->_page + CRLF;
+		}
 		r += CRLF;
 	}
 
@@ -182,11 +202,8 @@ const std::string Response::toString( void ) const
 	return r;
 }
 
-std::string Response::readError( std::string status ) const
+std::string Response::readError( std::string filePath ) const
 {
-	std::string line;
-	std::string base = this->_server.getRoot();
-	std::string filePath = base + '/' + status + ".html";
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
@@ -339,6 +356,28 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
+
+void Response::redirectCode( int code, std::string page )
+{
+	this->_status = static_cast<Status>(code);
+	this->_page = page;
+	doSend(this->_clientSocket);
+}
+
+void Response::throwErrorCode( int code, std::string page )
+{
+	if (page.size() > 0)
+		this->_content = readError(page);
+	else
+	{
+		int pcode = this->_server.getErrorPage().first;
+		std::string ppage = this->_server.getErrorPage().second;
+		if (pcode == code && ppage.size() > 0)
+			this->_content = readError(ppage);
+	}
+	this->_status = static_cast<Status>(code);
+	doSend(this->_clientSocket);
+}
 
 void Response::clearEnv( char **env )
 {

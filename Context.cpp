@@ -28,6 +28,8 @@ Context & Context::operator=( Context const & rhs )
 {
 	this->_root = rhs.getRoot();
 	this->_index = rhs.getIndex();
+	this->_errorPage = rhs.getErrorPage();
+	this->_return = rhs.getReturn();
 	return *this;
 }
 
@@ -58,14 +60,26 @@ void Context::setRoot( std::string root )
 	this->_root = root;
 }
 
-std::vector<std::string> Context::getReturn( void ) const
+std::pair<int, std::string> Context::getErrorPage( void ) const
+{
+	return this->_errorPage;
+}
+
+void Context::setErrorPage( int statusCode, std::string page )
+{
+	this->_errorPage.first = statusCode;
+	this->_errorPage.second = page;
+}
+
+std::pair<int, std::string> Context::getReturn( void ) const
 {
 	return this->_return;
 }
 
-void Context::setReturn( std::string _return )
+void Context::setReturn( int statusCode, std::string page )
 {
-	this->_return.push_back(_return);
+	this->_return.first = statusCode;
+	this->_return.second = page;
 }
 
 std::vector<std::string> Context::getIndex( void ) const

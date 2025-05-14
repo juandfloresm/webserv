@@ -35,6 +35,9 @@ Server & Server::operator=( Server const & rhs )
 	this->_serverNames = rhs.getServerNames();
 	this->_index = rhs.getIndex();
 	this->_root = rhs.getRoot();
+	this->_errorPage = rhs.getErrorPage();
+	this->_return.first = rhs.getReturn().first;
+	this->_return.second = rhs.getReturn().second;
 	return *this;
 }
 

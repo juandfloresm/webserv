@@ -76,14 +76,17 @@ void Configuration::parse( std::string const file )
 		level1.push_back("listen");
 		level1.push_back("root");
 		level1.push_back("server_name");
-		level1.push_back("return");
 		level1.push_back("index");
+		level1.push_back("error_page");
+		level1.push_back("return");
+		
 		level1.push_back("autoindex");
 		level1.push_back("location");
 
 		level2.push_back("root");
 		level2.push_back("index");
 		level2.push_back("autoindex");
+		level2.push_back("error_page");
 		level2.push_back("return");
 
 		levels[0] = level0;
@@ -169,12 +172,21 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		while (getline(f, s, ' '))
 			cxt.setServerName(s);
 	}
+	else if (directive.first.compare("error_page") == 0)
+	{
+		std::istringstream f(directive.second);
+		std::string code, page;
+		getline(f, code, ' ');
+		getline(f, page, ' ');
+		cxt.setErrorPage(atoi(code.c_str()), page);
+	}
 	else if (directive.first.compare("return") == 0)
 	{
 		std::istringstream f(directive.second);
-		std::string s;
-		while (getline(f, s, ' '))
-			cxt.setReturn(s);
+		std::string code, page;
+		getline(f, code, ' ');
+		getline(f, page, ' ');
+		cxt.setReturn(atoi(code.c_str()), page);
 	}
 	else if (directive.first.compare("index") == 0)
 	{

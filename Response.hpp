@@ -111,22 +111,29 @@ class Response : public Message
 		static unsigned char headerCharTransform(unsigned char c);
 		void matchServer( void );
 
-		class BadGatewayException : public std::exception {
-			public:
-				const char * what () { return "Bad Gateway"; }
-		};
+		void redirectCode( int code, std::string page );
+		void throwErrorCode( int code, std::string page );
 
 		class NotFoundException : public std::exception {
 			public:
 				const char * what () { return "Not Found"; }
+		};
+		class InternalServerException : public std::exception {
+			public:
+				const char * what () { return "Internal Server Error"; }
+		};
+		class BadGatewayException : public std::exception {
+			public:
+				const char * what () { return "Bad Gateway"; }
 		};
 
 	private:
 		std::string _statusString;
 		std::string _description;
 		std::string _headerSection;
-		StatusDescription _statusDescriptions;
+		std::string _page;
 		std::string _content;
+		StatusDescription _statusDescriptions;
 		long _contentLength;
 		Status _status;
 		int _clientSocket;

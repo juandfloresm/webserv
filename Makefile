@@ -85,7 +85,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: for the same port, we are not matching the first server_name that matches the Host header. Otherwise the default server is the first server matching the port"
+	git commit -am "Configuration: 'error_page' and 'return' error"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
