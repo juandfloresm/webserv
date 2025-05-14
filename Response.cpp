@@ -10,8 +10,30 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 	setMinorVersion(MINOR_VERSION);
 	initStatusDescriptions();
 	this->_headerSection = "";
+	this->_page = "";
 	if (status == OK)
-		doResponse();
+	{
+		try {
+			matchServer();
+			doResponse();
+		} catch ( Response::NotFoundException & nfe ) {
+			this->_connection.ft_error(nfe.what());
+			this->_status = NOT_FOUND;
+			doSend(clientSocket);
+		} catch ( Response::ForbiddenException & fe ) {
+			this->_connection.ft_error(fe.what());
+			this->_status = FORBIDDEN;
+			doSend(clientSocket);
+		} catch ( Response::InternalServerException & ise ) {
+			this->_connection.ft_error(ise.what());
+			this->_status = INTERNAL_SERVER_ERROR;
+			doSend(clientSocket);
+		} catch ( Response::BadGatewayException & bge ) {
+			this->_connection.ft_error(bge.what());
+			this->_status = BAD_GATEWAY;
+			doSend(clientSocket);
+		}
+	}
 	else
 		doSend(clientSocket);
 }
@@ -21,9 +43,7 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Response::~Response()
-{
-}
+Response::~Response() {}
 
 
 /*
@@ -49,10 +69,57 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+void Response::matchServer( void )
+{
+	Configuration & cfg = this->_connection.getConfiguration();
+	ServerList list = cfg.getServerList();
+	ServerList match = cfg.getServerList();
+	ServerList::iterator it = list.begin();
+
+	for(; it < list.end(); it++) // ................................... by PORT
+		if (it->getPort() == this->_port)
+			match.push_back(*it);
+
+	if (match.size() == 0)
+		this->_server = match.back();
+	else if (match.size() > 0)
+	{
+		for(it = match.begin(); it < match.end(); it++) // ..... by SERVER_NAME
+		{
+			std::vector<std::string> list = it->getServerNames();
+			std::vector<std::string>::iterator sit = list.begin();
+			for(; sit < list.end(); sit++)
+			{
+				if ((*sit).compare(this->_request.header("Host")) == 0)
+				{
+					this->_server = *it;
+					return ;
+				}
+			}
+		}
+		this->_server = match.at(0); // ..................... by DEFAULT_SERVER
+	}
+
+	throw Response::BadGatewayException();
+}
+
 void Response::doResponse( void )
 {
-	this->matchServer();
-	if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
+	int code = this->_server.getReturn().first;
+	if (this->_server.getAutoIndex() && isDirectory())
+	{
+		this->_content = readDirectory();
+		doSend(this->_clientSocket);
+	}
+	else if(code != 0)
+	{
+		std::string page = this->_server.getReturn().second;
+		if (code < static_cast<int>(BAD_REQUEST))
+			redirectCode(code, page);
+		else
+			throwErrorCode(code, page);
+	}
+	else if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
 	{
 		std::string base = this->_server.getRoot();
 		std::string script = this->_request.getResource();
@@ -78,18 +145,6 @@ void Response::doResponse( void )
 	}
 }
 
-void Response::matchServer( void )
-{
-	Configuration & cfg = this->_connection.getConfiguration();
-	ServerList list = cfg.getServerList();
-	ServerList::iterator it = list.begin();
-	for(; it < list.end(); it++)
-	{
-		if (it->getPort() == this->_port)
-			this->_server = *it;
-	}
-}
-
 void Response::doSend( int fd )
 {
 	this->_contentLength = this->_content.size();
@@ -102,54 +157,6 @@ void Response::doSend( int fd )
 	close(this->_clientSocket);
 }
 
-void Response::initStatusDescriptions( void )
-{
-	/* 100 - 199 (Informational) */
-	this->_statusDescriptions[CONTINUE] = "Continue";
-	this->_statusDescriptions[SWITCHING_PROTOCOLOS] = "Switching Protocols";
-
-	/* 200 - 299 .............................. */
-	this->_statusDescriptions[OK] = "OK";
-	this->_statusDescriptions[CREATED] = "Created";
-	this->_statusDescriptions[ACCEPTED] = "Accepted";
-	this->_statusDescriptions[NO_CONTENT] = "No Content";
-	this->_statusDescriptions[PARTIAL_CONTENT] = "Partial Content";
-
-	/* 300 - 399 .............................. */
-	this->_statusDescriptions[MULTIPLE_CHOICES] = "Multiple Choices";
-	this->_statusDescriptions[MOVED_PERMANENTLY] = "Moved Permanently";
-	this->_statusDescriptions[FOUND] = "Found";
-	this->_statusDescriptions[SEE_OTHER] = "See Other";
-	this->_statusDescriptions[NOT_MODIFIED] = "Not Modified";
-	this->_statusDescriptions[TEMPORARY_REDIRECT] = "Temporary Redirect";
-	this->_statusDescriptions[PERMANENET_REDIRECT] = "Permanent Redirect";
-
-	/* 400 - 499 .............................. */
-	this->_statusDescriptions[BAD_REQUEST] = "Bad Request";
-	this->_statusDescriptions[UNAUTHORIZED] = "Unauthorized";
-	this->_statusDescriptions[FORBIDDEN] = "Forbidden";
-	this->_statusDescriptions[NOT_FOUND] = "Not Found";
-	this->_statusDescriptions[METHOD_NOT_ALLOWED] = "Method Not Allowed";
-	this->_statusDescriptions[NOT_ACCEPTABLE] = "Not Acceptable";
-	this->_statusDescriptions[REQUEST_TIMEOUT] = "Request Timeout";
-	this->_statusDescriptions[CONFLICT] = "Conlifct";
-	this->_statusDescriptions[GONE] = "Gone";
-	this->_statusDescriptions[LENGTH_REQUIRED] = "Length Required";
-	this->_statusDescriptions[PAYLOAD_TOO_LARGE] = "Payload Too Large";
-	this->_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
-	this->_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
-	this->_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";
-	this->_statusDescriptions[TOO_MANY_REQUESTS] = "Too Many Requests";
-
-	/* 500 - 599 .............................. */
-	this->_statusDescriptions[INTERNAL_SERVER_ERROR] = "Internal Server Error";
-	this->_statusDescriptions[NOT_IMPLEMENTED] = "Not Implemented";
-	this->_statusDescriptions[BAD_GATEWAY] = "Bad Gateway";
-	this->_statusDescriptions[SERVICE_UNAVAILABLE] = "Service Unavailable";
-	this->_statusDescriptions[GATEWAY_TIMEOUT] = "Gateway Timeout";
-	this->_statusDescriptions[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
-}
-
 const std::string Response::toString( void ) const
 {
 	std::ostringstream ss;
@@ -158,6 +165,9 @@ const std::string Response::toString( void ) const
 	ss << getMinorVersion();
 	std::string minor = ss.str();
 	std::string contentType = getMimeType(this->_request.getResource());
+
+	if (isDirectory() && this->_server.getAutoIndex())
+		contentType = "text/html";
 
 	ss.str("");
 	ss.clear();
@@ -178,9 +188,7 @@ const std::string Response::toString( void ) const
 			r += top + CRLF;
 		}
 		else
-		{
 			r += this->_statusString + " " + getDescription() + CRLF;
-		}
 		r += "Content-Length: " + contentLength + CRLF;
 		r += this->_headerSection;
 	}
@@ -189,6 +197,8 @@ const std::string Response::toString( void ) const
 		r += this->_statusString + " " + getDescription() + CRLF;
 		r += "Content-Type: " + contentType + CRLF;
 		r += "Content-Length: " + contentLength + CRLF;
+		if (this->_page.size() > 0)
+			r += "Location: " + this->_page + CRLF;
 		r += CRLF;
 	}
 
@@ -198,11 +208,8 @@ const std::string Response::toString( void ) const
 	return r;
 }
 
-std::string Response::readError( std::string status ) const
+std::string Response::readError( std::string filePath ) const
 {
-	std::string line;
-	std::string base = this->_server.getRoot();
-	std::string filePath = base + '/' + status + ".html";
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
 		std::cerr << "[Error] No error file match " << filePath << std::endl;
@@ -214,6 +221,53 @@ std::string Response::readError( std::string status ) const
 	return content.str();
 }
 
+std::string Response::readDirectory( void ) const
+{
+	std::string base = this->_server.getRoot();
+	std::string path = this->_request.getResource();
+	std::string filePath = base + path;
+	std::string result = "<h1>Directory: " + filePath + "</h1><ul>";
+	struct dirent* file;
+	DIR* fd;
+
+	std::vector<std::string> dirs;
+	std::vector<std::string> files;
+
+	fd = opendir(filePath.c_str());
+	if (fd == NULL)
+		throw ForbiddenException();
+	if (chdir(filePath.c_str()) != 0)
+		throw ForbiddenException();
+
+	while ((file = readdir(fd)))
+	{
+		struct stat buffer;
+		int status;
+		status = stat(file->d_name, &buffer);
+		if (status == -1)
+			throw ForbiddenException();
+		if ( buffer.st_mode & S_IFREG )
+			files.push_back(file->d_name);
+		else
+			dirs.push_back(file->d_name);
+	}
+
+ 	closedir(fd);
+
+	if (path[path.size() - 1] != '/')
+		path += "/";
+
+	std::sort(dirs.begin(), dirs.end());
+	for (std::vector<std::string>::iterator it = dirs.begin(); it < dirs.end(); it++)
+		result += ("<li>&#128193; <a href=\"" + (path + *it) + "\">" + *it + "</a></li>");
+	std::sort(files.begin(), files.end());
+	for (std::vector<std::string>::iterator it = files.begin(); it < files.end(); it++)
+		result += ("<li>&#128462; <a href=\"" + (path + *it) + "\">" + *it + "</a></li>");
+
+	result += "</ul>";
+	return result;
+}
+
 std::string Response::readStaticPage( void ) const
 {
 	std::string base = this->_server.getRoot();
@@ -222,109 +276,34 @@ std::string Response::readStaticPage( void ) const
 	if (path.empty() || path[0] != '/')
 		path = "/" + path;
 	
-	bool isDirectory = (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
-	if (isDirectory)
-		path += "index.html";
-
 	std::string filePath = base + path;
-	std::cout << "Serving file: " << filePath << std::endl;
-
-
-	std::ifstream file(filePath.c_str(), std::ios::binary);
-	if (!file.is_open()) {
-		std::cerr << "[Error] No error file match " << filePath << std::endl;
-		return readError("404");
+	
+	if (isDirectory())
+	{
+		std::vector<std::string> list = this->_server.getIndex();
+		std::vector<std::string>::iterator sit = list.begin();
+		bool found = false;
+		for(; sit < list.end(); sit++)
+		{
+			if (access((filePath + *sit).c_str(), F_OK) == 0)
+			{
+				filePath += *sit;
+				found = true;
+				break;
+			}
+		}
+		if(!found)
+			filePath += DEFAULT_PAGE;
 	}
 
+	std::cout << "Serving file: " << filePath << std::endl;
+	std::ifstream file(filePath.c_str(), std::ios::binary);
+	if (!file.is_open())
+		throw NotFoundException();
 	std::ostringstream content;
 	content << file.rdbuf();
 	file.close();
 	return content.str();
-}
-
-void Response::clearEnv( char **env )
-{
-	int i = 0;
-	while (env[i])
-		delete [] env[i++];
-	delete [] env;
-}
-
-void Response::setSingleEnv(char **env, std::string const s, int i)
-{
-	env[i] = new char[s.size() + 1];
-	if (env[i])
-		env[i] = strcpy(env[i], s.c_str());	
-}
-
-char **Response::getEnv( void )
-{
-	std::string base = this->_server.getRoot();
-	std::string path = this->_request.getResource();
-	std::string method = "";
-	
-	if (this->_request.getMethod() == GET)
-		method = "GET";
-	else if (this->_request.getMethod() == POST)
-		method = "POST";
-	else if (this->_request.getMethod() == DELETE) {
-		method = "DELETE";
-		std::string path = base + this->_request.getResource();
-		if (std::remove(path.c_str()) == 0) {
-			this->_status = OK;
-		} else {
-			this->_status = NOT_FOUND;
-		}
-	}
-	else
-	{
-		this->_status = NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	Header headers = this->_request.getHeaders();
-	std::vector<std::string> headerList;
-	HeaderIterator it = headers.begin();
-	std::string key;
-	for (; it != headers.end(); it++)
-	{
-		key = headerTransform(it->first);
-		headerList.push_back("HTTP_" + key + "=" + it->second);
-	}
-	headerList.push_back("SCRIPT_NAME=" + base + path);
-	headerList.push_back("SCRIPT_FILENAME=" + base + path);
-	headerList.push_back("PATH_INFO=" + base + path);
-	headerList.push_back("PATH_TRANSLATED=" + base + path);
-	headerList.push_back("REQUEST_URI=/");
-	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
-	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	headerList.push_back("REQUEST_METHOD=" + method);
-	headerList.push_back("REDIRECT_STATUS=200");
-	headerList.push_back("SERVER_PROTOCOL=HTTP/1.1");
-	headerList.push_back("SERVER_PORT=80");
-	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
-	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
-
-	std::string auth = this->_request.header("Authorization");
-	if (auth.length() > 0)
-	{
-		std::string scheme, userId;
-		std::istringstream f(auth);
-		getline(f, scheme, ' ');
-		getline(f, userId, ' ');
-		headerList.push_back("AUTH_TYPE=" + scheme);
-		headerList.push_back("REMOTE_USER=" + userId);
-	}
-
-	char **env = new char*[headerList.size() + 1];
-	if (env != NULL)
-	{
-		for (size_t i = 0; i < headerList.size(); i++)
-			setSingleEnv(env, headerList[i], i);
-		env[headerList.size()] = NULL;
-	}
-
-	return env;
 }
 
 std::string Response::readDynamicPage( const std::string binary )
@@ -426,6 +405,173 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 	return (parsed);
 }
 
+/*
+** --------------------------------- UTILITIES ---------------------------------
+*/
+
+bool Response::isDirectory( void ) const
+{
+	std::string path = this->_request.getResource();
+	return path.find(".") == std::string::npos;
+	// TODO: better determine if the path is a directory...
+	// return (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
+}
+
+void Response::redirectCode( int code, std::string page )
+{
+	this->_status = static_cast<Status>(code);
+	this->_page = page;
+	doSend(this->_clientSocket);
+}
+
+void Response::throwErrorCode( int code, std::string page )
+{
+	if (page.size() > 0)
+		this->_content = readError(page);
+	else
+	{
+		int pcode = this->_server.getErrorPage().first;
+		std::string ppage = this->_server.getErrorPage().second;
+		if (pcode == code && ppage.size() > 0)
+			this->_content = readError(ppage);
+	}
+	this->_status = static_cast<Status>(code);
+	doSend(this->_clientSocket);
+}
+
+void Response::clearEnv( char **env )
+{
+	int i = 0;
+	while (env[i])
+		delete [] env[i++];
+	delete [] env;
+}
+
+void Response::setSingleEnv(char **env, std::string const s, int i)
+{
+	env[i] = new char[s.size() + 1];
+	if (env[i])
+		env[i] = strcpy(env[i], s.c_str());	
+}
+
+char **Response::getEnv( void )
+{
+	std::string base = this->_server.getRoot();
+	std::string path = this->_request.getResource();
+	std::string method = "";
+	
+	if (this->_request.getMethod() == GET)
+		method = "GET";
+	else if (this->_request.getMethod() == POST)
+		method = "POST";
+	else if (this->_request.getMethod() == DELETE) {
+		method = "DELETE";
+		std::string path = base + this->_request.getResource();
+		if (std::remove(path.c_str()) == 0)
+			this->_status = OK;
+		else
+			this->_status = NOT_FOUND;
+	}
+	else
+	{
+		this->_status = NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	Header headers = this->_request.getHeaders();
+	std::vector<std::string> headerList;
+	HeaderIterator it = headers.begin();
+	std::string key;
+	for (; it != headers.end(); it++)
+	{
+		key = headerTransform(it->first);
+		headerList.push_back("HTTP_" + key + "=" + it->second);
+	}
+	headerList.push_back("SCRIPT_NAME=" + base + path);
+	headerList.push_back("SCRIPT_FILENAME=" + base + path);
+	headerList.push_back("PATH_INFO=" + base + path);
+	headerList.push_back("PATH_TRANSLATED=" + base + path);
+	headerList.push_back("REQUEST_URI=/");
+	headerList.push_back("QUERY_STRING=" + this->_request.getQueryString());
+	headerList.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	headerList.push_back("REQUEST_METHOD=" + method);
+	headerList.push_back("REDIRECT_STATUS=200");
+	headerList.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	headerList.push_back("SERVER_PORT=80");
+	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
+	headerList.push_back("REMOTE_HOST=" + this->_request.header("Host"));
+
+	std::string auth = this->_request.header("Authorization");
+	if (auth.length() > 0)
+	{
+		std::string scheme, userId;
+		std::istringstream f(auth);
+		getline(f, scheme, ' ');
+		getline(f, userId, ' ');
+		headerList.push_back("AUTH_TYPE=" + scheme);
+		headerList.push_back("REMOTE_USER=" + userId);
+	}
+
+	char **env = new char*[headerList.size() + 1];
+	if (env != NULL)
+	{
+		for (size_t i = 0; i < headerList.size(); i++)
+			setSingleEnv(env, headerList[i], i);
+		env[headerList.size()] = NULL;
+	}
+
+	return env;
+}
+
+void Response::initStatusDescriptions( void )
+{
+	/* 100 - 199 (Informational) */
+	this->_statusDescriptions[CONTINUE] = "Continue";
+	this->_statusDescriptions[SWITCHING_PROTOCOLOS] = "Switching Protocols";
+
+	/* 200 - 299 .............................. */
+	this->_statusDescriptions[OK] = "OK";
+	this->_statusDescriptions[CREATED] = "Created";
+	this->_statusDescriptions[ACCEPTED] = "Accepted";
+	this->_statusDescriptions[NO_CONTENT] = "No Content";
+	this->_statusDescriptions[PARTIAL_CONTENT] = "Partial Content";
+
+	/* 300 - 399 .............................. */
+	this->_statusDescriptions[MULTIPLE_CHOICES] = "Multiple Choices";
+	this->_statusDescriptions[MOVED_PERMANENTLY] = "Moved Permanently";
+	this->_statusDescriptions[FOUND] = "Found";
+	this->_statusDescriptions[SEE_OTHER] = "See Other";
+	this->_statusDescriptions[NOT_MODIFIED] = "Not Modified";
+	this->_statusDescriptions[TEMPORARY_REDIRECT] = "Temporary Redirect";
+	this->_statusDescriptions[PERMANENET_REDIRECT] = "Permanent Redirect";
+
+	/* 400 - 499 .............................. */
+	this->_statusDescriptions[BAD_REQUEST] = "Bad Request";
+	this->_statusDescriptions[UNAUTHORIZED] = "Unauthorized";
+	this->_statusDescriptions[FORBIDDEN] = "Forbidden";
+	this->_statusDescriptions[NOT_FOUND] = "Not Found";
+	this->_statusDescriptions[METHOD_NOT_ALLOWED] = "Method Not Allowed";
+	this->_statusDescriptions[NOT_ACCEPTABLE] = "Not Acceptable";
+	this->_statusDescriptions[REQUEST_TIMEOUT] = "Request Timeout";
+	this->_statusDescriptions[CONFLICT] = "Conlifct";
+	this->_statusDescriptions[GONE] = "Gone";
+	this->_statusDescriptions[LENGTH_REQUIRED] = "Length Required";
+	this->_statusDescriptions[PAYLOAD_TOO_LARGE] = "Payload Too Large";
+	this->_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
+	this->_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+	this->_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";
+	this->_statusDescriptions[TOO_MANY_REQUESTS] = "Too Many Requests";
+
+	/* 500 - 599 .............................. */
+	this->_statusDescriptions[INTERNAL_SERVER_ERROR] = "Internal Server Error";
+	this->_statusDescriptions[NOT_IMPLEMENTED] = "Not Implemented";
+	this->_statusDescriptions[BAD_GATEWAY] = "Bad Gateway";
+	this->_statusDescriptions[SERVICE_UNAVAILABLE] = "Service Unavailable";
+	this->_statusDescriptions[GATEWAY_TIMEOUT] = "Gateway Timeout";
+	this->_statusDescriptions[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
+}
+
+
 std::string Response::getMimeType(const std::string& path) const {
 	std::string extension = "";
 
@@ -462,10 +608,6 @@ std::string Response::getMimeType(const std::string& path) const {
 
 	return "application/octet-stream"; // Default MIME type for unknown extensions
 }
-
-/*
-** --------------------------------- UTILITIES ---------------------------------
-*/
 
 std::string Response::headerTransform(std::string s)
 {

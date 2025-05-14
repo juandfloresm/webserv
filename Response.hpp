@@ -7,7 +7,12 @@
 # include <sstream>
 # include <algorithm>
 # include <csignal>
+
 # include <sys/wait.h>
+# include <dirent.h>
+# include <errno.h>
+# include <sys/stat.h>
+
 # include "Message.hpp"
 # include "Connection.hpp"
 # include "Request.hpp"
@@ -20,6 +25,8 @@
 # define CGI_BUFFSIZE 2048
 # define MAJOR_VERSION 1
 # define MINOR_VERSION 1
+
+# define DEFAULT_PAGE "index.html"
 
 typedef std::map<std::string, std::string> Config;
 
@@ -109,12 +116,39 @@ class Response : public Message
 		static unsigned char headerCharTransform(unsigned char c);
 		void matchServer( void );
 
+		void redirectCode( int code, std::string page );
+		void throwErrorCode( int code, std::string page );
+		std::string readDirectory( void ) const;
+		bool isDirectory( void ) const;
+
+		/* 400 */
+		class NotFoundException : public std::exception {
+			public:
+				const char * what () { return "Not Found"; }
+		};
+		/* 403 */
+		class ForbiddenException : public std::exception {
+			public:
+				const char * what () { return "Forbidden"; }
+		};
+		/* 500 */
+		class InternalServerException : public std::exception {
+			public:
+				const char * what () { return "Internal Server Error"; }
+		};
+		/* 502 */
+		class BadGatewayException : public std::exception {
+			public:
+				const char * what () { return "Bad Gateway"; }
+		};
+
 	private:
 		std::string _statusString;
 		std::string _description;
 		std::string _headerSection;
-		StatusDescription _statusDescriptions;
+		std::string _page;
 		std::string _content;
+		StatusDescription _statusDescriptions;
 		long _contentLength;
 		Status _status;
 		int _clientSocket;

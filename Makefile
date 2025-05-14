@@ -32,6 +32,7 @@ fclean: clean
 re: fclean all
 
 runner: re
+	chmod -R 775 .
 	sudo ./$(NAME) $(ARG)
 
 valgrind: re
@@ -46,11 +47,6 @@ sanitize: fclean $(OBJ)
 
 siege:
 	siege --time=1m --concurrent=1000 http://127.0.0.1:8080/index.php
-
-gitter: fclean
-	git add -A
-	git commit -am "Configuration: supporting fields"
-	git push
 
 docker-build:
 	@if ! docker image inspect $(DOCKER_IMAGE) > /dev/null 2>&1; then \
@@ -88,8 +84,11 @@ docker: docker-run
 docker-clean: docker-stop
 	docker rmi $(DOCKER_IMAGE) 2>/dev/null || true
 
+gitter: fclean
+	git add -A
+	git commit -am "Configuration: List sorted. No permission issues drilling down."
+	git push
+
 .PHONY: all clean fclean re runner valgrind fds sanitize \
 		docker docker-build docker-run docker-stop docker-shell \
 		docker-logs docker-rebuild docker-restart docker-clean
-
-.PHONY: all clean fclean re runner valgrind fds sanitize
