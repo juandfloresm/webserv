@@ -1,5 +1,6 @@
-CXX			= c++
-CXXFLAGS	= -std=c++17 -Wall
+CXX			= g++
+CXXFLAGS	= -std=c++17
+LIBS		= -lcurl -lssl -lcrypto
 TARGET		= test_basic
 SRCS		= ../tester/test_basic.cpp
 INCLUDES	= -I../tester
@@ -7,7 +8,7 @@ INCLUDES	= -I../tester
 all: $(TARGET)
 
 $(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRCS) -o $(TARGET)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRCS) -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f $(TARGET)

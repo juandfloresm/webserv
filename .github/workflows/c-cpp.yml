@@ -11,8 +11,20 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install build tools
-      run: sudo apt-get update && sudo apt-get install -y g++ make
+    - name: Install build tools and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ make curl libcurl4-openssl-dev
+
+    - name: Build webserver
+      run: make
+
+    - name: Start webserver in background
+      run: |
+        ./webserv config/sample.conf &
+        echo $! > webserv.pid
+        sleep 5
+        curl -s --head http://localhost:8080/ || (echo "Server failed to start" && exit 1)
 
     - name: Build test binary
       run: make -C tests
@@ -20,3 +32,9 @@ jobs:
     - name: Run tests
       run: ./tests/test_basic
 
+    - name: Stop webserver
+      if: always()
+      run: |
+        if [ -f webserv.pid ]; then
+          kill $(cat webserv.pid) || true
+        fi
