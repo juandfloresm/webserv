@@ -169,14 +169,14 @@ void Connection::processClientRequest( int clientSocketFD )
 
 void Connection::handleSigint( int sgn )
 {
-	(void) sgn;
-	kill(0, SIGKILL);
+	if (sgn == SIGINT)
+		kill(0, SIGKILL);
 }
 
 void Connection::ft_error(const std::string msg) const
 {
 	perror(msg.c_str());
-	std::cerr << "[Error] on the event loop" << std::endl;
+	std::cerr << "[Error] " << msg << std::endl;
 }
 
 /*

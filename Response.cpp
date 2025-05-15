@@ -105,10 +105,17 @@ void Response::matchLocation( void )
 	{
 		std::vector<Location>::iterator lit = lcs.begin();
 		std::string path = this->_request.getResource();
+
+		if (path.find(".") != std::string::npos)
+			path = path.substr(0, path.rfind("/"));
+
 		for (; lit < lcs.end(); lit++)
 		{
-			// TODO 1: the path can end in a file
-			if(lit->getPath().find(path) != std::string::npos && lit->getPath().size() == path.size())
+			std::string opath = lit->getPath();
+			if (*path.rbegin() == '/' && *opath.rbegin() != '/')
+				opath += "/";
+
+			if(opath.find(path) != std::string::npos && opath.size() == path.size())
 			{
 				loc = *lit;
 				len = lit->getPath().size();
@@ -237,7 +244,7 @@ std::string Response::readError( std::string filePath ) const
 {
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
-		std::cerr << "[Error] No error file match " << filePath << std::endl;
+		_connection.ft_error("[Error] No error file match " + filePath);
 		return "";
 	}
 	std::ostringstream content;
@@ -279,7 +286,7 @@ std::string Response::readDirectory( void ) const
 
  	closedir(fd);
 
-	if (path[path.size() - 1] != '/')
+	if (*path.rbegin() != '/')
 		path += "/";
 
 	std::sort(dirs.begin(), dirs.end());

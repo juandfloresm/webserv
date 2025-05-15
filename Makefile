@@ -86,7 +86,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: supporting 'location' context with exact path matches"
+	git commit -am "Configuration: fixing serving URLs with / at the end"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
