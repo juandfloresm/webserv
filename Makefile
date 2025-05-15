@@ -32,8 +32,28 @@ fclean: clean
 re: fclean all
 
 runner: re
+	make clean
 	chmod -R 775 .
 	sudo ./$(NAME) $(ARG)
+
+runner-t: re
+	@echo "Starting server in background..."
+	@make clean
+	@chmod -R 775 .
+	@sudo ./$(NAME) $(ARG) > server.log 2>&1 & echo $$! > server.pid
+	@echo "Server started with PID: $$(cat server.pid)"
+	@sleep 2
+	@echo "Building and running tests..."
+	@if $(MAKE) -C tests/ && ./tests/test_basic; then \
+		echo "✅ Tests completed successfully"; \
+	else \
+		echo "❌ Tests failed"; \
+	fi
+	@echo "Shutting down server..."
+	@sudo kill $$(cat server.pid) || sudo kill -9 $$(cat server.pid) || true
+	@rm -f server.pid server.log
+	@rm -f tests/test_basic
+	@echo "Test run complete."
 
 valgrind: re
 	valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)
