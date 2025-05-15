@@ -40,7 +40,7 @@ jobs:
           exit 1
         fi
         
-        if ! curl -s --head http://localhost:8080/ > curl.log 2>&1; then
+        if ! curl -4 -s --head http://localhost:8080/ > curl.log 2>&1; then
           echo "Could not connect to server"
           cat curl.log
           exit 1
