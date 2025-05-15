@@ -52,6 +52,8 @@ class Configuration
 
 		std::map<int, std::vector<std::string> > levels;
 		std::vector<std::string> level0, level1, level2;
+
+		std::string _wpath;
 };
 
 std::ostream & operator<<( std::ostream & o, Configuration const & i );

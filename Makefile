@@ -10,6 +10,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 OBJ 				:=	$(SRC:.cpp=.o)
 
 ARG					:=	./config/zweb2.conf
+WWW					:=	/home/www
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -30,10 +31,15 @@ fclean: clean
 	sudo pkill webserv ; rm -f $(NAME)
 
 re: fclean all
+	make clean
+	sudo mkdir -p $(WWW)/html
+	sudo mkdir -p $(WWW)/cgi-bin
+	sudo cp -ru ./html $(WWW)/
+	sudo cp -ru ./cgi-bin $(WWW)/
+	sudo chmod -R 775 $(WWW)
+	export WPATH=$(WWW)
 
 runner: re
-	make clean
-	chmod -R 775 .
 	sudo ./$(NAME) $(ARG)
 
 runner-t: re
@@ -106,7 +112,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: debugging paths"
+	git commit -am "Serving static and dynamic files from /home/www"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

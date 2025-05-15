@@ -301,6 +301,7 @@ std::string Response::readDirectory( void ) const
 	fd = opendir(filePath.c_str());
 	if (fd == NULL)
 		throw ForbiddenException();
+
 	if (chdir(filePath.c_str()) != 0)
 		throw ForbiddenException();
 

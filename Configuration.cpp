@@ -31,6 +31,9 @@ Configuration::Configuration( std::string const configFile )
 	levels[1] = level1;
 	levels[2] = level2;
 
+	(void) configFile;
+	_wpath = "/home/www"; //std::getenv("WPATH");
+
 	parse(configFile);
 }
 
@@ -192,21 +195,25 @@ void Configuration::parseEntry( Entry directive )
 
 void Configuration::parseContext( Context & cxt, Entry directive )
 {
+	std::string parsedValue = directive.second;
+	std::string var = "$[WPATH]";
+	if (parsedValue.find(var) != std::string::npos)
+		parsedValue = parsedValue.replace(parsedValue.find(var), var.size(), _wpath);
 	_directiveCount++;
 	if (directive.first.compare("listen") == 0)
-		cxt.setPort(port(directive.second));
+		cxt.setPort(port(parsedValue));
 	else if (directive.first.compare("root") == 0)
-		cxt.setRoot(word(directive.second));
+		cxt.setRoot(word(parsedValue));
 	else if (directive.first.compare("server_name") == 0)
 	{
-		std::istringstream f(directive.second);
+		std::istringstream f(parsedValue);
 		std::string s;
 		while (getline(f, s, ' '))
 			cxt.setServerName(word(s));
 	}
 	else if (directive.first.compare("error_page") == 0)
 	{
-		std::istringstream f(directive.second);
+		std::istringstream f(parsedValue);
 		std::string code, page;
 		getline(f, code, ' ');
 		getline(f, page, ' ');
@@ -214,7 +221,7 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 	}
 	else if (directive.first.compare("return") == 0)
 	{
-		std::istringstream f(directive.second);
+		std::istringstream f(parsedValue);
 		std::string code, page;
 		getline(f, code, ' ');
 		getline(f, page, ' ');
@@ -222,7 +229,7 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 	}
 	else if (directive.first.compare("index") == 0)
 	{
-		std::istringstream f(directive.second);
+		std::istringstream f(parsedValue);
 		std::string s;
 		cxt.getIndex().clear();
 		while (getline(f, s, ' '))
@@ -230,23 +237,23 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 	}
 	else if (directive.first.compare("autoindex") == 0)
 	{
-		if (flag(directive.second).compare("on") == 0)
+		if (flag(parsedValue).compare("on") == 0)
 			cxt.setAutoIndex(true);
 		else
 			cxt.setAutoIndex(false);
 	}
 	else if (directive.first.compare("methods") == 0)
 	{
-		std::istringstream f(directive.second);
+		std::istringstream f(parsedValue);
 		std::string s;
 		cxt.getMethods().clear();
 		while (getline(f, s, ' '))
 			cxt.setMethod(methods(word(s)));
 	}
 	else if (directive.first.compare("cgi_pass") == 0)
-		cxt.setPassCGI(word(directive.second));
+		cxt.setPassCGI(word(parsedValue));
 	else if (directive.first.compare("client_max_body_size") == 0)
-		cxt.setClientMaxBodySize(size(directive.second));
+		cxt.setClientMaxBodySize(size(parsedValue));
 }
 
 /*
