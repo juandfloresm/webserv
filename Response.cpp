@@ -125,7 +125,9 @@ void Response::matchLocation( void )
 			throw NotFoundException();
 		else
 		{
-			this->_server.setRoot(loc.getRoot());
+			if (loc.getRoot().size() > 1)
+				this->_server.setRoot(loc.getRoot());
+
 			this->_server.setAutoIndex(loc.getAutoIndex());
 			// TODO 2: should not be blindly
 			this->_request.setResource("/");
@@ -445,9 +447,21 @@ void Response::errorHandler( Status status, std::exception e )
 {
 	this->_connection.ft_error(e.what());
 	this->_status = status;
-	if (this->_server.getErrorPage().first == static_cast<int>(status))
-		this->_content = readError(this->_server.getErrorPage().second);
+	setErrorPage(status);
 	doSend(this->_clientSocket);
+}
+
+void Response::setErrorPage(int status)
+{
+	std::vector<std::pair<int, std::string> > ep = _server.getErrorPages();
+	for (std::vector<std::pair<int, std::string> >::iterator it = ep.begin(); it < ep.end(); it++)
+	{
+		if (it->first == static_cast<int>(status))
+		{
+			this->_content = readError(it->second);
+			break ;
+		}
+	}
 }
 
 bool Response::isDirectory( void ) const
@@ -468,12 +482,7 @@ void Response::throwErrorCode( int code, std::string page )
 	if (page.size() > 0)
 		this->_content = readError(page);
 	else
-	{
-		int pcode = this->_server.getErrorPage().first;
-		std::string ppage = this->_server.getErrorPage().second;
-		if (pcode == code && ppage.size() > 0)
-			this->_content = readError(ppage);
-	}
+		setErrorPage(code);
 	this->_status = static_cast<Status>(code);
 	doSend(this->_clientSocket);
 }

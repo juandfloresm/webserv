@@ -16,7 +16,7 @@ class Context
 
 		std::string getRoot( void ) const;
 		void setRoot( std::string root );
-		std::pair<int, std::string> getErrorPage( void ) const;
+		std::vector<std::pair<int, std::string> > getErrorPages( void ) const;
 		void setErrorPage( int statusCode, std::string page );
 		std::pair<int, std::string> getReturn( void ) const;
 		void setReturn( int statusCode, std::string page );
@@ -29,8 +29,6 @@ class Context
 		virtual void setPort( int port );
 		virtual std::vector<std::string> getServerNames( void ) const;
 		virtual void setServerName( std::string serverName );
-		// virtual std::vector<Location> getLocations( void ) const;
-		// virtual void setLocation( Location location );
 
 		virtual std::string getPath( void ) const;
 		virtual void setPath( std::string path );
@@ -41,7 +39,7 @@ class Context
 
 	protected:
 		std::string _root;
-		std::pair<int, std::string> _errorPage;
+		std::vector<std::pair<int, std::string> > _errorPages;
 		std::pair<int, std::string> _return;
 		std::vector<std::string> _index;
 		bool _autoIndex;

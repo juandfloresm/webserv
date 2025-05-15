@@ -319,7 +319,8 @@ int Configuration::statusCode( std::string raw )
 {
 	std::istringstream f(raw);
 	std::string s;
-	size_t n = 0, i = 1;
+	int n = 0;
+	size_t i = 1;
 	getline(f, s, ' ');
 	for(std::string::iterator it = s.begin(); it < s.end(); it++)
 	{

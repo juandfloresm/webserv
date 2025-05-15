@@ -123,6 +123,7 @@ class Response : public Message
 
 		void errorHandler( Status status, std::exception e );
 		void matchLocation( void );
+		void setErrorPage(int status);
 
 		/* 400 */
 		class NotFoundException : public std::exception {
