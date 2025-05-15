@@ -3,8 +3,6 @@ name: C++ Tests
 on:
   push:
     branches: [ "tester" ]
-  pull_request:
-    branches: [ "tester" ]
 
 jobs:
   build-and-test:
@@ -16,7 +14,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libcurl4-openssl-dev
+        sudo apt-get install -y build-essential libcurl4-openssl-dev net-tools
 
     - name: Build webserver
       run: make
@@ -28,28 +26,44 @@ jobs:
       
     - name: Start webserver and run tests
       run: |
-        nohup ./webserv config/sample.conf > server.log 2>&1 &
-        echo $! > webserv.pid
-
-        for i in {1..10}; do
-            if curl -4 -s --head http://localhost:8080/ > /dev/null 2>&1; then
-                echo "Server is ready"
-                break
-            fi
-            sleep 1
-        done
-
-        if ! curl -4 -s --head http://localhost:8080/ > /dev/null 2>&1; then
-            echo "Server failed to start in time"
-            exit 1
+        ./webserv config/sample.conf > server.log 2>&1 &
+        SERVER_PID=$!
+        echo $SERVER_PID > webserv.pid
+        
+        # Wait briefly for server to initialize
+        sleep 5
+        
+        # Check if process is still running
+        if ! ps -p $SERVER_PID > /dev/null; then
+          echo "Server process died immediately"
+          cat server.log
+          exit 1
         fi
         
-        echo "Server started successfully"
+        echo "--- Server Log ---"
+        cat server.log
         
-        cd tests
-        ./test_basic
-        TEST_EXIT_CODE=$?
+        echo "--- Process Info ---"
+        ps aux | grep webserv
         
-        kill $(cat webserv.pid) || true
+        echo "--- Network Bindings ---"
+        sudo netstat -tulpn | grep $SERVER_PID
+        
+        echo "--- Connection Tests ---"
+        curl -v --head http://127.0.0.1:8080/ || true
+        curl -v --head http://localhost:8080/ || true
+        curl -v --head http://0.0.0.0:8080/ || true
+        
+        if curl -s --head --connect-timeout 5 http://127.0.0.1:8080/ > /dev/null 2>&1 || curl -s --head --connect-timeout 5 http://localhost:8080/ > /dev/null 2>&1; then
+          echo "Server started successfully"
+          cd tests
+          ./test_basic
+          TEST_EXIT_CODE=$?
+        else
+          echo "Server failed to respond to requests"
+          TEST_EXIT_CODE=1
+        fi
+        
+        kill $SERVER_PID || true
         
         exit $TEST_EXIT_CODE
