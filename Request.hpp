@@ -30,6 +30,7 @@ class Request : public Message
 
 		Method getMethod( void ) const;
 		std::string getResource( void ) const;
+		void setResource( std::string resource );
 
 		const std::string getMethodString( void ) const;
 		std::string header( std::string const header );

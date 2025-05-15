@@ -10,6 +10,12 @@ Context::Context( )
 	this->_autoIndex = false;
 }
 
+Context::Context( const Context & c )
+{
+	*this = c;
+}
+
+
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -134,4 +140,24 @@ std::string Context::getPath( void ) const
 void Context::setPath( std::string path )
 {
 	(void) path;
+}
+
+std::vector<std::string> Context::getMethods( void ) const
+{
+	return std::vector<std::string>();
+}
+
+void Context::setMethod( std::string method )
+{
+	(void) method;
+}
+
+std::string Context::getPassCGI( void ) const
+{
+	return "";
+}
+
+void Context::setPassCGI( std::string passCGI )
+{
+	(void) passCGI;
 }

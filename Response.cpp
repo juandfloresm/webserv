@@ -15,6 +15,7 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 	{
 		try {
 			matchServer();
+			matchLocation();
 			doResponse();
 		} catch ( Response::NotFoundException & e ) {
 			errorHandler(NOT_FOUND, e);
@@ -93,6 +94,36 @@ void Response::matchServer( void )
 	}
 
 	throw Response::BadGatewayException();
+}
+
+void Response::matchLocation( void )
+{
+	std::vector<Location> lcs = this->_server.getLocations();
+	Location loc;
+	size_t len = 0;
+	if (lcs.size() > 0)
+	{
+		std::vector<Location>::iterator lit = lcs.begin();
+		std::string path = this->_request.getResource();
+		for (; lit < lcs.end(); lit++)
+		{
+			// TODO 1: the path can end in a file
+			if(lit->getPath().find(path) != std::string::npos && lit->getPath().size() == path.size())
+			{
+				loc = *lit;
+				len = lit->getPath().size();
+			}
+		}
+		if (len == 0)
+			throw NotFoundException();
+		else
+		{
+			this->_server.setRoot(loc.getRoot());
+			this->_server.setAutoIndex(loc.getAutoIndex());
+			// TODO 2: should not be blindly
+			this->_request.setResource("/");
+		}
+	}
 }
 
 void Response::doResponse( void )

@@ -11,18 +11,22 @@ class Location : public Context
 {
 
 	public:
-		Location( );
+		Location();
+		Location( const Location & loc );
 		~Location();
 		Location & operator=( Location const & rhs );
 
 		std::string getPath( void ) const;
 		void setPath( std::string path );
+		std::vector<std::string> getMethods( void ) const;
+		void setMethod( std::string method );
+		std::string getPassCGI( void ) const;
+		void setPassCGI( std::string passGCI );
 
 	private:
 		std::string _path;
-		
-		// NOT WIRED
 		std::vector<std::string> _methods;
+		std::string _passCGI;
 
 };
 

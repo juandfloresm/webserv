@@ -11,7 +11,7 @@ Server::Server( )
 	this->_serverNames.push_back("localhost");
 }
 
-Server::Server( const Server & server )
+Server::Server( const Server & server ) : Context(server)
 {
 	*this = server;
 }
@@ -39,6 +39,9 @@ Server & Server::operator=( Server const & rhs )
 	this->_return.first = rhs.getReturn().first;
 	this->_return.second = rhs.getReturn().second;
 	this->_autoIndex = rhs.getAutoIndex();
+	this->_locations = rhs.getLocations();
+	if (rhs.getLocations().size() > 0)
+		std::cout << rhs.getLocations().at(1).getRoot();
 	return *this;
 }
 
@@ -82,6 +85,11 @@ void Server::setServerName( std::string serverName )
 std::vector<Location> Server::getLocations( void ) const
 {
 	return this->_locations;
+}
+
+Location & Server::getLastLocation( void )
+{
+	return this->_locations.back();
 }
 
 void Server::setLocation( Location location )

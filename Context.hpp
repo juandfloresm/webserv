@@ -5,12 +5,12 @@
 # include <string>
 # include <map>
 # include <vector>
-# include "Context.hpp"
 
 class Context
 {
 	public:
 		Context( );
+		Context( const Context & c );
 		virtual ~Context();
 		Context & operator=( Context const & rhs );
 
@@ -29,9 +29,15 @@ class Context
 		virtual void setPort( int port );
 		virtual std::vector<std::string> getServerNames( void ) const;
 		virtual void setServerName( std::string serverName );
+		// virtual std::vector<Location> getLocations( void ) const;
+		// virtual void setLocation( Location location );
 
 		virtual std::string getPath( void ) const;
 		virtual void setPath( std::string path );
+		virtual std::vector<std::string> getMethods( void ) const;
+		virtual void setMethod( std::string method );
+		virtual std::string getPassCGI( void ) const;
+		virtual void setPassCGI( std::string passGCI );
 
 	protected:
 		std::string _root;

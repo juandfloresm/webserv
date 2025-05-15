@@ -9,7 +9,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
-ARG					:=	./config/zweb.conf
+ARG					:=	./config/zweb2.conf
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -86,7 +86,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: 'error_page' directive works without the need to have a 'return' directive"
+	git commit -am "Configuration: supporting 'location' context with exact path matches"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

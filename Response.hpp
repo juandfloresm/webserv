@@ -122,6 +122,7 @@ class Response : public Message
 		bool isDirectory( void ) const;
 
 		void errorHandler( Status status, std::exception e );
+		void matchLocation( void );
 
 		/* 400 */
 		class NotFoundException : public std::exception {
