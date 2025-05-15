@@ -6,6 +6,8 @@
 
 Configuration::Configuration( std::string const configFile ) 
 {
+	_directiveCount = -1;
+
 	level0.push_back("server");
 	level1.push_back("listen");
 	level1.push_back("root");
@@ -26,6 +28,7 @@ Configuration::Configuration( std::string const configFile )
 	levels[0] = level0;
 	levels[1] = level1;
 	levels[2] = level2;
+
 	parse(configFile);
 }
 
@@ -105,6 +108,11 @@ void Configuration::parse( std::string const file )
 			std::cerr << "[Error] parsing format error: " << i << std::endl;
 			throw std::exception();
 		}
+		if (_directiveCount == 0)
+		{
+			std::cerr << "[Error] no directives detected for context" << std::endl;
+			throw std::exception();
+		}
 	}
 }
 
@@ -152,18 +160,27 @@ void Configuration::parseEntry( Entry directive )
 {
 	if (directive.first.compare("server") == 0)
 	{
+		if (_directiveCount == 0)
+		{
+			std::cerr << "[Error] no directives detected for context" << std::endl;
+			throw std::exception();
+		}
 		this->_servers.push_back(Server());
 		this->_parsingServer = true;
+		_directiveCount = 0;
 	}
 	else if (directive.first.compare("location") == 0)
 	{
+		if (_directiveCount == 0)
+		{
+			std::cerr << "[Error] no directives detected for context" << std::endl;
+			throw std::exception();
+		}
 		this->_location = Location();
-		std::istringstream f(directive.second);
-		std::string s;
-		getline(f, s, ' ');
-		this->_location.setPath(s);
+		this->_location.setPath(word(directive.second));
 		this->_servers.back().setLocation(this->_location);
 		this->_parsingServer = false;
+		_directiveCount = 0;
 	}
 	else if (this->_parsingServer)
 		parseContext(this->_servers.back(), directive);
@@ -173,6 +190,7 @@ void Configuration::parseEntry( Entry directive )
 
 void Configuration::parseContext( Context & cxt, Entry directive )
 {
+	_directiveCount++;
 	if (directive.first.compare("listen") == 0)
 		cxt.setPort(port(directive.second));
 	else if (directive.first.compare("root") == 0)
@@ -263,7 +281,7 @@ int Configuration::port( std::string raw )
 std::string Configuration::word( std::string raw )
 {
 	std::istringstream f(raw);
-	std::string s, extra = "/.";
+	std::string s, extra = "/.-";
 	size_t i = 0;
 	getline(f, s, ' ');
 	for(std::string::iterator it = s.begin(); it < s.end(); it++)
@@ -283,6 +301,11 @@ std::string Configuration::word( std::string raw )
 			throw std::exception();
 		}
 		i++;
+	}
+	if (s.size() == 0) 
+	{
+		std::cerr << "[Error] provided empty directive value" << std::endl;
+		throw std::exception();
 	}
 	return s;
 }

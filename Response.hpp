@@ -103,7 +103,7 @@ class Response : public Message
 
 		std::string readError( std::string status ) const;
 		std::string readStaticPage( void ) const;
-		std::string readDynamicPage( const std::string binary );
+		std::string readDynamicPage( void );
 		void clearEnv( char **env );
 		char **getEnv( void );
 
@@ -160,6 +160,7 @@ class Response : public Message
 		int _port;
 		Request & _request;
 		Server _server;
+		Location _location;
 
 		std::string getMimeType(const std::string& path) const;
 };

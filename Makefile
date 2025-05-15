@@ -86,7 +86,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: creating a list of STATUS_CODE / PAGE pair"
+	git commit -am "Configuration: support CGI proxy to differ between static and dynamic pages"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

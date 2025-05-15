@@ -44,6 +44,7 @@ class Configuration
 		bool _parsingServer;
 		ServerList _servers;
 		Location _location;
+		int _directiveCount;
 
 		std::map<int, std::vector<std::string> > levels;
 		std::vector<std::string> level0, level1, level2;

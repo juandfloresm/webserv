@@ -112,6 +112,12 @@ void Response::matchLocation( void )
 		for (; lit < lcs.end(); lit++)
 		{
 			std::string opath = lit->getPath();
+			if (opath.compare(".php") == 0 && this->_request.getResource().rfind(".php") != std::string::npos)
+			{
+				loc = *lit;
+				len = 1;
+				break;
+			}
 			if (*path.rbegin() == '/' && *opath.rbegin() != '/')
 				opath += "/";
 
@@ -129,8 +135,14 @@ void Response::matchLocation( void )
 				this->_server.setRoot(loc.getRoot());
 
 			this->_server.setAutoIndex(loc.getAutoIndex());
-			// TODO 2: should not be blindly
-			this->_request.setResource("/");
+
+			path = this->_request.getResource();
+			if (path.find(".php") != std::string::npos)
+				(void) path;
+			else
+				this->_request.setResource("/");
+
+			this->_location = loc;
 		}
 	}
 }
@@ -151,22 +163,15 @@ void Response::doResponse( void )
 		else
 			throwErrorCode(code, page);
 	}
-	else if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
+	else if (this->_location.getPassCGI().size() > 0)
 	{
-		std::string base = this->_server.getRoot();
-		std::string script = this->_request.getResource();
-		std::string binary = this->_request.getResource().find(".php") != std::string::npos ? CGI_PHP : (base + script);
-		int sock = this->_clientSocket;
 		pid_t pid = fork();
 		if (pid < 0)
-		{
-			this->_status = INTERNAL_SERVER_ERROR;
-			doSend(sock);
-		}
+			throw InternalServerException();
 		else if (pid == 0)
 		{
-			this->_content = readDynamicPage(binary);
-			doSend(sock);
+			this->_content = readDynamicPage();
+			doSend(this->_clientSocket);
 			exit(0);
 		}
 	}
@@ -330,7 +335,7 @@ std::string Response::readStaticPage( void ) const
 			filePath += DEFAULT_PAGE;
 	}
 
-	std::cout << "Serving file: " << filePath << std::endl;
+	std::cout << "[STATIC] Serving file: " << filePath << std::endl;
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open())
 		throw NotFoundException();
@@ -340,8 +345,10 @@ std::string Response::readStaticPage( void ) const
 	return content.str();
 }
 
-std::string Response::readDynamicPage( const std::string binary )
+std::string Response::readDynamicPage( void )
 {
+	std::string binary = _location.getPassCGI();
+	std::cout << "[DYNAMIC] Serving file: " << _request.getResource() << std::endl;
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
 	int	fd[2];
