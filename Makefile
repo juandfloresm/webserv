@@ -9,7 +9,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 
 OBJ 				:=	$(SRC:.cpp=.o)
 
-ARG					:=	./config/zweb.conf
+ARG					:=	./config/zweb2.conf
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -86,7 +86,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Configuration: List sorted. No permission issues drilling down."
+	git commit -am "Configuration: support CGI proxy to differ between static and dynamic pages"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

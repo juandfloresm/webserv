@@ -24,6 +24,7 @@ class Server : public Context
 		void setLocation( Location location );
 		bool isDefault( void ) const;
 		void setDefault( bool _default );
+		Location & getLastLocation( void );
 
 	private:
 		int _port;

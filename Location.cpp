@@ -9,6 +9,12 @@ Location::Location( )
 	this->_path = "/";
 }
 
+Location::Location( const Location & loc ) : Context(loc)
+{
+	*this = loc;
+}
+
+
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -27,6 +33,13 @@ Location & Location::operator=( Location const & rhs )
 {
 	this->_root = rhs.getRoot();
 	this->_path = rhs.getPath();
+	this->_methods = rhs.getMethods();
+	this->_passCGI = rhs.getPassCGI();
+	this->_errorPages = rhs.getErrorPages();
+	this->_return.first = rhs.getReturn().first;
+	this->_return.second = rhs.getReturn().second;
+	this->_autoIndex = rhs.getAutoIndex();
+	this->_index = rhs.getIndex();
 	return *this;
 }
 
@@ -55,4 +68,24 @@ std::string Location::getPath( void ) const
 void Location::setPath( std::string path )
 {
 	this->_path = path;
+}
+
+std::vector<std::string> Location::getMethods( void ) const
+{
+	return this->_methods;
+}
+
+void Location::setMethod( std::string method )
+{
+	this->_methods.push_back(method);
+}
+
+std::string Location::getPassCGI( void ) const
+{
+	return this->_passCGI;
+}
+
+void Location::setPassCGI( std::string passCGI )
+{
+	this->_passCGI = passCGI;
 }

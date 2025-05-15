@@ -7,9 +7,14 @@
 Context::Context( )
 {
 	this->_root = "./html";
-	this->_index.push_back("index.html");
 	this->_autoIndex = false;
 }
+
+Context::Context( const Context & c )
+{
+	*this = c;
+}
+
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -28,7 +33,7 @@ Context & Context::operator=( Context const & rhs )
 {
 	this->_root = rhs.getRoot();
 	this->_index = rhs.getIndex();
-	this->_errorPage = rhs.getErrorPage();
+	this->_errorPages = rhs.getErrorPages();
 	this->_return = rhs.getReturn();
 	this->_autoIndex = rhs.getAutoIndex();
 	return *this;
@@ -61,15 +66,17 @@ void Context::setRoot( std::string root )
 	this->_root = root;
 }
 
-std::pair<int, std::string> Context::getErrorPage( void ) const
+std::vector<std::pair<int, std::string> > Context::getErrorPages( void ) const
 {
-	return this->_errorPage;
+	return this->_errorPages;
 }
 
 void Context::setErrorPage( int statusCode, std::string page )
 {
-	this->_errorPage.first = statusCode;
-	this->_errorPage.second = page;
+	std::pair<int, std::string> pair;
+	pair.first = statusCode;
+	pair.second = page;
+	this->_errorPages.push_back(pair);
 }
 
 std::pair<int, std::string> Context::getReturn( void ) const
@@ -135,4 +142,24 @@ std::string Context::getPath( void ) const
 void Context::setPath( std::string path )
 {
 	(void) path;
+}
+
+std::vector<std::string> Context::getMethods( void ) const
+{
+	return std::vector<std::string>();
+}
+
+void Context::setMethod( std::string method )
+{
+	(void) method;
+}
+
+std::string Context::getPassCGI( void ) const
+{
+	return "";
+}
+
+void Context::setPassCGI( std::string passCGI )
+{
+	(void) passCGI;
 }

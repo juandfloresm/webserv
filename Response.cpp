@@ -15,23 +15,16 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 	{
 		try {
 			matchServer();
+			matchLocation();
 			doResponse();
-		} catch ( Response::NotFoundException & nfe ) {
-			this->_connection.ft_error(nfe.what());
-			this->_status = NOT_FOUND;
-			doSend(clientSocket);
-		} catch ( Response::ForbiddenException & fe ) {
-			this->_connection.ft_error(fe.what());
-			this->_status = FORBIDDEN;
-			doSend(clientSocket);
-		} catch ( Response::InternalServerException & ise ) {
-			this->_connection.ft_error(ise.what());
-			this->_status = INTERNAL_SERVER_ERROR;
-			doSend(clientSocket);
-		} catch ( Response::BadGatewayException & bge ) {
-			this->_connection.ft_error(bge.what());
-			this->_status = BAD_GATEWAY;
-			doSend(clientSocket);
+		} catch ( Response::NotFoundException & e ) {
+			errorHandler(NOT_FOUND, e);
+		} catch ( Response::ForbiddenException & e ) {
+			errorHandler(FORBIDDEN, e);
+		} catch ( Response::InternalServerException & e ) {
+			errorHandler(INTERNAL_SERVER_ERROR, e);
+		} catch ( Response::BadGatewayException & e ) {
+			errorHandler(BAD_GATEWAY, e);
 		}
 	}
 	else
@@ -103,6 +96,57 @@ void Response::matchServer( void )
 	throw Response::BadGatewayException();
 }
 
+void Response::matchLocation( void )
+{
+	std::vector<Location> lcs = this->_server.getLocations();
+	Location loc;
+	size_t len = 0;
+	if (lcs.size() > 0)
+	{
+		std::vector<Location>::iterator lit = lcs.begin();
+		std::string path = this->_request.getResource();
+
+		if (path.find(".") != std::string::npos)
+			path = path.substr(0, path.rfind("/"));
+
+		for (; lit < lcs.end(); lit++)
+		{
+			std::string opath = lit->getPath();
+			if (opath.compare(".php") == 0 && this->_request.getResource().rfind(".php") != std::string::npos)
+			{
+				loc = *lit;
+				len = 1;
+				break;
+			}
+			if (*path.rbegin() == '/' && *opath.rbegin() != '/')
+				opath += "/";
+
+			if(opath.find(path) != std::string::npos && opath.size() == path.size())
+			{
+				loc = *lit;
+				len = lit->getPath().size();
+			}
+		}
+		if (len == 0)
+			throw NotFoundException();
+		else
+		{
+			if (loc.getRoot().size() > 1)
+				this->_server.setRoot(loc.getRoot());
+
+			this->_server.setAutoIndex(loc.getAutoIndex());
+
+			path = this->_request.getResource();
+			if (path.find(".php") != std::string::npos)
+				(void) path;
+			else
+				this->_request.setResource("/");
+
+			this->_location = loc;
+		}
+	}
+}
+
 void Response::doResponse( void )
 {
 	int code = this->_server.getReturn().first;
@@ -119,22 +163,15 @@ void Response::doResponse( void )
 		else
 			throwErrorCode(code, page);
 	}
-	else if (this->_request.getResource().find(".php") != std::string::npos || this->_request.getResource().find(".pl") != std::string::npos)
+	else if (this->_location.getPassCGI().size() > 0)
 	{
-		std::string base = this->_server.getRoot();
-		std::string script = this->_request.getResource();
-		std::string binary = this->_request.getResource().find(".php") != std::string::npos ? CGI_PHP : (base + script);
-		int sock = this->_clientSocket;
 		pid_t pid = fork();
 		if (pid < 0)
-		{
-			this->_status = INTERNAL_SERVER_ERROR;
-			doSend(sock);
-		}
+			throw InternalServerException();
 		else if (pid == 0)
 		{
-			this->_content = readDynamicPage(binary);
-			doSend(sock);
+			this->_content = readDynamicPage();
+			doSend(this->_clientSocket);
 			exit(0);
 		}
 	}
@@ -162,8 +199,8 @@ const std::string Response::toString( void ) const
 	std::ostringstream ss;
     ss << getMajorVersion();
 	std::string major = ss.str();
-	// ss.str("");
-	// ss.clear();
+	ss.str("");
+	ss.clear();
 	ss << getMinorVersion();
 	std::string minor = ss.str();
 	std::string contentType = getMimeType(this->_request.getResource());
@@ -205,7 +242,10 @@ const std::string Response::toString( void ) const
 	}
 
 	r += this->_content;
+<<<<<<< HEAD
 	// r += CRLF;
+=======
+>>>>>>> 743afa10976fb05962e2cdc49292cb85f1eed2e8
 
 	return r;
 }
@@ -214,7 +254,7 @@ std::string Response::readError( std::string filePath ) const
 {
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
-		std::cerr << "[Error] No error file match " << filePath << std::endl;
+		_connection.ft_error("[Error] No error file match " + filePath);
 		return "";
 	}
 	std::ostringstream content;
@@ -256,7 +296,7 @@ std::string Response::readDirectory( void ) const
 
  	closedir(fd);
 
-	if (path[path.size() - 1] != '/')
+	if (*path.rbegin() != '/')
 		path += "/";
 
 	std::sort(dirs.begin(), dirs.end());
@@ -298,7 +338,7 @@ std::string Response::readStaticPage( void ) const
 			filePath += DEFAULT_PAGE;
 	}
 
-	std::cout << "Serving file: " << filePath << std::endl;
+	std::cout << "[STATIC] Serving file: " << filePath << std::endl;
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open())
 		throw NotFoundException();
@@ -308,8 +348,10 @@ std::string Response::readStaticPage( void ) const
 	return content.str();
 }
 
-std::string Response::readDynamicPage( const std::string binary )
+std::string Response::readDynamicPage( void )
 {
+	std::string binary = _location.getPassCGI();
+	std::cout << "[DYNAMIC] Serving file: " << _request.getResource() << std::endl;
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
 	int	fd[2];
@@ -411,12 +453,31 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
+void Response::errorHandler( Status status, std::exception e )
+{
+	this->_connection.ft_error(e.what());
+	this->_status = status;
+	setErrorPage(status);
+	doSend(this->_clientSocket);
+}
+
+void Response::setErrorPage(int status)
+{
+	std::vector<std::pair<int, std::string> > ep = _server.getErrorPages();
+	for (std::vector<std::pair<int, std::string> >::iterator it = ep.begin(); it < ep.end(); it++)
+	{
+		if (it->first == static_cast<int>(status))
+		{
+			this->_content = readError(it->second);
+			break ;
+		}
+	}
+}
+
 bool Response::isDirectory( void ) const
 {
 	std::string path = this->_request.getResource();
 	return path.find(".") == std::string::npos;
-	// TODO: better determine if the path is a directory...
-	// return (path == "/" || (path.length() > 0 && path[path.length() - 1] == '/'));
 }
 
 void Response::redirectCode( int code, std::string page )
@@ -431,12 +492,7 @@ void Response::throwErrorCode( int code, std::string page )
 	if (page.size() > 0)
 		this->_content = readError(page);
 	else
-	{
-		int pcode = this->_server.getErrorPage().first;
-		std::string ppage = this->_server.getErrorPage().second;
-		if (pcode == code && ppage.size() > 0)
-			this->_content = readError(ppage);
-	}
+		setErrorPage(code);
 	this->_status = static_cast<Status>(code);
 	doSend(this->_clientSocket);
 }

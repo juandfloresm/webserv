@@ -103,7 +103,7 @@ class Response : public Message
 
 		std::string readError( std::string status ) const;
 		std::string readStaticPage( void ) const;
-		std::string readDynamicPage( const std::string binary );
+		std::string readDynamicPage( void );
 		void clearEnv( char **env );
 		char **getEnv( void );
 
@@ -120,6 +120,10 @@ class Response : public Message
 		void throwErrorCode( int code, std::string page );
 		std::string readDirectory( void ) const;
 		bool isDirectory( void ) const;
+
+		void errorHandler( Status status, std::exception e );
+		void matchLocation( void );
+		void setErrorPage(int status);
 
 		/* 400 */
 		class NotFoundException : public std::exception {
@@ -156,6 +160,7 @@ class Response : public Message
 		int _port;
 		Request & _request;
 		Server _server;
+		Location _location;
 
 		std::string getMimeType(const std::string& path) const;
 };

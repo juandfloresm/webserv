@@ -5,18 +5,18 @@
 # include <string>
 # include <map>
 # include <vector>
-# include "Context.hpp"
 
 class Context
 {
 	public:
 		Context( );
+		Context( const Context & c );
 		virtual ~Context();
 		Context & operator=( Context const & rhs );
 
 		std::string getRoot( void ) const;
 		void setRoot( std::string root );
-		std::pair<int, std::string> getErrorPage( void ) const;
+		std::vector<std::pair<int, std::string> > getErrorPages( void ) const;
 		void setErrorPage( int statusCode, std::string page );
 		std::pair<int, std::string> getReturn( void ) const;
 		void setReturn( int statusCode, std::string page );
@@ -32,10 +32,14 @@ class Context
 
 		virtual std::string getPath( void ) const;
 		virtual void setPath( std::string path );
+		virtual std::vector<std::string> getMethods( void ) const;
+		virtual void setMethod( std::string method );
+		virtual std::string getPassCGI( void ) const;
+		virtual void setPassCGI( std::string passGCI );
 
 	protected:
 		std::string _root;
-		std::pair<int, std::string> _errorPage;
+		std::vector<std::pair<int, std::string> > _errorPages;
 		std::pair<int, std::string> _return;
 		std::vector<std::string> _index;
 		bool _autoIndex;

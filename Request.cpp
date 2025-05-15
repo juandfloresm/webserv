@@ -176,6 +176,11 @@ std::string Request::getResource( void ) const
 	return this->_resource;
 }
 
+void Request::setResource( std::string resource )
+{
+	this->_resource = resource;
+}
+
 std::string const Request::getQueryString( void ) const
 {
 	return this->_queryString;
