@@ -14,7 +14,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libcurl4-openssl-dev net-tools
+        sudo apt-get install -y build-essential libcurl4-openssl-dev net-tools netcat-openbsd
 
     - name: Build webserver
       run: make
@@ -30,15 +30,16 @@ jobs:
         SERVER_PID=$!
         echo $SERVER_PID > webserv.pid
         
-        # Wait briefly for server to initialize
-        sleep 5
-        
-        # Check if process is still running
-        if ! ps -p $SERVER_PID > /dev/null; then
-          echo "Server process died immediately"
-          cat server.log
-          exit 1
-        fi
+        for i in {1..10}; do
+          if ps -p $SERVER_PID > /dev/null; then
+            echo "Server is running (attempt $i)"
+            sleep 1
+          else
+            echo "Server process died"
+            cat server.log
+            exit 1
+          fi
+        done
         
         echo "--- Server Log ---"
         cat server.log
@@ -49,19 +50,22 @@ jobs:
         echo "--- Network Bindings ---"
         sudo netstat -tulpn | grep $SERVER_PID
         
-        echo "--- Connection Tests ---"
-        curl -v --head http://127.0.0.1:8080/ || true
-        curl -v --head http://localhost:8080/ || true
-        curl -v --head http://0.0.0.0:8080/ || true
+        echo "--- Raw HTTP Response via netcat ---"
+        printf "GET / HTTP/1.1\r\nHost: localhost:8080\r\n\r\n" | nc localhost 8080 | hexdump -C
         
-        if curl -s --head --connect-timeout 5 http://127.0.0.1:8080/ > /dev/null 2>&1 || curl -s --head --connect-timeout 5 http://localhost:8080/ > /dev/null 2>&1; then
-          echo "Server started successfully"
-          cd tests
+        echo "--- Running basic test only ---"
+        cd tests
+        
+        ./test_basic -c "Basic check"
+        BASIC_EXIT_CODE=$?
+        
+        if [ $BASIC_EXIT_CODE -eq 0 ]; then
+          echo "Basic test passes, running full test suite"
           ./test_basic
           TEST_EXIT_CODE=$?
         else
-          echo "Server failed to respond to requests"
-          TEST_EXIT_CODE=1
+          echo "Basic test failed, something is fundamentally wrong"
+          TEST_EXIT_CODE=$BASIC_EXIT_CODE
         fi
         
         kill $SERVER_PID || true
