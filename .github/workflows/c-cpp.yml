@@ -1,40 +1,57 @@
-name: C++ Tests on tester Branch
+name: C++ Tests
 
 on:
   push:
-    branches: [tester]
+    branches: [ "tester" ]
+  pull_request:
+    branches: [ "tester" ]
 
 jobs:
-  test-request:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Install build tools and dependencies
+    
+    - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y g++ make curl libcurl4-openssl-dev
+        sudo apt-get install -y build-essential libcurl4-openssl-dev
 
     - name: Build webserver
       run: make
-
-    - name: Start webserver in background
+      
+    - name: Build tests
       run: |
-        ./webserv config/sample.conf &
+        cd tests
+        make
+      
+    - name: Start webserver and run tests
+      run: |
+        nohup ./webserv config/sample.conf > server.log 2>&1 &
         echo $! > webserv.pid
+        
         sleep 5
-        curl -s --head http://localhost:8080/ || (echo "Server failed to start" && exit 1)
-
-    - name: Build test binary
-      run: make -C tests
-
-    - name: Run tests
-      run: ./tests/test_basic
-
-    - name: Stop webserver
-      if: always()
-      run: |
-        if [ -f webserv.pid ]; then
-          kill $(cat webserv.pid) || true
+        
+        cat server.log
+        
+        if ! ps -p $(cat webserv.pid) > /dev/null; then
+          echo "Server process died"
+          exit 1
         fi
+        
+        if ! curl -s --head http://localhost:8080/ > curl.log 2>&1; then
+          echo "Could not connect to server"
+          cat curl.log
+          exit 1
+        fi
+        
+        echo "Server started successfully"
+        
+        cd tests
+        ./test_basic
+        TEST_EXIT_CODE=$?
+        
+        kill $(cat webserv.pid) || true
+        
+        exit $TEST_EXIT_CODE
