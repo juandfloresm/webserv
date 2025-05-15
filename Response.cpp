@@ -242,10 +242,6 @@ const std::string Response::toString( void ) const
 	}
 
 	r += this->_content;
-<<<<<<< HEAD
-	// r += CRLF;
-=======
->>>>>>> 743afa10976fb05962e2cdc49292cb85f1eed2e8
 
 	return r;
 }
