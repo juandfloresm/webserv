@@ -89,7 +89,7 @@ int Connection::connect( int serverSocket, int port, int connections )
 	{
 		if (listen(serverSocket, connections) == 0)
 		{
-			std::cout << "[Info] server is accepting HTTP connections on port: " << port << std::endl;
+			std::cout << "[Info] server is accepting HTTP connections on port: '" << port << "'" << std::endl;
 			struct epoll_event pollEvent;
 			pollEvent.events = EPOLLIN;
 			pollEvent.data.fd = serverSocket;

@@ -67,12 +67,10 @@ bool Configuration::isEnding(char c, int * i)
 {
 	if (c=='{' || c=='}')
 	{
-		std::cout << *i << " to ";
 		if (c == '{')
 			(*i)++;
 		else if (c == '}')
 			(*i)--;
-		std::cout << *i << std::endl;
 		return true;
 	}
 	return false;

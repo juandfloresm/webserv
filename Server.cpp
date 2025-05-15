@@ -40,8 +40,6 @@ Server & Server::operator=( Server const & rhs )
 	this->_return.second = rhs.getReturn().second;
 	this->_autoIndex = rhs.getAutoIndex();
 	this->_locations = rhs.getLocations();
-	if (rhs.getLocations().size() > 0)
-		std::cout << rhs.getLocations().at(1).getRoot();
 	return *this;
 }
 
