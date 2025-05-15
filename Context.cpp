@@ -8,6 +8,7 @@ Context::Context( )
 {
 	this->_root = "./html";
 	this->_autoIndex = false;
+	this->_clientMaxBodySize = 0;
 }
 
 Context::Context( const Context & c )
@@ -36,6 +37,7 @@ Context & Context::operator=( Context const & rhs )
 	this->_errorPages = rhs.getErrorPages();
 	this->_return = rhs.getReturn();
 	this->_autoIndex = rhs.getAutoIndex();
+	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 	return *this;
 }
 
@@ -108,6 +110,16 @@ bool Context::getAutoIndex( void ) const
 void Context::setAutoIndex( bool autoIndex )
 {
 	this->_autoIndex = autoIndex;
+}
+
+unsigned long Context::getClientMaxBodySize( void ) const
+{
+	return this->_clientMaxBodySize;
+}
+
+void Context::setClientMaxBodySize( unsigned long sz )
+{
+	this->_clientMaxBodySize = sz;
 }
 
 /*

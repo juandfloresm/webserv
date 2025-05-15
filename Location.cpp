@@ -40,6 +40,7 @@ Location & Location::operator=( Location const & rhs )
 	this->_return.second = rhs.getReturn().second;
 	this->_autoIndex = rhs.getAutoIndex();
 	this->_index = rhs.getIndex();
+	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 	return *this;
 }
 

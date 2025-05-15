@@ -19,9 +19,6 @@
 # include "Server.hpp"
 
 # define CRLF "\r\n"
-# define CGI_PHP "/usr/bin/php-cgi"
-# define CGI_PY "/usr/bin/python3"
-# define GCI_PERL "/usr/bin/perl"
 # define CGI_BUFFSIZE 2048
 # define MAJOR_VERSION 1
 # define MINOR_VERSION 1
@@ -65,7 +62,7 @@ typedef enum {
 	CONFLICT = 409,
 	GONE = 410,
 	LENGTH_REQUIRED = 411,
-	PAYLOAD_TOO_LARGE = 413,
+	CONTENT_TOO_LARGE = 413,
 	URI_TOO_LONG = 414,
 	UNSUPPORTED_MEDIA_TYPE = 415,
 	EXPECTATION_FAILED = 426,
@@ -121,9 +118,12 @@ class Response : public Message
 		std::string readDirectory( void ) const;
 		bool isDirectory( void ) const;
 
-		void errorHandler( Status status, std::exception e );
+		void errorHandler( Status status );
 		void matchLocation( void );
 		void setErrorPage(int status);
+		bool matchLocationExact( std::string locationPath, std::string requestPath );
+		int matchLocationLogestPrefix( std::string locationPath, std::string requestPath );
+		void ft_error( const std::string err ) const;
 
 		/* 400 */
 		class NotFoundException : public std::exception {
@@ -134,6 +134,11 @@ class Response : public Message
 		class ForbiddenException : public std::exception {
 			public:
 				const char * what () { return "Forbidden"; }
+		};
+		/* 413 */
+		class ContentTooLargeException : public std::exception {
+			public:
+				const char * what () { return "Content Too Large"; }
 		};
 		/* 500 */
 		class InternalServerException : public std::exception {
@@ -152,6 +157,7 @@ class Response : public Message
 		std::string _headerSection;
 		std::string _page;
 		std::string _content;
+		std::string _prefix;
 		StatusDescription _statusDescriptions;
 		long _contentLength;
 		Status _status;

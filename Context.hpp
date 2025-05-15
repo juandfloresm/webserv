@@ -24,6 +24,8 @@ class Context
 		void setIndex( std::string index );
 		bool getAutoIndex( void ) const;
 		void setAutoIndex( bool autoIndex );
+		unsigned long getClientMaxBodySize( void ) const;
+		void setClientMaxBodySize( unsigned long sz );
 
 		virtual int getPort( void ) const;
 		virtual void setPort( int port );
@@ -43,9 +45,7 @@ class Context
 		std::pair<int, std::string> _return;
 		std::vector<std::string> _index;
 		bool _autoIndex;
-		
-		// NOT WIRED
-		long _clientMaxBodySize;
+		unsigned long _clientMaxBodySize;
 };
 
 std::ostream & operator<<( std::ostream & o, Context const & i );

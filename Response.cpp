@@ -18,13 +18,15 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 			matchLocation();
 			doResponse();
 		} catch ( Response::NotFoundException & e ) {
-			errorHandler(NOT_FOUND, e);
+			errorHandler(NOT_FOUND);
 		} catch ( Response::ForbiddenException & e ) {
-			errorHandler(FORBIDDEN, e);
+			errorHandler(FORBIDDEN);
+		} catch ( Response::ContentTooLargeException & e ) {
+			errorHandler(CONTENT_TOO_LARGE);
 		} catch ( Response::InternalServerException & e ) {
-			errorHandler(INTERNAL_SERVER_ERROR, e);
+			errorHandler(INTERNAL_SERVER_ERROR);
 		} catch ( Response::BadGatewayException & e ) {
-			errorHandler(BAD_GATEWAY, e);
+			errorHandler(BAD_GATEWAY);
 		}
 	}
 	else
@@ -98,53 +100,78 @@ void Response::matchServer( void )
 
 void Response::matchLocation( void )
 {
+	std::string requestPath = _request.getResource();
 	std::vector<Location> lcs = this->_server.getLocations();
 	Location loc;
-	size_t len = 0;
+	bool matched = false;
 	if (lcs.size() > 0)
 	{
-		std::vector<Location>::iterator lit = lcs.begin();
-		std::string path = this->_request.getResource();
-
-		if (path.find(".") != std::string::npos)
-			path = path.substr(0, path.rfind("/"));
-
-		for (; lit < lcs.end(); lit++)
+		for (std::vector<Location>::iterator lit = lcs.begin(); lit < lcs.end(); lit++)
 		{
-			std::string opath = lit->getPath();
-			if (opath.compare(".php") == 0 && this->_request.getResource().rfind(".php") != std::string::npos)
+			if (matchLocationExact(lit->getPath(), requestPath))
 			{
 				loc = *lit;
-				len = 1;
-				break;
-			}
-			if (*path.rbegin() == '/' && *opath.rbegin() != '/')
-				opath += "/";
-
-			if(opath.find(path) != std::string::npos && opath.size() == path.size())
-			{
-				loc = *lit;
-				len = lit->getPath().size();
+				matched = true;
+				_prefix = loc.getPath();
+				_request.setResource("/");
+				break ;
 			}
 		}
-		if (len == 0)
-			throw NotFoundException();
+		if (!matched)
+		{
+			int i = 0, t;
+			for (std::vector<Location>::iterator lit = lcs.begin(); lit < lcs.end(); lit++)
+			{
+				t = matchLocationLogestPrefix(lit->getPath(), requestPath);
+				if (t > i)
+				{
+					i = t;
+					loc = *lit;
+					matched = true;
+				}
+			}
+			if (matched)
+			{
+				_prefix = loc.getPath();
+				std::string r = _request.getResource();
+				_request.setResource(requestPath.substr(loc.getPath().size()));
+			}
+		}
+		if (!matched)
+			throw NotFoundException();	
 		else
 		{
-			if (loc.getRoot().size() > 1)
+			if (loc.getRoot().compare("./html") != 0)
 				this->_server.setRoot(loc.getRoot());
-
 			this->_server.setAutoIndex(loc.getAutoIndex());
-
-			path = this->_request.getResource();
-			if (path.find(".php") != std::string::npos)
-				(void) path;
-			else
-				this->_request.setResource("/");
-
 			this->_location = loc;
 		}
 	}
+}
+
+bool Response::matchLocationExact( std::string locationPath, std::string requestPath )
+{	
+	if (locationPath.compare(".php") == 0 && requestPath.rfind(".php") != std::string::npos)
+		return true;
+
+	if (*requestPath.rbegin() == '/' && *locationPath.rbegin() != '/')
+		locationPath += "/";
+
+	if(locationPath.find(requestPath) != std::string::npos && locationPath.size() == requestPath.size())
+		return true;
+
+	return false;
+}
+
+int Response::matchLocationLogestPrefix( std::string locationPath, std::string requestPath )
+{
+	int i = 0;
+	std::istringstream f(locationPath);
+	std::istringstream r(requestPath);
+	std::string locationSegment, requestSegment;
+	while (getline(f, locationSegment, '/') && getline(r, requestSegment, '/') && locationSegment.compare(requestSegment) == 0)
+		i++;
+	return i;
 }
 
 void Response::doResponse( void )
@@ -250,7 +277,7 @@ std::string Response::readError( std::string filePath ) const
 {
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
-		_connection.ft_error("[Error] No error file match " + filePath);
+		ft_error("No error file match " + filePath);
 		return "";
 	}
 	std::ostringstream content;
@@ -292,6 +319,7 @@ std::string Response::readDirectory( void ) const
 
  	closedir(fd);
 
+	path = _prefix + path;
 	if (*path.rbegin() != '/')
 		path += "/";
 
@@ -331,7 +359,10 @@ std::string Response::readStaticPage( void ) const
 			}
 		}
 		if(!found)
-			filePath += DEFAULT_PAGE;
+		{
+			filePath = (filePath + "/" + DEFAULT_PAGE);
+			this->_request.setResource(path + "/" + DEFAULT_PAGE);
+		}
 	}
 
 	std::cout << "[STATIC] Serving file: " << filePath << std::endl;
@@ -356,7 +387,7 @@ std::string Response::readDynamicPage( void )
 	if (pipe(fd) == -1)
 	{
 		this->_status = INTERNAL_SERVER_ERROR;
-		this->_connection.ft_error("[Error] creating pipe");
+		ft_error("Creating pipe");
 		return "";
 	}
 
@@ -372,7 +403,7 @@ std::string Response::readDynamicPage( void )
 	if (pid < 0)
 	{
 		this->_status = INTERNAL_SERVER_ERROR;
-		this->_connection.ft_error("[Error] not abled to create fork");
+		ft_error("Not abled to create fork");
 		clearEnv(env);
 		return "";
 	}
@@ -387,7 +418,7 @@ std::string Response::readDynamicPage( void )
 		close(fd[1]);
 		execve(binary.c_str(), cmd, env);
 		this->_status = INTERNAL_SERVER_ERROR;
-		this->_connection.ft_error("[Error] error executing CGI");
+		ft_error("Executing CGI");
 		delete [] cmd;
 	}
 	else
@@ -449,12 +480,18 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
-void Response::errorHandler( Status status, std::exception e )
+void Response::errorHandler( Status status )
 {
-	this->_connection.ft_error(e.what());
+	ft_error(this->_statusDescriptions[status]);
 	this->_status = status;
 	setErrorPage(status);
 	doSend(this->_clientSocket);
+}
+
+
+void Response::ft_error( const std::string err ) const
+{
+	_connection.ft_error(err + ".........................................CONTEXT = '" + _request.getResource() + "'");
 }
 
 void Response::setErrorPage(int status)
@@ -610,7 +647,7 @@ void Response::initStatusDescriptions( void )
 	this->_statusDescriptions[CONFLICT] = "Conlifct";
 	this->_statusDescriptions[GONE] = "Gone";
 	this->_statusDescriptions[LENGTH_REQUIRED] = "Length Required";
-	this->_statusDescriptions[PAYLOAD_TOO_LARGE] = "Payload Too Large";
+	this->_statusDescriptions[CONTENT_TOO_LARGE] = "Content Too Large";
 	this->_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
 	this->_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
 	this->_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";

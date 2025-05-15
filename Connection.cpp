@@ -41,16 +41,16 @@ std::ostream & operator<<( std::ostream & o, Connection const & i )
 void Connection::initServer( void )
 {
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-		ft_error("[Error] Singal problem");
+		ft_error("Singal problem");
 		return ;
 	}
 	if (signal(SIGINT, handleSigint) == SIG_ERR) {
-		ft_error("[Error] Singal problem");
+		ft_error("Singal problem");
 		return ;
 	}
 	this->_epollfd = epoll_create(MAX_EVENTS);
 	if (this->_epollfd < 0)
-		ft_error("[Error] creating epoll");
+		ft_error("Creating epoll");
 	initServers();
 	eventLoop();
 }
@@ -69,12 +69,12 @@ void Connection::initServers( void )
 				if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
 				{				
 					if (connect(serverSocket, it->getPort(), 10) == -1) // TODO
-						ft_error("[Error] binding client socket");
+						ft_error("Binding client socket");
 				}
 			}
 		}
 		else
-			ft_error("[Error] opening server socket");
+			ft_error("Opening server socket");
 	}
 }
 
@@ -98,7 +98,7 @@ int Connection::connect( int serverSocket, int port, int connections )
 			data.port = port;
 			this->_serverEvents[serverSocket] = data;
 			if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, serverSocket, &pollEvent) == -1)
-				ft_error("[Error] adding new listeding socket to epoll");
+				ft_error("Adding new listeding socket to epoll");
 		}
 		return 0;
 	}
@@ -112,7 +112,7 @@ void Connection::eventLoop( void )
 	{
 		newEvents = epoll_wait(this->_epollfd, this->_events, MAX_EVENTS, -1);
 		if (newEvents == -1)
-			ft_error("[Error] with epoll_wait");
+			ft_error("With epoll_wait");
 		int serverSocket = 0;
 		for (int i = 0; i < newEvents; ++i)
 		{
@@ -126,11 +126,11 @@ void Connection::eventLoop( void )
 				sockConnectionFD = accept(this->_events[i].data.fd, (struct sockaddr *)&clientAddress, &clientAddressSize);
 				this->_clientEvents[sockConnectionFD] = this->_serverEvents[serverSocket];
 				if (sockConnectionFD == -1)
-					ft_error("[Error] accepting new connection");
+					ft_error("Accepting new connection");
 				this->_serverEvents[serverSocket].pollEvent.events = EPOLLIN | EPOLLET;
 				this->_serverEvents[serverSocket].pollEvent.data.fd = sockConnectionFD;
 				if (epoll_ctl(this->_epollfd, EPOLL_CTL_ADD, sockConnectionFD, &this->_serverEvents[serverSocket].pollEvent) == -1)
-					ft_error("[Error] adding new event to epoll");
+					ft_error("Adding new event to epoll");
 			}
 			else
 			{
@@ -141,7 +141,7 @@ void Connection::eventLoop( void )
 				{
 					epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, newSocketFD, NULL);
 					close(newSocketFD);
-					ft_error("[Error] accepting client connection");
+					ft_error("Accepting client connection");
 				}
 			}
 		}
@@ -175,7 +175,8 @@ void Connection::handleSigint( int sgn )
 
 void Connection::ft_error(const std::string msg) const
 {
-	perror(msg.c_str());
+	if (errno != 0)
+		perror(" ");
 	std::cerr << "[Error] " << msg << std::endl;
 }
 

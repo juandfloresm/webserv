@@ -17,6 +17,7 @@ Configuration::Configuration( std::string const configFile )
 	level1.push_back("return");
 	level1.push_back("autoindex");
 	level1.push_back("location");
+	level1.push_back("client_max_body_size");
 	level2.push_back("methods");
 	level2.push_back("cgi_pass");
 	level2.push_back("root");
@@ -24,6 +25,7 @@ Configuration::Configuration( std::string const configFile )
 	level2.push_back("autoindex");
 	level2.push_back("error_page");
 	level2.push_back("return");
+	level2.push_back("client_max_body_size");
 
 	levels[0] = level0;
 	levels[1] = level1;
@@ -243,7 +245,13 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 	}
 	else if (directive.first.compare("cgi_pass") == 0)
 		cxt.setPassCGI(word(directive.second));
+	else if (directive.first.compare("client_max_body_size") == 0)
+		cxt.setClientMaxBodySize(size(directive.second));
 }
+
+/*
+** --------------------------------- VALIDATIONS ------------------------------------------------------------------
+*/
 
 int Configuration::port( std::string raw )
 {
@@ -354,7 +362,7 @@ int Configuration::statusCode( std::string raw )
 		}
 		if (!isdigit(*it))
 		{
-			std::cerr << "[Error] provided directive value is should be a number" << std::endl;
+			std::cerr << "[Error] provided directive value should be a number" << std::endl;
 			throw std::exception();
 		}
 		i++;
@@ -366,6 +374,71 @@ int Configuration::statusCode( std::string raw )
 		throw std::exception();
 	}
 	return n;
+}
+
+unsigned long Configuration::size( std::string raw )
+{
+	std::istringstream f(raw);
+	std::string s;
+	getline(f, s, ' ');
+	char c = s[s.size() - 1];
+	unsigned long n = 0;
+	int m = 0;
+	if (isdigit(c))
+		m = 1;
+	else if (c == 'm')
+	{
+		m = 1024 * 1024;
+		s = s.substr(0, s.find("m"));
+	}
+	else if (c == 'k')
+	{
+		m = 1024;
+		s = s.substr(0, s.find("k"));
+	}
+	else
+	{
+		std::cerr << "[Error] on size format" << std::endl;
+		throw std::exception();
+	}
+	for(std::string::iterator it = s.begin(); it < s.end(); it++)
+	{
+		if (!isdigit(*it))
+		{
+			std::cerr << "[Error] provided directive value should be a number" << std::endl;
+			throw std::exception();
+		}
+		if (willMultiplicationOverflow(n, 10))
+		{
+			std::cerr << "[Error] provided directive value overflows" << std::endl;
+			throw std::exception();
+		}
+		n *= 10;
+		if (willAdditionOverflow(n, (*it - '0')))
+		{
+			std::cerr << "[Error] provided directive value overflows" << std::endl;
+			throw std::exception();
+		}
+		n += (*it - '0');
+	}
+	if (willMultiplicationOverflow(n, m))
+	{
+		std::cerr << "[Error] provided directive value overflows" << std::endl;
+		throw std::exception();
+	}
+	return n * m;
+}
+
+bool Configuration::willAdditionOverflow(unsigned long a, unsigned long b)
+{
+    return b > std::numeric_limits<unsigned long>::max() - a;
+}
+
+bool Configuration::willMultiplicationOverflow(unsigned long a, unsigned long b)
+{
+    if (a == 0 || b == 0)
+        return false;
+    return a > std::numeric_limits<unsigned long>::max() / b;
 }
 
 /*

@@ -7,6 +7,7 @@
 # include <map>
 # include <vector>
 # include <utility>
+# include <limits>
 # include <cstdlib>
 # include <cctype>
 # include <fcntl.h>
@@ -39,6 +40,9 @@ class Configuration
 		std::string word( std::string raw );
 		std::string methods( std::string raw );
 		std::string flag( std::string raw );
+		unsigned long size( std::string raw );
+		bool willAdditionOverflow(unsigned long a, unsigned long b);
+		bool willMultiplicationOverflow(unsigned long a, unsigned long b);
 	
 	private:
 		bool _parsingServer;
