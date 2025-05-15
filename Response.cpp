@@ -185,6 +185,8 @@ const std::string Response::toString( void ) const
 	std::ostringstream ss;
     ss << getMajorVersion();
 	std::string major = ss.str();
+	ss.str("");
+	ss.clear();
 	ss << getMinorVersion();
 	std::string minor = ss.str();
 	std::string contentType = getMimeType(this->_request.getResource());
