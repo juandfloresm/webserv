@@ -30,20 +30,18 @@ jobs:
       run: |
         nohup ./webserv config/sample.conf > server.log 2>&1 &
         echo $! > webserv.pid
-        
-        sleep 5
-        
-        cat server.log
-        
-        if ! ps -p $(cat webserv.pid) > /dev/null; then
-          echo "Server process died"
-          exit 1
-        fi
-        
-        if ! curl -4 -s --head http://localhost:8080/ > curl.log 2>&1; then
-          echo "Could not connect to server"
-          cat curl.log
-          exit 1
+
+        for i in {1..10}; do
+            if curl -4 -s --head http://localhost:8080/ > /dev/null 2>&1; then
+                echo "Server is ready"
+                break
+            fi
+            sleep 1
+        done
+
+        if ! curl -4 -s --head http://localhost:8080/ > /dev/null 2>&1; then
+            echo "Server failed to start in time"
+            exit 1
         fi
         
         echo "Server started successfully"
