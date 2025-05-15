@@ -237,7 +237,6 @@ const std::string Response::toString( void ) const
 	}
 
 	r += this->_content;
-	r += CRLF;
 
 	return r;
 }
