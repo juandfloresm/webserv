@@ -511,8 +511,7 @@ void Response::errorHandler( Status status )
 
 void Response::ft_error( const std::string err ) const
 {
-	if (errno != 0)
-		perror("");
+	strerror(errno);
 	std::cerr << "[Error] " << (err + ".........................................CONTEXT = '" + _request.getResource() + "'") << std::endl;
 }
 
