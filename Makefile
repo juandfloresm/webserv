@@ -10,7 +10,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 OBJ 				:=	$(SRC:.cpp=.o)
 
 ARG					:=	./config/zweb2.conf
-WWW					:=	/home/www
+WWW					:=	/home/juaflore/www
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -28,26 +28,26 @@ clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	sudo pkill webserv ; rm -f $(NAME)
+	pkill webserv ; rm -f $(NAME)
 
 re: fclean all
 	make clean
-	sudo mkdir -p $(WWW)/html
-	sudo mkdir -p $(WWW)/cgi-bin
-	sudo cp -ru ./html $(WWW)/
-	sudo cp -ru ./cgi-bin $(WWW)/
-	sudo chmod -R 775 $(WWW)
+	mkdir -p $(WWW)/html
+	mkdir -p $(WWW)/cgi-bin
+	cp -ru ./html $(WWW)/
+	cp -ru ./cgi-bin $(WWW)/
+	chmod -R 775 $(WWW)
 	export WPATH=$(WWW)
 
 runner: re
 	clear
-	sudo ./$(NAME) $(ARG)
+	./$(NAME) $(ARG)
 
 runner-t: re
 	@echo "Starting server in background..."
 	@make clean
 	@chmod -R 775 .
-	@sudo ./$(NAME) $(ARG) > server.log 2>&1 & echo $$! > server.pid
+	@./$(NAME) $(ARG) > server.log 2>&1 & echo $$! > server.pid
 	@echo "Server started with PID: $$(cat server.pid)"
 	@sleep 2
 	@echo "Building and running tests..."
@@ -57,7 +57,7 @@ runner-t: re
 		echo "❌ Tests failed"; \
 	fi
 	@echo "Shutting down server..."
-	@sudo kill $$(cat server.pid) || sudo kill -9 $$(cat server.pid) || true
+	@kill $$(cat server.pid) || kill -9 $$(cat server.pid) || true
 	@rm -f server.pid server.log
 	@rm -f tests/test_basic
 	@echo "Test run complete."
