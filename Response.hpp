@@ -122,6 +122,7 @@ class Response : public Message
 		bool matchLocationExact( std::string locationPath, std::string requestPath );
 		int matchLocationLogestPrefix( std::string locationPath, std::string requestPath );
 		void ft_error( const std::string err ) const;
+		void p( std::string s ) const;
 
 		/* 400 */
 		class NotFoundException : public std::exception {

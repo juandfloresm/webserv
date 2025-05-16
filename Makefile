@@ -40,6 +40,7 @@ re: fclean all
 	export WPATH=$(WWW)
 
 runner: re
+	clear
 	sudo ./$(NAME) $(ARG)
 
 runner-t: re
@@ -112,7 +113,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup"
+	git commit -am "Fixing path resolution"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
