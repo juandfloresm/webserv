@@ -62,9 +62,11 @@ runner-t: re
 	@echo "Test run complete."
 
 valgrind: re
+	clear
 	WPATH=$(WWW) valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)
 
 fds: re
+	clear
 	WPATH=$(WWW) valgrind --track-fds=yes ./$(NAME) $(ARG)
 
 sanitize: fclean $(OBJ)
