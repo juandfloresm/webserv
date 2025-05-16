@@ -31,7 +31,7 @@ Configuration::Configuration( std::string const configFile )
 	levels[1] = level1;
 	levels[2] = level2;
 
-	_wpath = "/home/www";
+	_wpath = std::getenv("WPATH");
 
 	parse(configFile);
 }

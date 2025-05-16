@@ -37,11 +37,10 @@ re: fclean all
 	cp -ru ./html $(WWW)/
 	cp -ru ./cgi-bin $(WWW)/
 	chmod -R 775 $(WWW)
-	export WPATH=$(WWW)
 
 runner: re
 	clear
-	./$(NAME) $(ARG)
+	WPATH=$(WWW) ./$(NAME) $(ARG)
 
 runner-t: re
 	@echo "Starting server in background..."
