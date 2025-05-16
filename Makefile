@@ -62,14 +62,14 @@ runner-t: re
 	@echo "Test run complete."
 
 valgrind: re
-	valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)
+	WPATH=$(WWW) valgrind --track-origins=yes --leak-check=full ./$(NAME) $(ARG)
 
 fds: re
-	valgrind --track-fds=yes ./$(NAME) $(ARG)
+	WPATH=$(WWW) valgrind --track-fds=yes ./$(NAME) $(ARG)
 
 sanitize: fclean $(OBJ)
 	$(CC) $(FLAGS) -g $(OBJ) -fsanitize=address -o $(NAME)
-	./$(NAME) $(ARG)
+	WPATH=$(WWW) ./$(NAME) $(ARG)
 
 siege:
 	siege --time=1m --concurrent=1000 http://127.0.0.1:8080/index.php
