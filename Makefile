@@ -10,7 +10,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 OBJ 				:=	$(SRC:.cpp=.o)
 
 ARG					:=	./config/zweb2.conf
-WWW					:=	/home/juaflore/www
+WWW					:=	/home/$$(whoami)/www
 
 DOCKER_IMAGE		:= webserv
 DOCKER_CONTAINER	:= webserv-dev
@@ -112,7 +112,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Your server must have default error pages if none are provided"
+	git commit -am "Customize WWW path"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
