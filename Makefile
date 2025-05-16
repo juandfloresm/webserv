@@ -113,7 +113,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Validating Content-Length when client_max_body_size directive is specified"
+	git commit -am "Your server must have default error pages if none are provided"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

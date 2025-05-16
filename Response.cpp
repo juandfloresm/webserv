@@ -275,6 +275,17 @@ const std::string Response::toString( void ) const
 	return r;
 }
 
+std::string Response::replaceAll( std::string str, std::string from, std::string to ) const
+{
+	size_t pos = str.find(from);
+	while (pos != std::string::npos)
+	{
+		str.replace(pos, from.length(), to);
+		pos = str.find(from, pos + to.length());
+	}
+	return str;
+}
+
 std::string Response::readError( std::string filePath ) const
 {
 	std::ifstream file(filePath.c_str(), std::ios::binary);
@@ -285,7 +296,9 @@ std::string Response::readError( std::string filePath ) const
 	std::ostringstream content;
 	content << file.rdbuf();
 	file.close();
-	return content.str();
+	std::string desc = _statusDescriptions.at(_status);
+	std::string s = content.str();
+	return replaceAll(replaceAll(s, "[STATUS_CODE]", SSTR(_status)), "[STATUS_DESCRIPTION]", desc);
 }
 
 std::string Response::readDirectory( void ) const
@@ -491,7 +504,7 @@ void Response::errorHandler( Status status )
 {
 	ft_error(_statusDescriptions[status]);
 	_status = status;
-	setErrorPage(status);
+	setErrorPage();
 	doSend(_clientSocket);
 }
 
@@ -503,17 +516,18 @@ void Response::ft_error( const std::string err ) const
 	std::cerr << "[Error] " << (err + ".........................................CONTEXT = '" + _request.getResource() + "'") << std::endl;
 }
 
-void Response::setErrorPage(int status)
+void Response::setErrorPage(void)
 {
 	std::vector<std::pair<int, std::string> > ep = _server.getErrorPages();
 	for (std::vector<std::pair<int, std::string> >::iterator it = ep.begin(); it < ep.end(); it++)
 	{
-		if (it->first == static_cast<int>(status))
+		if (it->first == static_cast<int>(_status))
 		{
 			_content = readError(it->second);
 			break ;
 		}
 	}
+	_content = readError(DEFAULT_ERROR_PAGE);
 }
 
 bool Response::isDirectory( void ) const
@@ -531,11 +545,11 @@ void Response::redirectCode( int code, std::string page )
 
 void Response::throwErrorCode( int code, std::string page )
 {
+	_status = static_cast<Status>(code);
 	if (page.size() > 0)
 		_content = readError(page);
 	else
-		setErrorPage(code);
-	_status = static_cast<Status>(code);
+		setErrorPage();
 	doSend(_clientSocket);
 }
 

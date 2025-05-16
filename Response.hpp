@@ -25,6 +25,10 @@
 # define MAJOR_VERSION 1
 # define MINOR_VERSION 1
 # define DEFAULT_PAGE "index.html"
+# define DEFAULT_ERROR_PAGE "./config/ERROR"
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 typedef std::map<std::string, std::string> Config;
 
@@ -118,11 +122,12 @@ class Response : public Message
 
 		void errorHandler( Status status );
 		void matchLocation( void );
-		void setErrorPage(int status);
+		void setErrorPage( void );
 		bool matchLocationExact( std::string locationPath, std::string requestPath );
 		int matchLocationLogestPrefix( std::string locationPath, std::string requestPath );
 		void ft_error( const std::string err ) const;
 		void validateLocationMethods( void ) const;
+		std::string replaceAll( std::string str, std::string from, std::string to ) const;
 		void p( std::string s ) const;
 
 		/* 400 */
