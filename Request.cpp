@@ -5,11 +5,23 @@ const char Request::HEADER_SEP = ':';
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Request::Request(int clientSocket, Configuration & cfg) : Message(clientSocket, cfg)
+Request::Request(int clientSocket, Configuration & cfg, int port) : Message(clientSocket, cfg)
 {
 	this->_body = "";
 	this->_queryString = "";
-	parseRequest();
+
+	try {
+		parseTopLine();
+		parseHeaders();
+		parseContent();
+		Response(OK, clientSocket, cfg, port, *this);
+	} catch ( Response::ContentTooLargeException & e ) {
+		Response(CONTENT_TOO_LARGE, clientSocket, cfg, port, *this);
+	} catch ( Response::InternalServerException & e ) {
+		Response(INTERNAL_SERVER_ERROR, clientSocket, cfg, port, *this);
+	} catch ( Response::NotImplementedException & e ) {
+		Response(NOT_IMPLEMENTED, clientSocket, cfg, port, *this);
+	}
 }
 
 
@@ -62,12 +74,6 @@ const std::string Request::getMethodString( void ) const
 	}
 }
 
-void Request::parseRequest( void )
-{
-	parseTopLine();
-	parseHeaders();
-}
-
 void Request::parseTopLine( void )
 {
 	std::string line = getMessageLine();
@@ -82,10 +88,7 @@ void Request::parseTopLine( void )
 	else if (method.find("DELETE") != std::string::npos)
 		this->_method = DELETE;
 	else
-	{
-		this->_method = UNKNOWN;
-		return;
-	}
+		throw Response::NotImplementedException();
 	
 	getline(f, resource, ' ');
 	this->_resource = resource;

@@ -156,21 +156,21 @@ int Response::matchLocationLogestPrefix( std::string locationPath, std::string r
 
 void Response::doResponse( void )
 {
-	int code = _server.getReturn().first;
-	if (_server.getAutoIndex() && isDirectory())
+	if(_server.getReturn().first != 0)								// ................................... RETURN
 	{
-		_content = readDirectory();
-		doSend(_clientSocket);
-	}
-	else if(code != 0)
-	{
+		int code = _server.getReturn().first;
 		std::string page = _server.getReturn().second;
 		if (code < static_cast<int>(BAD_REQUEST))
 			redirectCode(code, page);
 		else
 			throwErrorCode(code, page);
 	}
-	else if (_location.getPassCGI().size() > 0)
+	else if (_server.getAutoIndex() && isDirectory())				// ................................... AUTO INDEX
+	{
+		_content = readDirectory();
+		doSend(_clientSocket);
+	}
+	else if (_location.getPassCGI().size() > 0)						// ................................... DYNAMIC
 	{
 		pid_t pid = fork();
 		if (pid < 0)
@@ -182,7 +182,7 @@ void Response::doResponse( void )
 			exit(0);
 		}
 	}
-	else
+	else															// ................................... STATIC
 	{
 		_content = readStaticPage();
 		doSend(_clientSocket);

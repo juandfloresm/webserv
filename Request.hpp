@@ -24,7 +24,7 @@ class Request : public Message
 
 	public:
 
-		Request(int clientSocket, Configuration & cfg);
+		Request(int clientSocket, Configuration & cfg, int port);
 		~Request();
 
 		Method getMethod( void ) const;
@@ -36,7 +36,6 @@ class Request : public Message
 
 		std::string const getQueryString( void ) const;
 
-		void parseRequest( void );
 		void parseTopLine( void );
 		void parseHeaders( void );
 		void parseContent( void );

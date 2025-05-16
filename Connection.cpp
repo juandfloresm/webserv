@@ -148,11 +148,7 @@ void Connection::processClientRequest( int clientSocketFD )
 	SocketDataEventsIterator it = e.find(clientSocketFD);
 	if (it != e.end())
 	{
-		Request req(clientSocketFD, _cfg);
-		if (req.getMethod() == UNKNOWN)
-			Response res(NOT_IMPLEMENTED, clientSocketFD, _cfg, it->second.port, req);
-		else
-			Response res(OK, clientSocketFD, _cfg, it->second.port, req);
+		Request req(clientSocketFD, _cfg, it->second.port);
 		e.erase(it);
 	}
 }

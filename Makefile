@@ -113,7 +113,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup"
+	git commit -am "Request pre-validates 500, 501, 513"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
