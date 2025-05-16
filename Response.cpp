@@ -122,6 +122,8 @@ void Response::matchLocation( void )
 		{
 			if (loc.getRoot().compare("./html") != 0)
 				_server.setRoot(loc.getRoot());
+			if (loc.getClientMaxBodySize() > 0)
+				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
 			_server.setAutoIndex(loc.getAutoIndex());
 			_location = loc;
 			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
@@ -154,8 +156,28 @@ int Response::matchLocationLogestPrefix( std::string locationPath, std::string r
 	return i;
 }
 
+void Response::validateLocationMethods( void ) const
+{
+	std::vector<std::string> methods = _location.getMethods();
+	const std::string method = _request.getMethodString();
+	if (methods.size() > 0)
+	{
+		std::vector<std::string>::iterator it = methods.begin();
+		for( ; it < methods.end(); it++)
+		{
+			if (method.compare(*it) == 0)
+				return ;
+		}
+		throw NotImplementedException();
+	}
+}
+
 void Response::doResponse( void )
 {
+	validateLocationMethods();										// ................................... CHECK MATCHING METHODS
+	
+	_request.parseContent(_server.getClientMaxBodySize());			// ................................... CHECK CONTENT SIZE
+
 	if(_server.getReturn().first != 0)								// ................................... RETURN
 	{
 		int code = _server.getReturn().first;

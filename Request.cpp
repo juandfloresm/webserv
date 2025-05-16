@@ -13,7 +13,6 @@ Request::Request(int clientSocket, Configuration & cfg, int port) : Message(clie
 	try {
 		parseTopLine();
 		parseHeaders();
-		parseContent();
 		Response(OK, clientSocket, cfg, port, *this);
 	} catch ( Response::ContentTooLargeException & e ) {
 		Response(CONTENT_TOO_LARGE, clientSocket, cfg, port, *this);
@@ -59,16 +58,8 @@ const std::string Request::getMethodString( void ) const
 			return "GET";
 		case POST:
 			return "POST";
-		case PUT:
-			return "PUT";
 		case DELETE:
 			return "DELETE";
-		case TRACE:
-			return "TRACE";
-		case OPTIONS:
-			return "OPTIONS";
-		case HEAD:
-			return "HEAD";
 		default:
 			return "UNKNOWN";
 	}
@@ -129,11 +120,13 @@ void Request::parseHeaders( void )
 	}
 }
 
-void Request::parseContent( void )
+void Request::parseContent( unsigned long clientMaxBodySize )
 {
 	unsigned char buffer[BUFFER];
 	size_t bufferSize = BUFFER;
 	unsigned long contentLength = atol(header("Content-Length").c_str());
+	if ( clientMaxBodySize > 0 && clientMaxBodySize < contentLength )
+		throw Response::ContentTooLargeException();
 	for (unsigned long i = 0; i < contentLength; i++)
 	{
 		if (read(_clientSocket, buffer, bufferSize) > 0)

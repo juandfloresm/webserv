@@ -113,7 +113,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Request pre-validates 500, 501, 513"
+	git commit -am "Validating Content-Length when client_max_body_size directive is specified"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

@@ -38,7 +38,7 @@ class Request : public Message
 
 		void parseTopLine( void );
 		void parseHeaders( void );
-		void parseContent( void );
+		void parseContent( unsigned long clientMaxBodySize );
 
 		std::string getMessageLine( void );
 		Header & getHeaders( void );
