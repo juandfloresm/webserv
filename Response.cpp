@@ -564,7 +564,7 @@ void Response::setSingleEnv(char **env, std::string const s, int i)
 {
 	env[i] = new char[s.size() + 1];
 	if (env[i])
-		env[i] = strcpy(env[i], s.c_str());	
+		env[i] = std::strcpy(env[i], s.c_str());	
 }
 
 char **Response::getEnv( void )
