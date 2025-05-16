@@ -4,18 +4,20 @@
 # include <iostream>
 # include <string>
 # include <fstream>
+# include <sstream>
+# include <map>
+# include <vector>
+
+# include <cstring>
+# include <cmath>
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <sys/epoll.h>
 # include <unistd.h>
-# include <cstring>
-# include <cmath>
-# include <sstream>
-# include <map>
-# include <vector>
+
+# include "Configuration.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
-# include "Configuration.hpp"
 
 # define MAX_EVENTS 128
 # define MAX_MESSAGE_LEN 512
@@ -35,9 +37,6 @@ typedef struct _data
 
 typedef std::map<int, SocketData> SocketDataEvents;
 typedef SocketDataEvents::iterator SocketDataEventsIterator;
-
-class Request;
-class Response;
 
 class Connection
 {

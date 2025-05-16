@@ -6,15 +6,17 @@
 # include <map>
 # include <sstream>
 # include <algorithm>
-# include <csignal>
+# include <fstream>
 
+# include <csignal>
+# include <cstring>
 # include <sys/wait.h>
 # include <dirent.h>
 # include <errno.h>
+# include <stdio.h>
 # include <sys/stat.h>
 
 # include "Message.hpp"
-# include "Connection.hpp"
 # include "Request.hpp"
 # include "Server.hpp"
 
@@ -26,9 +28,6 @@
 # define DEFAULT_PAGE "index.html"
 
 typedef std::map<std::string, std::string> Config;
-
-class Connection;
-class Request;
 
 typedef enum {
 
@@ -82,12 +81,14 @@ typedef enum {
 typedef std::map<Status, std::string> StatusDescription;
 typedef StatusDescription::iterator StatusDescriptionIterator;
 
+class Request;
+
 class Response : public Message
 {
 
 	public:
 
-		Response(Status status, int clientSocket, const Connection & connection, int port, Request & request);
+		Response(Status status, int clientSocket, Configuration & cfg, int port, Request & request);
 		~Response();
 
 		Response & operator=( Response const & rhs );
@@ -145,6 +146,11 @@ class Response : public Message
 			public:
 				const char * what () { return "Internal Server Error"; }
 		};
+		/* 501 */
+		class NotImplementedException : public std::exception {
+			public:
+				const char * what () { return "Not Implemented"; }
+		};
 		/* 502 */
 		class BadGatewayException : public std::exception {
 			public:
@@ -158,11 +164,9 @@ class Response : public Message
 		std::string _page;
 		std::string _content;
 		std::string _prefix;
+		Status _status;
 		StatusDescription _statusDescriptions;
 		long _contentLength;
-		Status _status;
-		int _clientSocket;
-		const Connection & _connection;
 		int _port;
 		Request & _request;
 		Server _server;

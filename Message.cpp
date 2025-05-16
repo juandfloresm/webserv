@@ -4,12 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Message::Message()
+Message::Message(int socket, Configuration & cfg) : _cfg(cfg), _clientSocket(socket)
 {
-}
-
-Message::Message(int major, int minor) : _majorVersion(major), _minorVersion(minor)
-{
+	
 }
 
 /*

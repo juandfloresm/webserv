@@ -5,7 +5,7 @@ const char Request::HEADER_SEP = ':';
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Request::Request(int clientSocket) : Message(), _clientSocket(clientSocket)
+Request::Request(int clientSocket, Configuration & cfg) : Message(clientSocket, cfg)
 {
 	this->_body = "";
 	this->_queryString = "";
@@ -17,9 +17,7 @@ Request::Request(int clientSocket) : Message(), _clientSocket(clientSocket)
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Request::~Request()
-{
-}
+Request::~Request(){}
 
 
 /*
@@ -72,6 +70,13 @@ const std::string Request::getMethodString( void ) const
 
 void Request::parseRequest( void )
 {
+	parseTopLine();
+	parseHeaders();
+	// parseContent();
+}
+
+void Request::parseTopLine( void )
+{
 	std::string line = getMessageLine();
 	std::string method, resource, major, minor;
 	std::istringstream f(line);
@@ -103,17 +108,6 @@ void Request::parseRequest( void )
 	getline(f, minor, '.');	
 	setMajorVersion(atoi(major.c_str()));
 	setMinorVersion(atoi(minor.c_str()));
-
-	parseHeaders();
-}
-
-std::string Request::header( std::string const header )
-{
-	HeaderIterator it = this->_headers.find(header);
-	if (it != this->_headers.end())
-		return it->second;
-	else
-		return "";
 }
 
 void Request::parseHeaders( void )
@@ -139,11 +133,28 @@ void Request::parseHeaders( void )
 	}
 }
 
+void Request::parseContent( void )
+{
+	unsigned char buffer[10];
+	size_t bufferSize = 1;
+	unsigned long contentLength = atol(header("Content-Length").c_str());
+	for (unsigned long i = 0; i < contentLength; i++)
+	{
+		if (read(_clientSocket, buffer, bufferSize) > 0)
+			std::cout << buffer[0];
+	}
+	std::cout << std::endl;
+}
+
+/*
+** --------------------------------- UTILITIES ---------------------------------
+*/
+
 std::string Request::getMessageLine( void )
 {
 	std::string line = "";
 	char c = '\0', p = '\0';
-	while (recv(this->_clientSocket, this->_buffer, 1, 0) > 0)
+	while (recv(_clientSocket, this->_buffer, 1, 0) > 0)
 	{
 		c = this->_buffer[0];
 		if (c == LF || c == CR)
@@ -159,6 +170,15 @@ std::string Request::getMessageLine( void )
 		line.push_back(c);
 	}
 	return line;
+}
+
+std::string Request::header( std::string const header )
+{
+	HeaderIterator it = this->_headers.find(header);
+	if (it != this->_headers.end())
+		return it->second;
+	else
+		return "";
 }
 
 

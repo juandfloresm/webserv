@@ -8,16 +8,21 @@
 # include <vector>
 # include <utility>
 # include <limits>
+
 # include <cstdlib>
 # include <cctype>
 # include <fcntl.h>
 # include <unistd.h>
+
 # include "Server.hpp"
 # include "Location.hpp"
 
 typedef std::pair<std::string, std::string> Entry;
 typedef std::vector<Server> ServerList;
 typedef ServerList::iterator ServerListIterator;
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 class Configuration
 {
@@ -38,6 +43,7 @@ class Configuration
 		int port( std::string raw );
 		int statusCode( std::string raw );
 		std::string word( std::string raw );
+		std::string path( std::string raw );
 		std::string methods( std::string raw );
 		std::string flag( std::string raw );
 		unsigned long size( std::string raw );

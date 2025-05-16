@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response(Status status, int clientSocket, const Connection & connection, int port, Request & request) : Message(), _status(status), _clientSocket(clientSocket), _connection(connection), _port(port), _request(request)
+Response::Response(Status status, int clientSocket, Configuration & cfg, int port, Request & request) : Message(clientSocket, cfg), _status(status), _port(port), _request(request)
 {
 	setMajorVersion(MAJOR_VERSION);
 	setMinorVersion(MINOR_VERSION);
@@ -25,6 +25,8 @@ Response::Response(Status status, int clientSocket, const Connection & connectio
 			errorHandler(CONTENT_TOO_LARGE);
 		} catch ( Response::InternalServerException & e ) {
 			errorHandler(INTERNAL_SERVER_ERROR);
+		} catch ( Response::NotImplementedException & e ) {
+			errorHandler(NOT_IMPLEMENTED);
 		} catch ( Response::BadGatewayException & e ) {
 			errorHandler(BAD_GATEWAY);
 		}
@@ -66,9 +68,8 @@ std::ostream & operator<<( std::ostream & o, Response const & i )
 
 void Response::matchServer( void )
 {
-	Configuration & cfg = this->_connection.getConfiguration();
-	ServerList list = cfg.getServerList();
-	ServerList match = cfg.getServerList();
+	ServerList list = _cfg.getServerList();
+	ServerList match = _cfg.getServerList();
 	ServerList::iterator it = list.begin();
 
 	for(; it < list.end(); it++) // ................................... by PORT
@@ -180,7 +181,7 @@ void Response::doResponse( void )
 	if (this->_server.getAutoIndex() && isDirectory())
 	{
 		this->_content = readDirectory();
-		doSend(this->_clientSocket);
+		doSend(_clientSocket);
 	}
 	else if(code != 0)
 	{
@@ -198,14 +199,14 @@ void Response::doResponse( void )
 		else if (pid == 0)
 		{
 			this->_content = readDynamicPage();
-			doSend(this->_clientSocket);
+			doSend(_clientSocket);
 			exit(0);
 		}
 	}
 	else
 	{
 		this->_content = readStaticPage();
-		doSend(this->_clientSocket);
+		doSend(_clientSocket);
 	}
 }
 
@@ -218,7 +219,7 @@ void Response::doSend( int fd )
 	this->_statusString = ss.str();
 	std::string resp = toString();
 	send(fd, resp.c_str(), resp.size(), 0);
-	close(this->_clientSocket);
+	close(_clientSocket);
 }
 
 const std::string Response::toString( void ) const
@@ -413,7 +414,7 @@ std::string Response::readDynamicPage( void )
 		char **cmd = new char*[2];
 		cmd[0] = (char *) "";
 		cmd[1] = NULL;
-		dup2(this->_clientSocket, STDIN_FILENO);
+		dup2(_clientSocket, STDIN_FILENO);
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[0]);
 		close(fd[1]);
@@ -486,13 +487,15 @@ void Response::errorHandler( Status status )
 	ft_error(this->_statusDescriptions[status]);
 	this->_status = status;
 	setErrorPage(status);
-	doSend(this->_clientSocket);
+	doSend(_clientSocket);
 }
 
 
 void Response::ft_error( const std::string err ) const
 {
-	_connection.ft_error(err + ".........................................CONTEXT = '" + _request.getResource() + "'");
+	if (errno != 0)
+		perror("");
+	std::cerr << "[Error] " << (err + ".........................................CONTEXT = '" + _request.getResource() + "'") << std::endl;
 }
 
 void Response::setErrorPage(int status)
@@ -518,7 +521,7 @@ void Response::redirectCode( int code, std::string page )
 {
 	this->_status = static_cast<Status>(code);
 	this->_page = page;
-	doSend(this->_clientSocket);
+	doSend(_clientSocket);
 }
 
 void Response::throwErrorCode( int code, std::string page )
@@ -528,7 +531,7 @@ void Response::throwErrorCode( int code, std::string page )
 	else
 		setErrorPage(code);
 	this->_status = static_cast<Status>(code);
-	doSend(this->_clientSocket);
+	doSend(_clientSocket);
 }
 
 void Response::clearEnv( char **env )
@@ -565,10 +568,7 @@ char **Response::getEnv( void )
 			this->_status = NOT_FOUND;
 	}
 	else
-	{
-		this->_status = NOT_IMPLEMENTED;
-		return NULL;
-	}
+		throw NotImplementedException();
 
 	Header headers = this->_request.getHeaders();
 	std::vector<std::string> headerList;

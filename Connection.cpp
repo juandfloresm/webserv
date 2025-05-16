@@ -154,11 +154,11 @@ void Connection::processClientRequest( int clientSocketFD )
 	SocketDataEventsIterator it = e.find(clientSocketFD);
 	if (it != e.end())
 	{
-		Request req(clientSocketFD);
+		Request req(clientSocketFD, _cfg);
 		if (req.getMethod() == UNKNOWN)
-			Response res(NOT_IMPLEMENTED, clientSocketFD, *this, it->second.port, req);
+			Response res(NOT_IMPLEMENTED, clientSocketFD, _cfg, it->second.port, req);
 		else
-			Response res(OK, clientSocketFD, *this, it->second.port, req);
+			Response res(OK, clientSocketFD, _cfg, it->second.port, req);
 		e.erase(it);
 	}
 }

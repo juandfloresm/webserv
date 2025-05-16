@@ -5,6 +5,8 @@
 # include <string>
 # include <map>
 
+# include "Configuration.hpp"
+
 class Message
 {
 
@@ -17,12 +19,14 @@ class Message
 		void setMinorVersion( int minor );
 
 	protected:
-		Message();
-		Message(int major, int minor);
+		Message(int socket, Configuration & cfg);
 		Message & operator=( Message const & rhs );
 
 		int _majorVersion;
 		int _minorVersion;
+
+		Configuration & _cfg;
+		int _clientSocket;
 
 };
 
