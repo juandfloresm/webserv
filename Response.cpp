@@ -346,7 +346,6 @@ std::string Response::readStaticPage( void ) const
 		}
 	}
 
-	// p("[STATIC] Serving file: " + filePath);
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open())
 		throw NotFoundException();
@@ -359,7 +358,6 @@ std::string Response::readStaticPage( void ) const
 std::string Response::readDynamicPage( void )
 {
 	std::string binary = _location.getPassCGI();
-	// p("[DYNAMIC] Serving file: " + _request.getResource());
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
 	int	fd[2];
