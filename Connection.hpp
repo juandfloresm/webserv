@@ -20,8 +20,6 @@
 # include "Response.hpp"
 
 # define MAX_EVENTS 128
-# define MAX_MESSAGE_LEN 512
-# define CONFIG "./config/zweb.conf"
 
 typedef std::map<std::string, std::string> Config;
 typedef struct epoll_event EpollEvent;
@@ -69,7 +67,5 @@ class Connection
 		int _epollfd;
 
 };
-
-std::ostream & operator<<( std::ostream & o, Connection const & i );
 
 #endif

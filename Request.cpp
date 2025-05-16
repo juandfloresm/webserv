@@ -24,12 +24,6 @@ Request::~Request(){}
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-Request & Request::operator=( Request const & rhs )
-{
-	(void) rhs;
-	return *this;
-}
-
 std::ostream & operator<<( std::ostream & o, Request const & i )
 {
 	o << std::endl << "....... REQUEST ......." << std::endl << std::endl;
@@ -72,7 +66,6 @@ void Request::parseRequest( void )
 {
 	parseTopLine();
 	parseHeaders();
-	// parseContent();
 }
 
 void Request::parseTopLine( void )
@@ -135,8 +128,8 @@ void Request::parseHeaders( void )
 
 void Request::parseContent( void )
 {
-	unsigned char buffer[10];
-	size_t bufferSize = 1;
+	unsigned char buffer[BUFFER];
+	size_t bufferSize = BUFFER;
 	unsigned long contentLength = atol(header("Content-Length").c_str());
 	for (unsigned long i = 0; i < contentLength; i++)
 	{

@@ -47,20 +47,6 @@ Response::~Response() {}
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-Response & Response::operator=( Response const & rhs )
-{
-	(void) rhs;
-	return *this;
-}
-
-std::ostream & operator<<( std::ostream & o, Response const & i )
-{
-	o << std::endl << "....... RESPONSE ......" << std::endl << std::endl;
-	o << i.toString();
-	o << "......................." << std::endl;
-	return o;
-}
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------

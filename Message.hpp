@@ -20,7 +20,6 @@ class Message
 
 	protected:
 		Message(int socket, Configuration & cfg);
-		Message & operator=( Message const & rhs );
 
 		int _majorVersion;
 		int _minorVersion;
@@ -29,7 +28,5 @@ class Message
 		int _clientSocket;
 
 };
-
-std::ostream & operator<<( std::ostream & o, Message const & i );
 
 #endif

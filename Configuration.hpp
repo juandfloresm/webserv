@@ -30,7 +30,6 @@ class Configuration
 	public:
 		Configuration( std::string const configFile );
 		~Configuration();
-		Configuration & operator=( Configuration const & rhs );
 
 		void parse( std::string const file );
 		void parseEntry( Entry directive );
@@ -61,7 +60,5 @@ class Configuration
 
 		std::string _wpath;
 };
-
-std::ostream & operator<<( std::ostream & o, Configuration const & i );
 
 #endif

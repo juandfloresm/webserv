@@ -27,12 +27,6 @@ Connection::~Connection()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-std::ostream & operator<<( std::ostream & o, Connection const & i )
-{
-	(void) i;
-	o << "Connection class" << std::endl;
-	return o;
-}
 
 /*
 ** --------------------------------- METHODS ----------------------------------

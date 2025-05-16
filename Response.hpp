@@ -24,7 +24,6 @@
 # define CGI_BUFFSIZE 2048
 # define MAJOR_VERSION 1
 # define MINOR_VERSION 1
-
 # define DEFAULT_PAGE "index.html"
 
 typedef std::map<std::string, std::string> Config;
@@ -90,8 +89,6 @@ class Response : public Message
 
 		Response(Status status, int clientSocket, Configuration & cfg, int port, Request & request);
 		~Response();
-
-		Response & operator=( Response const & rhs );
 
 		Status getStatus( void ) const;
 		std::string getDescription( void ) const;
@@ -174,7 +171,5 @@ class Response : public Message
 
 		std::string getMimeType(const std::string& path) const;
 };
-
-std::ostream & operator<<( std::ostream & o, Response const & i );
 
 #endif

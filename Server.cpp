@@ -20,9 +20,7 @@ Server::Server( const Server & server ) : Context(server)
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Server::~Server()
-{
-}
+Server::~Server() {}
 
 
 /*
@@ -43,14 +41,6 @@ Server & Server::operator=( Server const & rhs )
 	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 	return *this;
 }
-
-std::ostream & operator<<( std::ostream & o, Server const & i )
-{
-	(void) i;
-	o << "Server = " << std::endl;
-	return o;
-}
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------

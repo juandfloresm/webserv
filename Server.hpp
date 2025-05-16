@@ -5,6 +5,7 @@
 # include <string>
 # include <map>
 # include <vector>
+
 # include "Context.hpp"
 # include "Location.hpp"
 
@@ -32,7 +33,5 @@ class Server : public Context
 		std::vector<std::string> _serverNames;
 		std::vector<Location> _locations;
 };
-
-std::ostream & operator<<( std::ostream & o, Server const & i );
 
 #endif

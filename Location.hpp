@@ -30,6 +30,4 @@ class Location : public Context
 
 };
 
-std::ostream & operator<<( std::ostream & o, Location const & i );
-
 #endif

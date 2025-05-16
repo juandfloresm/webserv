@@ -19,10 +19,7 @@ Location::Location( const Location & loc ) : Context(loc)
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Location::~Location()
-{
-
-}
+Location::~Location() {}
 
 
 /*
@@ -42,13 +39,6 @@ Location & Location::operator=( Location const & rhs )
 	this->_index = rhs.getIndex();
 	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 	return *this;
-}
-
-std::ostream & operator<<( std::ostream & o, Location const & i )
-{
-	(void) i;
-	o << "Location = " << std::endl;
-	return o;
 }
 
 

@@ -27,8 +27,6 @@ class Request : public Message
 		Request(int clientSocket, Configuration & cfg);
 		~Request();
 
-		Request & operator=( Request const & rhs );
-
 		Method getMethod( void ) const;
 		std::string getResource( void ) const;
 		void setResource( std::string resource );

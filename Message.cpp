@@ -22,18 +22,6 @@ Message::~Message()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-Message & Message::operator=( Message const & rhs )
-{
-	(void) rhs;
-	return *this;
-}
-
-std::ostream & operator<<( std::ostream & o, Message const & i )
-{
-	o << "Message = " << i.getMajorVersion() << "." << i.getMinorVersion() << std::endl;
-	return o;
-}
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------

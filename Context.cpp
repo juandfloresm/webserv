@@ -21,9 +21,7 @@ Context::Context( const Context & c )
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Context::~Context()
-{
-}
+Context::~Context() {}
 
 
 /*
@@ -39,13 +37,6 @@ Context & Context::operator=( Context const & rhs )
 	this->_autoIndex = rhs.getAutoIndex();
 	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 	return *this;
-}
-
-std::ostream & operator<<( std::ostream & o, Context const & i )
-{
-	(void) i;
-	o << "Context = " << std::endl;
-	return o;
 }
 
 

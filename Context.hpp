@@ -48,6 +48,4 @@ class Context
 		unsigned long _clientMaxBodySize;
 };
 
-std::ostream & operator<<( std::ostream & o, Context const & i );
-
 #endif
