@@ -28,16 +28,19 @@ Location::~Location() {}
 
 Location & Location::operator=( Location const & rhs )
 {
-	this->_root = rhs.getRoot();
-	this->_path = rhs.getPath();
-	this->_methods = rhs.getMethods();
-	this->_passCGI = rhs.getPassCGI();
-	this->_errorPages = rhs.getErrorPages();
-	this->_return.first = rhs.getReturn().first;
-	this->_return.second = rhs.getReturn().second;
-	this->_autoIndex = rhs.getAutoIndex();
-	this->_index = rhs.getIndex();
-	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+	if (this != &rhs)
+	{
+		this->_root = rhs.getRoot();
+		this->_path = rhs.getPath();
+		this->_methods = rhs.getMethods();
+		this->_passCGI = rhs.getPassCGI();
+		this->_errorPages = rhs.getErrorPages();
+		this->_return.first = rhs.getReturn().first;
+		this->_return.second = rhs.getReturn().second;
+		this->_autoIndex = rhs.getAutoIndex();
+		this->_index = rhs.getIndex();
+		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+	}
 	return *this;
 }
 

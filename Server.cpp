@@ -29,16 +29,19 @@ Server::~Server() {}
 
 Server & Server::operator=( Server const & rhs )
 {
-	this->_port = rhs.getPort();
-	this->_serverNames = rhs.getServerNames();
-	this->_index = rhs.getIndex();
-	this->_root = rhs.getRoot();
-	this->_errorPages = rhs.getErrorPages();
-	this->_return.first = rhs.getReturn().first;
-	this->_return.second = rhs.getReturn().second;
-	this->_autoIndex = rhs.getAutoIndex();
-	this->_locations = rhs.getLocations();
-	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+	if (this != &rhs)
+	{
+		this->_port = rhs.getPort();
+		this->_serverNames = rhs.getServerNames();
+		this->_index = rhs.getIndex();
+		this->_root = rhs.getRoot();
+		this->_errorPages = rhs.getErrorPages();
+		this->_return.first = rhs.getReturn().first;
+		this->_return.second = rhs.getReturn().second;
+		this->_autoIndex = rhs.getAutoIndex();
+		this->_locations = rhs.getLocations();
+		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+	}
 	return *this;
 }
 
