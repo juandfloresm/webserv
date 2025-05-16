@@ -240,7 +240,7 @@ int Configuration::port( std::string raw )
 	{
 		if (i > 5)
 			throw std::runtime_error("[Error] port cannot be greater than range [0 - 65.535]");
-		if (!isdigit(*it))
+		if (!std::isdigit(*it))
 			throw std::runtime_error(SSTR("[Error] provided directive value should be a number '" << *it << "'"));
 		i++;
 	}
@@ -260,7 +260,7 @@ std::string Configuration::word( std::string raw )
 	{
 		if (i > 256)
 			throw std::runtime_error("[Error] excessive number of token characters");
-		if (isalpha(*it) || (extra.find(*it) != std::string::npos) || (i > 0 && isdigit(*it))){}
+		if (isalpha(*it) || (extra.find(*it) != std::string::npos) || (i > 0 && std::isdigit(*it))){}
 		else
 			throw std::runtime_error("[Error] provided directive value should be a word: '" + raw + "'");
 		i++;
@@ -311,7 +311,7 @@ int Configuration::statusCode( std::string raw )
 	{
 		if (i > 3)
 			throw std::runtime_error("[Error] status code cannot be greater than range [100 - 599]");
-		if (!isdigit(*it))
+		if (!std::isdigit(*it))
 			throw std::runtime_error("[Error] provided directive value should be a number");
 		i++;
 	}
@@ -329,7 +329,7 @@ unsigned long Configuration::size( std::string raw )
 	char c = s[s.size() - 1];
 	unsigned long n = 0;
 	int m = 0;
-	if (isdigit(c))
+	if (std::isdigit(c))
 		m = 1;
 	else if (c == 'm')
 	{
@@ -346,7 +346,7 @@ unsigned long Configuration::size( std::string raw )
 
 	for(std::string::iterator it = s.begin(); it < s.end(); it++)
 	{
-		if (!isdigit(*it))
+		if (!std::isdigit(*it))
 			throw std::runtime_error("[Error] provided directive value should be a number");
 		if (willMultiplicationOverflow(n, 10))
 			throw std::runtime_error("[Error] provided directive value overflows");
