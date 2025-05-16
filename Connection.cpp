@@ -62,7 +62,7 @@ void Connection::initServers( void )
 			if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &_enable, sizeof(_enable)) == 0) {
 				if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEPORT, &_enable, sizeof(_enable)) == 0) 
 				{				
-					if (connect(serverSocket, it->getPort(), 10) == -1) // TODO
+					if (connect(serverSocket, it->getPort(), MIN_CONNECTIONS) == -1)
 						ft_error("Binding client socket");
 				}
 			}

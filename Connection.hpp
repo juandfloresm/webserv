@@ -20,6 +20,7 @@
 # include "Response.hpp"
 
 # define MAX_EVENTS 128
+# define MIN_CONNECTIONS 10
 
 typedef std::map<std::string, std::string> Config;
 typedef struct epoll_event EpollEvent;
