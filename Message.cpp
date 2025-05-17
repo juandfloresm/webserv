@@ -4,18 +4,13 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Message::Message(int socket, Configuration & cfg) : _cfg(cfg), _clientSocket(socket)
-{
-	
-}
+Message::Message(int socket, Configuration & cfg) : _cfg(cfg), _clientSocket(socket) {}
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Message::~Message()
-{
-}
+Message::~Message() {}
 
 
 /*

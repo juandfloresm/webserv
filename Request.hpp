@@ -14,7 +14,7 @@
 # define LF 10
 # define CR 13
 
-typedef enum { GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, HEAD, UNKNOWN } Method;
+typedef enum { GET, POST, DELETE, UNKNOWN } Method;
 
 typedef std::map<std::string, std::string> Header;
 typedef Header::iterator HeaderIterator;

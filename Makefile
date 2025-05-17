@@ -114,7 +114,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Eliminating extra fork for CGI due to Valgrind issues"
+	git commit -am "Cleanup"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
