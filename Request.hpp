@@ -3,6 +3,8 @@
 
 # include <iostream>
 # include <string>
+# include <fstream>
+# include <cstdlib>
 # include <map>
 
 # include <sys/socket.h>
@@ -57,6 +59,8 @@ class Request : public Message
 		bool eq( std::string s1, std::string s2 );
 		void parseMultipartContent( void );
 		void parseContentPart( void );
+		void setPart(std::string & name, std::string & value);
+		std::vector<std::string> split(std::string & s, std::string& delimiter);
 
 	private:
 		std::string _resource;

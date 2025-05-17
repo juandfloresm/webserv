@@ -21,7 +21,7 @@ Request::Request(int clientSocket, Configuration & cfg, int port) : Message(clie
 		Response(OK, clientSocket, cfg, port, *this);
 	} catch ( Response::LengthRequiredException & e ) {
 		Response(LENGTH_REQUIRED, clientSocket, cfg, port, *this);
-	} catch ( Response::UnsuportedMediaTypeException & e ) {
+	} catch ( Response::UnsupportedMediaTypeException & e ) {
 		Response(UNSUPPORTED_MEDIA_TYPE, clientSocket, cfg, port, *this);
 	} catch ( Response::UnprocessableContentException & e ) {
 		Response(UNPROCESSABLE_CONTENT, clientSocket, cfg, port, *this);
@@ -173,55 +173,97 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 	}
 }
 
-void Request::parseContentPart( void )
+void Request::setPart(std::string & name, std::string & value)
 {
-	std::string line, type, name, value = "";
-	std::istringstream f(_body);
-	bool emptyLine = false;
-
-	std::getline(f, line);
-	if (line.find(_boundary) == std::string::npos)
+	if (value.empty())
 		throw Response::UnprocessableContentException();
-
-	std::getline(f, line);
-	if (line.find(CONTENT_DISPOSITION) != 0)
-		throw Response::UnprocessableContentException();
-	else
+	if (name.find(";") != std::string::npos)
 	{
-		line = line.substr(0, line.size() - 1);
-		name = line.substr(line.find("=") + 2);
-		name = name.substr(0, name.size() - 1);
-	}
-
-	std::getline(f, line);
-	if (line.size() == 1 && line[0] == CR)
-		emptyLine = true;
-	else if (line.find(CONTENT_TYPE) == 0)
-	{
-		// Content-Type
+		std::string nm = name.substr(6, name.find(";") - 1 - 6);
+		std::string file = name.substr(name.find(";") + 12, name.size() - name.find(";") + 12);
+		file = file.substr(0, file.size() - 1);
+		_content["filename"] = file;
+		_content[nm] = value;
+		std::string path = std::getenv("WPATH");
+		path +=  ("/html/uploads/" + file);
+		std::ofstream MyFile(path.c_str());
+		MyFile << _content[nm];
+		MyFile.close();
 	}
 	else
-		throw Response::UnprocessableContentException();
-
-	std::getline(f, line);
-	if (emptyLine)
 	{
-		value = line.substr(0, line.size() - 1);
+		std::string nm = name.substr(6, name.rfind("\"") - 6);
+		_content[nm] = value;
 	}
-	else if (line.size() == 1 && line[0] == CR)
-		emptyLine = true;
-	else
-		throw Response::UnprocessableContentException();
-
-	if (emptyLine)
-		std::getline(f, line);
-	
-	_content[name] = value;
 }
 
 void Request::parseMultipartContent( void )
 {
-	parseContentPart();
+	bool emptyLine = false;
+	std::string line, name, type, value;
+	std::string delimiter = _boundary;
+	std::string liner = "\r\n";
+	std::vector<std::string> parts = split(_body, delimiter), lines;
+	for(size_t i = 1; i < parts.size(); i++)
+	{
+		lines = split(parts[i], liner);
+
+		line = lines.at(1);							//.....................................
+		if (line.find(CONTENT_DISPOSITION) != 0)
+			throw Response::UnprocessableContentException();
+		else
+			name = line.substr(line.find("name"));
+
+		line = lines.at(2);							//.....................................
+		if (line.empty())
+			emptyLine = true;
+		else if (line.find(CONTENT_TYPE) == 0)
+		{
+			type = line;
+			std::istringstream f(type);
+			std::string s;
+			getline(f, s, ' ');
+			getline(f, type, ' ');
+			if (eq(type, "image/png") || eq(type, "image/gif") || eq(type, "image/jpg") || \
+				eq(type, "image/jpeg") || eq(type, "application/pdf") || \
+				eq(type, "text/plain") || eq(type, "text/html"))
+			{
+				// TODO: delimit supporting MIME types from config file
+			}
+			else
+			{
+				std::cout << type << std::endl;
+				throw Response::UnsupportedMediaTypeException();
+			}
+
+		}
+		else
+			throw Response::UnprocessableContentException();
+
+		line = lines.at(3);							//.....................................
+		if (emptyLine)
+		{
+			value = line;
+			setPart(name, value);
+			emptyLine = false;
+			continue;
+		}
+		else if (line.empty())
+			emptyLine = true;
+		else
+			throw Response::UnprocessableContentException();
+
+		if (emptyLine)								//.....................................
+		{
+			line = lines.at(4);
+			value = line + liner + lines.at(5);
+			setPart(name, value);
+			emptyLine = false;
+			continue;
+		}
+		else
+			throw Response::UnprocessableContentException();
+	}
 }
 
 /*
@@ -252,7 +294,7 @@ void Request::parseContentType( void )
 	std::string raw = header(CONTENT_TYPE);
 	std::string len = header(CONTENT_LENGTH);
 	if (!len.empty() && raw.empty())
-		throw Response::UnsuportedMediaTypeException();
+		throw Response::UnsupportedMediaTypeException();
 	if (!raw.empty())
 	{
 		std::istringstream f(raw);
@@ -271,7 +313,7 @@ void Request::parseContentType( void )
 				if (_boundary.size() > 0)
 					return;
 			}
-			throw Response::UnsuportedMediaTypeException();
+			throw Response::UnsupportedMediaTypeException();
 		}
 		else
 		{
@@ -279,7 +321,7 @@ void Request::parseContentType( void )
 			{
 				_charSet = b.substr(9);
 				if (_charSet.compare("UTF-8") != 0)
-					throw Response::UnsuportedMediaTypeException();
+					throw Response::UnsupportedMediaTypeException();
 			}
 		}
 	}
@@ -295,6 +337,19 @@ bool Request::isFormContentType( void )
 	return 	_contentType.compare(FORM_TYPE_MULTIPART) == 0 || \
 			_contentType.compare(FORM_TYPE_APPLICATION) == 0|| \
 			_contentType.compare(FORM_TYPE_PLAIN) == 0;
+}
+
+std::vector<std::string> Request::split(std::string& s, std::string& delimiter)
+{
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        tokens.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+    return tokens;
 }
 
 std::string Request::getMessageLine( void )

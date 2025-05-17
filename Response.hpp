@@ -167,9 +167,9 @@ class Response : public Message
 				const char * what () { return "Content Too Large"; }
 		};
 		/* 415 */
-		class UnsuportedMediaTypeException : public std::exception {
+		class UnsupportedMediaTypeException : public std::exception {
 			public:
-				const char * what () { return "Unsuported Media Type"; }
+				const char * what () { return "Unsupported Media Type"; }
 		};
 		/* 422 */
 		class UnprocessableContentException : public std::exception {
