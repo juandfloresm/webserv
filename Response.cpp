@@ -436,7 +436,7 @@ std::string Response::readDynamicPage( void )
 	clearEnv(env);
 
 	if (pid == 0)
-		exit(0);
+		std::exit(0);
 
 	return getParsedCGIResponse(response);
 }
@@ -465,6 +465,7 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 	return (parsed);
 }
 
+
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
@@ -474,7 +475,6 @@ void Response::p( std::string s ) const
 	std::cout << s << std::endl;
 }
 
-
 void Response::errorHandler( Status status )
 {
 	showError(_statusDescriptions[status]);
@@ -482,7 +482,6 @@ void Response::errorHandler( Status status )
 	setErrorPage();
 	doSend(_clientSocket);
 }
-
 
 void Response::showError( const std::string err ) const
 {
@@ -655,7 +654,6 @@ void Response::initStatusDescriptions( void )
 	_statusDescriptions[GATEWAY_TIMEOUT] = "Gateway Timeout";
 	_statusDescriptions[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
 }
-
 
 std::string Response::getMimeType(const std::string& path) const {
 	std::string extension = "";
