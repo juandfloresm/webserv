@@ -117,7 +117,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup: moving tests to ./config/_tests"
+	git commit -am "Moving .github/workflows under ./config/_tests"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
