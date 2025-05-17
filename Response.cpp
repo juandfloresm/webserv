@@ -36,7 +36,7 @@ Response::Response(Status status, int clientSocket, Configuration & cfg, int por
 		}
 	}
 	else
-		doSend(clientSocket);
+		errorHandler(status);
 }
 
 
