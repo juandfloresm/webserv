@@ -39,7 +39,7 @@ re: fclean all
 	mkdir -p $(WWW)/cgi-bin
 	cp -ru ./config/html $(WWW)/
 	cp -ru ./config/cgi-bin $(WWW)/
-	chmod -R 775 $(WWW)
+	chmod -R 777 $(WWW)
 
 runner: re
 	clear
@@ -117,7 +117,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Parsing content"
+	git commit -am "The only method"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

@@ -154,7 +154,7 @@ void Response::validateLocationMethods( void ) const
 			if (method.compare(*it) == 0)
 				return ;
 		}
-		throw NotImplementedException();
+		throw MethodNotAllowedException();
 	}
 }
 
@@ -552,22 +552,7 @@ char **Response::getEnv( void )
 {
 	std::string base = _server.getRoot();
 	std::string path = _request.getResource();
-	std::string method = "";
-	
-	if (_request.getMethod() == GET)
-		method = "GET";
-	else if (_request.getMethod() == POST)
-		method = "POST";
-	else if (_request.getMethod() == DELETE) {
-		method = "DELETE";
-		std::string path = base + _request.getResource();
-		if (std::remove(path.c_str()) == 0)
-			_status = OK;
-		else
-			_status = NOT_FOUND;
-	}
-	else
-		throw NotImplementedException();
+	std::string method = _request.getMethodString();
 
 	Header headers = _request.getHeaders();
 	std::vector<std::string> headerList;

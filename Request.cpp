@@ -197,6 +197,7 @@ void Request::parseContentType( void )
 		getline(f, h, ';');
 		getline(f, b, ';');
 		_contentType = h;
+
 		_boundary = b;
 		_charSet = b;
 	}
