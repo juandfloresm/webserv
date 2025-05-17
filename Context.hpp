@@ -29,8 +29,6 @@ class Context
 
 		virtual int getPort( void ) const;
 		virtual void setPort( int port );
-		virtual std::vector<std::string> getServerNames( void ) const;
-		virtual void setServerName( std::string serverName );
 
 		virtual std::string getPath( void ) const;
 		virtual void setPath( std::string path );

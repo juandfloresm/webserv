@@ -55,33 +55,15 @@ Response::~Response() {}
 void Response::matchServer( void )
 {
 	ServerList list = _cfg.getServerList();
-	ServerList match = _cfg.getServerList();
 	ServerList::iterator it = list.begin();
-
-	for(; it < list.end(); it++) // ................................... by PORT
-		if (it->getPort() == _port)
-			match.push_back(*it);
-
-	if (match.size() == 0)
-		_server = match.back();
-	else if (match.size() > 0)
+	for(; it < list.end(); it++) // ................................... filter server by PORT
 	{
-		for(it = match.begin(); it < match.end(); it++) // ..... by SERVER_NAME
+		if (it->getPort() == _port)
 		{
-			std::vector<std::string> list = it->getServerNames();
-			std::vector<std::string>::iterator sit = list.begin();
-			for(; sit < list.end(); sit++)
-			{
-				if ((*sit).compare(_request.header("Host")) == 0)
-				{
-					_server = *it;
-					return ;
-				}
-			}
+			_server = *it;
+			return;
 		}
-		_server = match.at(0); // ..................... by DEFAULT_SERVER
 	}
-
 	throw Response::BadGatewayException();
 }
 

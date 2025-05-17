@@ -11,7 +11,6 @@ Configuration::Configuration( std::string const configFile )
 	level0.push_back("server");
 	level1.push_back("listen");
 	level1.push_back("root");
-	level1.push_back("server_name");
 	level1.push_back("index");
 	level1.push_back("error_page");
 	level1.push_back("return");
@@ -174,13 +173,6 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		cxt.setPort(port(parsedValue));
 	else if (directive.first.compare("root") == 0)
 		cxt.setRoot(path(parsedValue));
-	else if (directive.first.compare("server_name") == 0)
-	{
-		std::istringstream f(parsedValue);
-		std::string s;
-		while (getline(f, s, ' '))
-			cxt.setServerName(word(s));
-	}
 	else if (directive.first.compare("error_page") == 0)
 	{
 		std::istringstream f(parsedValue);

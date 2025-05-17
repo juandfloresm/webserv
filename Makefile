@@ -114,7 +114,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup"
+	git commit -am "Fixing siege run"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \

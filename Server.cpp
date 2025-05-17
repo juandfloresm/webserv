@@ -8,7 +8,6 @@ Server::Server( )
 {
 	this->_port = 80;
 	this->_default = false;
-	this->_serverNames.push_back("localhost");
 }
 
 Server::Server( const Server & server ) : Context(server)
@@ -32,7 +31,6 @@ Server & Server::operator=( Server const & rhs )
 	if (this != &rhs)
 	{
 		this->_port = rhs.getPort();
-		this->_serverNames = rhs.getServerNames();
 		this->_index = rhs.getIndex();
 		this->_root = rhs.getRoot();
 		this->_errorPages = rhs.getErrorPages();
@@ -62,16 +60,6 @@ int Server::getPort( void ) const
 void Server::setPort( int port )
 {
 	this->_port = port;
-}
-
-std::vector<std::string> Server::getServerNames( void ) const
-{
-	return this->_serverNames;
-}
-
-void Server::setServerName( std::string serverName )
-{
-	this->_serverNames.push_back(serverName);
 }
 
 std::vector<Location> Server::getLocations( void ) const

@@ -30,12 +30,15 @@ Context::~Context() {}
 
 Context & Context::operator=( Context const & rhs )
 {
-	this->_root = rhs.getRoot();
-	this->_index = rhs.getIndex();
-	this->_errorPages = rhs.getErrorPages();
-	this->_return = rhs.getReturn();
-	this->_autoIndex = rhs.getAutoIndex();
-	this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+	if (this != &rhs)
+	{
+		this->_root = rhs.getRoot();
+		this->_index = rhs.getIndex();
+		this->_errorPages = rhs.getErrorPages();
+		this->_return = rhs.getReturn();
+		this->_autoIndex = rhs.getAutoIndex();
+		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+	}
 	return *this;
 }
 
@@ -125,16 +128,6 @@ int Context::getPort( void ) const
 void Context::setPort( int port )
 {
 	(void) port;
-}
-
-std::vector<std::string> Context::getServerNames( void ) const
-{
-	return std::vector<std::string>();
-}
-
-void Context::setServerName( std::string serverName )
-{
-	(void) serverName;
 }
 
 std::string Context::getPath( void ) const
