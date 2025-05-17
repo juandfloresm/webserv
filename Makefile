@@ -117,7 +117,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Serving default error page when exception comes from Request class"
+	git commit -am $(m)
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
