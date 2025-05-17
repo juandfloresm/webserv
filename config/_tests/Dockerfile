@@ -58,7 +58,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
 WORKDIR /app
 COPY . .
 
-RUN chmod +x ./cgi-bin/*.sh ./cgi-bin/*.py ./cgi-bin/*.pl
+RUN chmod +x ./config/cgi-bin/*.sh ./config/cgi-bin/*.py ./config/cgi-bin/*.pl
 
 EXPOSE 8080
 

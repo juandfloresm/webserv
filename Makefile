@@ -12,9 +12,10 @@ OBJ 				:=	$(SRC:.cpp=.o)
 ARG					:=	./config/zweb2.conf
 WWW					:=	/home/$$(whoami)/www
 
-DOCKER_IMAGE		:= webserv
-DOCKER_CONTAINER	:= webserv-dev
-DOCKER_PORT			:= 8080
+DOCKER_FILE			:=	./config/_tests/Dockerfile
+DOCKER_IMAGE		:=	webserv
+DOCKER_CONTAINER	:=	webserv-dev
+DOCKER_PORT			:=	8080
 
 all: $(NAME)
 
@@ -34,8 +35,8 @@ re: fclean all
 	make clean
 	mkdir -p $(WWW)/html
 	mkdir -p $(WWW)/cgi-bin
-	cp -ru ./html $(WWW)/
-	cp -ru ./cgi-bin $(WWW)/
+	cp -ru ./config/html $(WWW)/
+	cp -ru ./config/cgi-bin $(WWW)/
 	chmod -R 775 $(WWW)
 
 runner: re
@@ -79,7 +80,7 @@ siege:
 docker-build:
 	@if ! docker image inspect $(DOCKER_IMAGE) > /dev/null 2>&1; then \
 		echo "Building Docker image $(DOCKER_IMAGE)..."; \
-		docker build -t $(DOCKER_IMAGE) .; \
+		docker build -f $(DOCKER_FILE) -t $(DOCKER_IMAGE) .; \
 	else \
 		echo "Docker image $(DOCKER_IMAGE) already exists."; \
 	fi
@@ -114,7 +115,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup"
+	git commit -am "Cleanup: moving Docker file to ./config/_tests"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
