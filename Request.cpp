@@ -189,7 +189,7 @@ void Request::parseContentType( void )
 	std::string raw = header("Content-Type");
 	std::string len = header("Content-Length");
 	if (!len.empty() && raw.empty())
-		throw UnsuportedMediaTypeException();
+		throw Response::UnsuportedMediaTypeException();
 	if (!raw.empty())
 	{
 		std::istringstream f(raw);
