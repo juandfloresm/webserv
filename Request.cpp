@@ -172,7 +172,7 @@ bool Request::eq( std::string s1, std::string s2 )
 
 void Request::parseContentLength( void )
 {
-	std::string len = header("Content-Length");
+	std::string len = header(CONTENT_LENGTH);
 
 	if (len.empty())
 		throw Response::LengthRequiredException();
@@ -186,20 +186,37 @@ void Request::parseContentLength( void )
 
 void Request::parseContentType( void )
 {
-	std::string raw = header("Content-Type");
-	std::string len = header("Content-Length");
+	std::string raw = header(CONTENT_TYPE);
+	std::string len = header(CONTENT_LENGTH);
 	if (!len.empty() && raw.empty())
 		throw Response::UnsuportedMediaTypeException();
 	if (!raw.empty())
 	{
 		std::istringstream f(raw);
 		std::string h, b;
-		getline(f, h, ';');
-		getline(f, b, ';');
+		std::getline(f, h, ';');
+		std::getline(f, b, ';');
 		_contentType = h;
 
-		_boundary = b;
-		_charSet = b;
+		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
+		{
+			if (b.find("boundary=") == 1)
+			{
+				_boundary = b.substr(10);
+				if (_boundary.size() > 0)
+					return;
+			}
+			throw Response::UnsuportedMediaTypeException();
+		}
+		else
+		{
+			if (b.find("charset=") == 1)
+			{
+				_charSet = b.substr(9);
+				if (_charSet.compare("UTF-8") != 0)
+					throw Response::UnsuportedMediaTypeException();
+			}
+		}
 	}
 }
 
@@ -210,9 +227,9 @@ bool Request::isContentAvailable( void ) const
 
 bool Request::isFormContentType( void )
 {
-	return 	_contentType.compare("multipart/form-data") == 0 || \
-			_contentType.compare("application/x-www-form-urlencoded") == 0|| \
-			_contentType.compare("text/plain") == 0;
+	return 	_contentType.compare(FORM_TYPE_MULTIPART) == 0 || \
+			_contentType.compare(FORM_TYPE_APPLICATION) == 0|| \
+			_contentType.compare(FORM_TYPE_PLAIN) == 0;
 }
 
 std::string Request::getMessageLine( void )

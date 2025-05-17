@@ -238,7 +238,9 @@ const std::string Response::toString( void ) const
 			r += top + CRLF;
 		}
 		else
+		{
 			r += _statusString + " " + getDescription() + CRLF;
+		}
 		r += "Content-Length: " + contentLength + CRLF;
 		r += _headerSection;
 	}

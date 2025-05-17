@@ -14,6 +14,12 @@
 # define LF 10
 # define CR 13
 
+# define CONTENT_TYPE "Content-Type"
+# define CONTENT_LENGTH "Content-Length"
+# define FORM_TYPE_MULTIPART "multipart/form-data"
+# define FORM_TYPE_APPLICATION "application/x-www-form-urlencoded"
+# define FORM_TYPE_PLAIN "text/plain"
+
 typedef enum { GET, POST, DELETE, HEAD, PUT, CONNECT, OPTIONS, TRACE, PATCH, UNKNOWN } Method;
 
 typedef std::map<std::string, std::string> Header;
