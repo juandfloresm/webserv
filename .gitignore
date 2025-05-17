@@ -4,3 +4,6 @@ webserv
 *.o
 *_shrubbery
 .vscode/
+config/_tests/YoupiBanane
+config/tester.conf
+config/ubuntu*

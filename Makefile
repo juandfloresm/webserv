@@ -49,7 +49,7 @@ runner-t: re
 	@echo "Starting server in background..."
 	@make clean
 	@chmod -R 775 .
-	@./$(NAME) $(ARG) > server.log 2>&1 & echo $$! > server.pid
+	@WPATH=$(WWW) ./$(NAME) $(ARG) > server.log 2>&1 & echo $$! > server.pid
 	@echo "Server started with PID: $$(cat server.pid)"
 	@sleep 2
 	@echo "Building and running tests..."
@@ -61,7 +61,7 @@ runner-t: re
 	@echo "Shutting down server..."
 	@kill $$(cat server.pid) || kill -9 $$(cat server.pid) || true
 	@rm -f server.pid server.log
-	@rm -f $(TESTS_BASE)tests/test_basic
+	@rm -f $(TESTS_BASE)/tests/test_basic
 	@echo "Test run complete."
 
 valgrind: re
