@@ -12,6 +12,8 @@ OBJ 				:=	$(SRC:.cpp=.o)
 ARG					:=	./config/zweb2.conf
 WWW					:=	/home/$$(whoami)/www
 
+TESTS_BASE			:=	./config/_tests
+
 DOCKER_FILE			:=	./config/_tests/Dockerfile
 DOCKER_IMAGE		:=	webserv
 DOCKER_CONTAINER	:=	webserv-dev
@@ -51,7 +53,7 @@ runner-t: re
 	@echo "Server started with PID: $$(cat server.pid)"
 	@sleep 2
 	@echo "Building and running tests..."
-	@if $(MAKE) -C tests/ && ./tests/test_basic; then \
+	@if $(MAKE) -C $(TESTS_BASE)/tests/ && $(TESTS_BASE)/tests/test_basic; then \
 		echo "✅ Tests completed successfully"; \
 	else \
 		echo "❌ Tests failed"; \
@@ -59,7 +61,7 @@ runner-t: re
 	@echo "Shutting down server..."
 	@kill $$(cat server.pid) || kill -9 $$(cat server.pid) || true
 	@rm -f server.pid server.log
-	@rm -f tests/test_basic
+	@rm -f $(TESTS_BASE)tests/test_basic
 	@echo "Test run complete."
 
 valgrind: re
@@ -115,7 +117,7 @@ docker-clean: docker-stop
 
 gitter: fclean
 	git add -A
-	git commit -am "Cleanup: moving Docker file to ./config/_tests"
+	git commit -am "Cleanup: moving tests to ./config/_tests"
 	git push
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
