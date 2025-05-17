@@ -48,6 +48,7 @@ class Configuration
 		unsigned long size( std::string raw );
 		bool willAdditionOverflow(unsigned long a, unsigned long b);
 		bool willMultiplicationOverflow(unsigned long a, unsigned long b);
+		unsigned long number( std::string raw );
 	
 	private:
 		bool _parsingServer;

@@ -17,10 +17,14 @@ Response::Response(Status status, int clientSocket, Configuration & cfg, int por
 			matchServer();
 			matchLocation();
 			doResponse();
-		} catch ( Response::NotFoundException & e ) {
-			errorHandler(NOT_FOUND);
 		} catch ( Response::ForbiddenException & e ) {
 			errorHandler(FORBIDDEN);
+		} catch ( Response::BadRequestException & e ) {
+			errorHandler(BAD_REQUEST);
+		} catch ( Response::NotFoundException & e ) {
+			errorHandler(NOT_FOUND);
+		} catch ( Response::MethodNotAllowedException & e ) {
+			errorHandler(METHOD_NOT_ALLOWED);
 		} catch ( Response::ContentTooLargeException & e ) {
 			errorHandler(CONTENT_TOO_LARGE);
 		} catch ( Response::InternalServerException & e ) {
@@ -157,8 +161,11 @@ void Response::validateLocationMethods( void ) const
 void Response::doResponse( void )
 {
 	validateLocationMethods();										// ................................... CHECK MATCHING METHODS
-	
+
 	_request.parseContent(_server.getClientMaxBodySize());			// ................................... CHECK CONTENT SIZE
+
+	if (isPOST() && !isCGI() && isContentAvailable())				// ................................... FILE UPLOAD
+		processUpload();
 
 	if(_server.getReturn().first != 0)								// ................................... RETURN
 	{
@@ -174,7 +181,7 @@ void Response::doResponse( void )
 		_content = readDirectory();
 		doSend(_clientSocket);
 	}
-	else if (_location.getPassCGI().size() > 0)						// ................................... DYNAMIC
+	else if (isCGI())												// ................................... DYNAMIC
 	{
 		_content = readDynamicPage();
 		doSend(_clientSocket);
@@ -643,6 +650,7 @@ void Response::initStatusDescriptions( void )
 	_statusDescriptions[CONTENT_TOO_LARGE] = "Content Too Large";
 	_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
 	_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+	_statusDescriptions[UNPROCESSABLE_CONTENT] = "Unprocessable Content";
 	_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";
 	_statusDescriptions[TOO_MANY_REQUESTS] = "Too Many Requests";
 
@@ -703,6 +711,26 @@ unsigned char Response::headerCharTransform(unsigned char c)
 	if (c == '-')
 		c = '_';
 	return std::toupper(c); 
+}
+
+bool Response::isCGI( void ) const
+{
+	return _location.getPassCGI().size() > 0;
+}
+
+bool Response::isPOST( void ) const
+{
+	return _request.getMethodString().compare("POST") == 0;
+}
+
+bool Response::isContentAvailable( void ) const
+{
+	return _request.isContentAvailable() && _request.isFormContentType();
+}
+
+void Response::processUpload( void )
+{
+	p("Processing file upload...");
 }
 
 /*

@@ -67,6 +67,7 @@ typedef enum {
 	CONTENT_TOO_LARGE = 413,
 	URI_TOO_LONG = 414,
 	UNSUPPORTED_MEDIA_TYPE = 415,
+	UNPROCESSABLE_CONTENT = 422,
 	EXPECTATION_FAILED = 426,
 	TOO_MANY_REQUESTS = 429,
 
@@ -130,20 +131,50 @@ class Response : public Message
 		std::string replaceAll( std::string str, std::string from, std::string to ) const;
 		void p( std::string s ) const;
 
+		void processUpload( void );
+		bool isContentAvailable( void ) const;
+		bool isPOST( void ) const;
+		bool isCGI( void ) const;
+
 		/* 400 */
-		class NotFoundException : public std::exception {
+		class BadRequestException : public std::exception {
 			public:
-				const char * what () { return "Not Found"; }
+				const char * what () { return "Bad Request"; }
 		};
 		/* 403 */
 		class ForbiddenException : public std::exception {
 			public:
 				const char * what () { return "Forbidden"; }
 		};
+		/* 404 */
+		class NotFoundException : public std::exception {
+			public:
+				const char * what () { return "Not Found"; }
+		};
+		/* 405 */
+		class MethodNotAllowedException : public std::exception {
+			public:
+				const char * what () { return "Method Not Allowed"; }
+		};
+		/* 411 */
+		class LengthRequiredException : public std::exception {
+			public:
+				const char * what () { return "Length Required"; }
+		};
 		/* 413 */
 		class ContentTooLargeException : public std::exception {
 			public:
 				const char * what () { return "Content Too Large"; }
+		};
+		/* 415 */
+		class UnsuportedMediaTypeException : public std::exception {
+			public:
+				const char * what () { return "Unsuported Media Type"; }
+		};
+		/* 422 */
+		class UnprocessableContentException : public std::exception {
+			public:
+				const char * what () { return "Unprocessable Content"; }
 		};
 		/* 500 */
 		class InternalServerException : public std::exception {

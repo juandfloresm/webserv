@@ -14,7 +14,7 @@
 # define LF 10
 # define CR 13
 
-typedef enum { GET, POST, DELETE, UNKNOWN } Method;
+typedef enum { GET, POST, DELETE, HEAD, PUT, CONNECT, OPTIONS, TRACE, PATCH, UNKNOWN } Method;
 
 typedef std::map<std::string, std::string> Header;
 typedef Header::iterator HeaderIterator;
@@ -42,12 +42,21 @@ class Request : public Message
 
 		std::string getMessageLine( void );
 		Header & getHeaders( void );
+		bool isContentAvailable( void ) const;
+		bool isFormContentType( void );
+		void parseContentLength( void );
+		void parseContentType( void );
+		bool eq( std::string s1, std::string s2 );
 
 	private:
-		Method _method;
 		std::string _resource;
 		std::string _queryString;
 		std::string _body;
+		std::string _contentType;
+		std::string _boundary;
+		std::string _charSet;
+		unsigned long _contentLength;
+		Method _method;
 		Header _headers;
 		char _buffer[BUFFER];
 		static const char HEADER_SEP;

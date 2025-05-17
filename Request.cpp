@@ -8,12 +8,25 @@ const char Request::HEADER_SEP = ':';
 Request::Request(int clientSocket, Configuration & cfg, int port) : Message(clientSocket, cfg)
 {
 	this->_body = "";
+	this->_resource = "";
 	this->_queryString = "";
+	this->_contentType = "";
+	this->_charSet = "";
+	this->_boundary = "";
+	this->_contentLength = 0;
 
 	try {
 		parseTopLine();
 		parseHeaders();
 		Response(OK, clientSocket, cfg, port, *this);
+	} catch ( Response::LengthRequiredException & e ) {
+		Response(LENGTH_REQUIRED, clientSocket, cfg, port, *this);
+	} catch ( Response::UnsuportedMediaTypeException & e ) {
+		Response(UNSUPPORTED_MEDIA_TYPE, clientSocket, cfg, port, *this);
+	} catch ( Response::UnprocessableContentException & e ) {
+		Response(UNPROCESSABLE_CONTENT, clientSocket, cfg, port, *this);
+	} catch ( Response::MethodNotAllowedException & e ) {
+		Response(METHOD_NOT_ALLOWED, clientSocket, cfg, port, *this);
 	} catch ( Response::ContentTooLargeException & e ) {
 		Response(CONTENT_TOO_LARGE, clientSocket, cfg, port, *this);
 	} catch ( Response::InternalServerException & e ) {
@@ -72,12 +85,20 @@ void Request::parseTopLine( void )
 	std::istringstream f(line);
 
 	getline(f, method, ' ');
-	if (method.find("GET") != std::string::npos)
+
+	if (eq(method, "GET"))
 		this->_method = GET;
-	else if (method.find("POST") != std::string::npos)
+	else if (eq(method, "POST"))
 		this->_method = POST;
-	else if (method.find("DELETE") != std::string::npos)
+	else if (eq(method, "DELETE"))
 		this->_method = DELETE;
+	else if (eq(method, "HEAD") || \
+			 eq(method, "PUT") || \
+			 eq(method, "CONNECT") || \
+			 eq(method, "OPTIONS") || \
+			 eq(method, "TRACE") || \
+			 eq(method, "PATCH"))
+		throw Response::MethodNotAllowedException();
 	else
 		throw Response::NotImplementedException();
 	
@@ -124,20 +145,74 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 {
 	unsigned char buffer[BUFFER];
 	size_t bufferSize = BUFFER;
-	unsigned long contentLength = atol(header("Content-Length").c_str());
-	if ( clientMaxBodySize > 0 && clientMaxBodySize < contentLength )
-		throw Response::ContentTooLargeException();
-	for (unsigned long i = 0; i < contentLength; i++)
+
+	parseContentType();
+	if (isFormContentType() && _method == POST)
 	{
-		if (read(_clientSocket, buffer, bufferSize) > 0)
-			std::cout << buffer[0];
+		parseContentLength();
+		if ( clientMaxBodySize > 0 && clientMaxBodySize < _contentLength )
+			throw Response::ContentTooLargeException();
+
+		for (unsigned long i = 0; i < _contentLength; i++)
+		{
+			if (read(_clientSocket, buffer, bufferSize) > 0)
+				_body.push_back(buffer[0]);
+		}
 	}
-	std::cout << std::endl;
 }
 
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
+
+bool Request::eq( std::string s1, std::string s2 )
+{
+	return (s1.compare(s2) == 0);
+}
+
+void Request::parseContentLength( void )
+{
+	std::string len = header("Content-Length");
+
+	if (len.empty())
+		throw Response::LengthRequiredException();
+
+	try {
+		_contentLength = _cfg.number(len);
+	} catch (std::runtime_error & e) {
+		throw Response::UnprocessableContentException();
+	}
+}
+
+void Request::parseContentType( void )
+{
+	std::string raw = header("Content-Type");
+	std::string len = header("Content-Length");
+	if (!len.empty() && raw.empty())
+		throw UnsuportedMediaTypeException();
+	if (!raw.empty())
+	{
+		std::istringstream f(raw);
+		std::string h, b;
+		getline(f, h, ';');
+		getline(f, b, ';');
+		_contentType = h;
+		_boundary = b;
+		_charSet = b;
+	}
+}
+
+bool Request::isContentAvailable( void ) const
+{
+	return _body.size() > 0;
+}
+
+bool Request::isFormContentType( void )
+{
+	return 	_contentType.compare("multipart/form-data") == 0 || \
+			_contentType.compare("application/x-www-form-urlencoded") == 0|| \
+			_contentType.compare("text/plain") == 0;
+}
 
 std::string Request::getMessageLine( void )
 {

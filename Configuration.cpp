@@ -313,14 +313,31 @@ int Configuration::statusCode( std::string raw )
 	return n;
 }
 
+unsigned long Configuration::number( std::string s )
+{
+	unsigned long n = 0;
+	for(std::string::iterator it = s.begin(); it < s.end(); it++)
+	{
+		if (!std::isdigit(*it))
+			throw std::runtime_error("[Error] provided directive value should be a number");
+		if (willMultiplicationOverflow(n, 10))
+			throw std::runtime_error("[Error] provided directive value overflows");
+		n *= 10;
+		if (willAdditionOverflow(n, (*it - '0')))
+			throw std::runtime_error("[Error] provided directive value overflows");
+		n += (*it - '0');
+	}
+	return n;
+}
+
 unsigned long Configuration::size( std::string raw )
 {
 	std::istringstream f(raw);
 	std::string s;
 	getline(f, s, ' ');
 	char c = s[s.size() - 1];
-	unsigned long n = 0;
 	int m = 0;
+	
 	if (std::isdigit(c))
 		m = 1;
 	else if (c == 'm')
@@ -336,17 +353,7 @@ unsigned long Configuration::size( std::string raw )
 	else
 		throw std::runtime_error("[Error] on size format");
 
-	for(std::string::iterator it = s.begin(); it < s.end(); it++)
-	{
-		if (!std::isdigit(*it))
-			throw std::runtime_error("[Error] provided directive value should be a number");
-		if (willMultiplicationOverflow(n, 10))
-			throw std::runtime_error("[Error] provided directive value overflows");
-		n *= 10;
-		if (willAdditionOverflow(n, (*it - '0')))
-			throw std::runtime_error("[Error] provided directive value overflows");
-		n += (*it - '0');
-	}
+	unsigned long n = number(s);
 
 	if (willMultiplicationOverflow(n, m))
 		throw std::runtime_error("[Error] provided directive value overflows");
