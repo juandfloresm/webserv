@@ -125,7 +125,7 @@ class Response : public Message
 		void setErrorPage( void );
 		bool matchLocationExact( std::string locationPath, std::string requestPath );
 		int matchLocationLogestPrefix( std::string locationPath, std::string requestPath );
-		void ft_error( const std::string err ) const;
+		void showError( const std::string err ) const;
 		void validateLocationMethods( void ) const;
 		std::string replaceAll( std::string str, std::string from, std::string to ) const;
 		void p( std::string s ) const;

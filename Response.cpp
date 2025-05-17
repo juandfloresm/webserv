@@ -265,7 +265,7 @@ std::string Response::readError( std::string filePath ) const
 {
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
-		ft_error("No error file match " + filePath);
+		showError("No error file match " + filePath);
 		return "";
 	}
 	std::ostringstream content;
@@ -376,7 +376,7 @@ std::string Response::readDynamicPage( void )
 	if (pipe(fd) == -1)
 	{
 		_status = INTERNAL_SERVER_ERROR;
-		ft_error("Creating pipe");
+		showError("Creating pipe");
 		return "";
 	}
 
@@ -392,7 +392,7 @@ std::string Response::readDynamicPage( void )
 	if (pid < 0)
 	{
 		_status = INTERNAL_SERVER_ERROR;
-		ft_error("Not abled to create fork");
+		showError("Not abled to create fork");
 		clearEnv(env);
 		return "";
 	}
@@ -407,7 +407,7 @@ std::string Response::readDynamicPage( void )
 		close(fd[1]);
 		execve(binary.c_str(), cmd, env);
 		_status = INTERNAL_SERVER_ERROR;
-		ft_error("Executing CGI");
+		showError("Executing CGI");
 		delete [] cmd;
 	}
 	else
@@ -477,14 +477,14 @@ void Response::p( std::string s ) const
 
 void Response::errorHandler( Status status )
 {
-	ft_error(_statusDescriptions[status]);
+	showError(_statusDescriptions[status]);
 	_status = status;
 	setErrorPage();
 	doSend(_clientSocket);
 }
 
 
-void Response::ft_error( const std::string err ) const
+void Response::showError( const std::string err ) const
 {
 	strerror(errno);
 	std::cerr << "[Error] " << (err + ".........................................CONTEXT = '" + _request.getResource() + "'") << std::endl;
