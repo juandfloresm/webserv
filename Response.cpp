@@ -176,15 +176,8 @@ void Response::doResponse( void )
 	}
 	else if (_location.getPassCGI().size() > 0)						// ................................... DYNAMIC
 	{
-		pid_t pid = fork();
-		if (pid < 0)
-			throw InternalServerException();
-		else if (pid == 0)
-		{
-			_content = readDynamicPage();
-			doSend(_clientSocket);
-			exit(0);
-		}
+		_content = readDynamicPage();
+		doSend(_clientSocket);
 	}
 	else															// ................................... STATIC
 	{
