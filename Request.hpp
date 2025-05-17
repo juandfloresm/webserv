@@ -13,12 +13,14 @@
 # define BUFFER 1
 # define LF 10
 # define CR 13
+# define CRLFF "\r\f"
 
 # define CONTENT_TYPE "Content-Type"
 # define CONTENT_LENGTH "Content-Length"
 # define FORM_TYPE_MULTIPART "multipart/form-data"
 # define FORM_TYPE_APPLICATION "application/x-www-form-urlencoded"
 # define FORM_TYPE_PLAIN "text/plain"
+# define CONTENT_DISPOSITION "Content-Disposition: form-data; name=\""
 
 typedef enum { GET, POST, DELETE, HEAD, PUT, CONNECT, OPTIONS, TRACE, PATCH, UNKNOWN } Method;
 
@@ -53,6 +55,8 @@ class Request : public Message
 		void parseContentLength( void );
 		void parseContentType( void );
 		bool eq( std::string s1, std::string s2 );
+		void parseMultipartContent( void );
+		void parseContentPart( void );
 
 	private:
 		std::string _resource;
@@ -67,6 +71,8 @@ class Request : public Message
 		char _buffer[BUFFER];
 		static const char HEADER_SEP;
 
+		std::map<std::string, std::string> _content;
+		
 };
 
 std::ostream & operator<<( std::ostream & o, Request const & i );

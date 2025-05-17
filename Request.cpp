@@ -158,7 +158,70 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 			if (read(_clientSocket, buffer, bufferSize) > 0)
 				_body.push_back(buffer[0]);
 		}
+		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
+		{
+			parseMultipartContent();
+		}
+		else if (_contentType.compare(FORM_TYPE_PLAIN) == 0)
+		{
+			throw Response::UnprocessableContentException();
+		}
+		else if (_contentType.compare(FORM_TYPE_APPLICATION) == 0)
+		{
+			throw Response::UnprocessableContentException();
+		}
 	}
+}
+
+void Request::parseContentPart( void )
+{
+	std::string line, type, name, value = "";
+	std::istringstream f(_body);
+	bool emptyLine = false;
+
+	std::getline(f, line);
+	if (line.find(_boundary) == std::string::npos)
+		throw Response::UnprocessableContentException();
+
+	std::getline(f, line);
+	if (line.find(CONTENT_DISPOSITION) != 0)
+		throw Response::UnprocessableContentException();
+	else
+	{
+		line = line.substr(0, line.size() - 1);
+		name = line.substr(line.find("=") + 2);
+		name = name.substr(0, name.size() - 1);
+	}
+
+	std::getline(f, line);
+	if (line.size() == 1 && line[0] == CR)
+		emptyLine = true;
+	else if (line.find(CONTENT_TYPE) == 0)
+	{
+		// Content-Type
+	}
+	else
+		throw Response::UnprocessableContentException();
+
+	std::getline(f, line);
+	if (emptyLine)
+	{
+		value = line.substr(0, line.size() - 1);
+	}
+	else if (line.size() == 1 && line[0] == CR)
+		emptyLine = true;
+	else
+		throw Response::UnprocessableContentException();
+
+	if (emptyLine)
+		std::getline(f, line);
+	
+	_content[name] = value;
+}
+
+void Request::parseMultipartContent( void )
+{
+	parseContentPart();
 }
 
 /*
@@ -193,9 +256,11 @@ void Request::parseContentType( void )
 	if (!raw.empty())
 	{
 		std::istringstream f(raw);
-		std::string h, b;
-		std::getline(f, h, ';');
-		std::getline(f, b, ';');
+		std::string s, h, b;
+		std::getline(f, s);
+		std::istringstream r(s);
+		std::getline(r, h, ';');
+		std::getline(r, b, ';');
 		_contentType = h;
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
