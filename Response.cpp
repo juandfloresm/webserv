@@ -125,7 +125,10 @@ bool Response::matchLocationExact( std::string locationPath, std::string request
 {	
 	if (locationPath.compare(".php") == 0 && requestPath.rfind(".php") != std::string::npos)
 		return true;
-
+	if (locationPath.compare(".py") == 0 && requestPath.rfind(".py") != std::string::npos)
+		return true;
+	if (locationPath.compare(".pl") == 0 && requestPath.rfind(".pl") != std::string::npos)
+		return true;
 	if (*requestPath.rbegin() == '/' && *locationPath.rbegin() != '/')
 		locationPath += "/";
 
@@ -415,6 +418,8 @@ std::string Response::readStaticPage( void ) const
 std::string Response::readDynamicPage( void )
 {
 	std::string binary = _location.getPassCGI();
+	std::string script = _server.getRoot() + _request.getResource();
+
 	int stdin = dup(STDIN_FILENO);
 	int stdout = dup(STDOUT_FILENO);
 	int	fd[2];
@@ -446,13 +451,14 @@ std::string Response::readDynamicPage( void )
 	else if (!pid)
 	{
 		char **cmd = new char*[2];
-		cmd[0] = (char *) "";
-		cmd[1] = NULL;
+		cmd[0] = (char *) binary.c_str();
+		cmd[1] = (char *) script.c_str();
+		cmd[2] = NULL;
 		dup2(_clientSocket, STDIN_FILENO);
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[0]);
 		close(fd[1]);
-		execve(binary.c_str(), cmd, env);
+		execve(cmd[0], cmd, env);
 		_status = INTERNAL_SERVER_ERROR;
 		showError("Executing CGI");
 		delete [] cmd;

@@ -1,10 +1,10 @@
-#! /usr/bin/python
+#! /usr/bin/env python38
 
 import html
 import time
 import cgi, cgitb 
 
-cgi.enable()
+cgitb.enable()
 
 hit_count = 0
 

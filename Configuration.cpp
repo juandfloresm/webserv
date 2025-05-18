@@ -272,7 +272,7 @@ std::string Configuration::word( std::string raw )
 std::string Configuration::path( std::string raw )
 {
 	std::string s = word(raw);
-	if (s[0] != '/'  && s.compare(".php") != 0)
+	if (!(s[0] == '/' || s.compare(".php") == 0 || s.compare(".py") == 0 || s.compare(".pl") == 0))
 		throw std::runtime_error("[Error] paths should be absolute '" + raw + "'");
 	return s;
 }
