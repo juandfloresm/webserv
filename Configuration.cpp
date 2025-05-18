@@ -245,7 +245,7 @@ int Configuration::port( std::string raw )
 std::string Configuration::word( std::string raw )
 {
 	std::istringstream f(raw);
-	std::string s, extra = "/.-";
+	std::string s, extra = "/.-_";
 	size_t i = 0;
 	getline(f, s, ' ');
 	for(std::string::iterator it = s.begin(); it < s.end(); it++)
