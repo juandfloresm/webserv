@@ -143,21 +143,51 @@ void Request::parseHeaders( void )
 
 void Request::parseContent( unsigned long clientMaxBodySize )
 {
-	unsigned char buffer[BUFFER];
-	size_t bufferSize = BUFFER;
-
 	parseContentType();
 	if (isFormContentType() && _method == POST)
 	{
-		parseContentLength();
-		if ( clientMaxBodySize > 0 && clientMaxBodySize < _contentLength )
-			throw Response::ContentTooLargeException();
-
-		for (unsigned long i = 0; i < _contentLength; i++)
+		if (eq(header(TRANSFER_ENCODING), CHUNKED))
 		{
-			if (read(_clientSocket, buffer, bufferSize) > 0)
-				_body.push_back(buffer[0]);
+			unsigned long n = 0;
+			unsigned char c = '\0', pc = '\0';
+			std::string hx = "";
+			unsigned char buffer[BUFFER];
+			size_t bufferSize = BUFFER;
+			std::string base = "0123456789abcdefABCDEF";
+			unsigned int counter = 0;
+			while(read(_clientSocket, buffer, bufferSize) > 0)
+			{
+				c = (unsigned char) buffer[0];
+				if (pc == CR && c == LF)
+				{
+					if (hx.empty())
+					{
+						counter++;
+						if (counter == 2)
+							break;
+					}
+					else
+					{
+						std::stringstream ss;
+						ss << std::hex << hx;
+						ss >> n;
+						_contentLength += n;
+						parseContentFragment(clientMaxBodySize, n);
+						hx = "";
+						n = 0;
+					}
+				}
+				else if (base.find(c) != std::string::npos)
+					hx.push_back(c);
+				pc = c;
+			}
 		}
+		else
+		{
+			parseContentLength();
+			parseContentFragment(clientMaxBodySize, _contentLength);
+		}
+
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
 		{
 			parseMultipartContent();
@@ -170,6 +200,21 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		{
 			throw Response::UnprocessableContentException();
 		}
+	}
+}
+
+void Request::parseContentFragment( unsigned long max, unsigned long n )
+{
+	if ( max > 0 && max < _contentLength )
+		throw Response::ContentTooLargeException();
+
+	unsigned char buffer[BUFFER];
+	size_t bufferSize = BUFFER;
+
+	for (unsigned long i = 0; i < n; i++)
+	{
+		if (read(_clientSocket, buffer, bufferSize) > 0)
+			_body.push_back(buffer[0]);
 	}
 }
 
@@ -231,10 +276,7 @@ void Request::parseMultipartContent( void )
 				// TODO: delimit supporting MIME types from config file
 			}
 			else
-			{
-				std::cout << type << std::endl;
 				throw Response::UnsupportedMediaTypeException();
-			}
 
 		}
 		else

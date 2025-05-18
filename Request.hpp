@@ -23,6 +23,8 @@
 # define FORM_TYPE_APPLICATION "application/x-www-form-urlencoded"
 # define FORM_TYPE_PLAIN "text/plain"
 # define CONTENT_DISPOSITION "Content-Disposition: form-data; name=\""
+# define TRANSFER_ENCODING "Transfer-Encoding"
+# define CHUNKED "chunked"
 
 typedef enum { GET, POST, DELETE, HEAD, PUT, CONNECT, OPTIONS, TRACE, PATCH, UNKNOWN } Method;
 
@@ -61,6 +63,7 @@ class Request : public Message
 		void parseContentPart( void );
 		void setPart(std::string & name, std::string & value);
 		std::vector<std::string> split(std::string & s, std::string& delimiter);
+		void parseContentFragment( unsigned long max, unsigned long n );
 
 	private:
 		std::string _resource;
