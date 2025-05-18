@@ -253,6 +253,10 @@ void Request::parseMultipartContent( void )
 	{
 		lines = split(parts[i], liner);
 
+		if (lines.size() < 4) {
+			throw Response::UnprocessableContentException();
+		}
+
 		line = lines.at(1);							//.....................................
 		if (line.find(CONTENT_DISPOSITION) != 0)
 			throw Response::UnprocessableContentException();
@@ -291,12 +295,11 @@ void Request::parseMultipartContent( void )
 			continue;
 		}
 		else if (line.empty())
-			emptyLine = true;
-		else
-			throw Response::UnprocessableContentException();
-
-		if (emptyLine)								//.....................................
 		{
+			emptyLine = true;
+			if (lines.size() < 6) {
+				throw Response::UnprocessableContentException();
+			}
 			line = lines.at(4);
 			value = line + liner + lines.at(5);
 			setPart(name, value);
