@@ -147,41 +147,7 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 	if (isFormContentType() && _method == POST)
 	{
 		if (eq(header(TRANSFER_ENCODING), CHUNKED))
-		{
-			unsigned long n = 0;
-			unsigned char c = '\0', pc = '\0';
-			std::string hx = "";
-			unsigned char buffer[BUFFER];
-			size_t bufferSize = BUFFER;
-			std::string base = "0123456789abcdefABCDEF";
-			unsigned int counter = 0;
-			while(read(_clientSocket, buffer, bufferSize) > 0)
-			{
-				c = (unsigned char) buffer[0];
-				if (pc == CR && c == LF)
-				{
-					if (hx.empty())
-					{
-						counter++;
-						if (counter == 2)
-							break;
-					}
-					else
-					{
-						std::stringstream ss;
-						ss << std::hex << hx;
-						ss >> n;
-						_contentLength += n;
-						parseContentFragment(clientMaxBodySize, n);
-						hx = "";
-						n = 0;
-					}
-				}
-				else if (base.find(c) != std::string::npos)
-					hx.push_back(c);
-				pc = c;
-			}
-		}
+			parseChunkedContent(clientMaxBodySize);
 		else
 		{
 			parseContentLength();
@@ -189,17 +155,48 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
-		{
 			parseMultipartContent();
-		}
 		else if (_contentType.compare(FORM_TYPE_PLAIN) == 0)
-		{
 			throw Response::UnprocessableContentException();
-		}
 		else if (_contentType.compare(FORM_TYPE_APPLICATION) == 0)
-		{
 			throw Response::UnprocessableContentException();
+	}
+}
+
+void Request::parseChunkedContent( unsigned long clientMaxBodySize )
+{
+	unsigned long n = 0;
+	unsigned char c = '\0', pc = '\0';
+	std::string hx = "";
+	unsigned char buffer[BUFFER];
+	size_t bufferSize = BUFFER;
+	std::string base = "0123456789abcdefABCDEF";
+	unsigned int counter = 0;
+	while(read(_clientSocket, buffer, bufferSize) > 0)
+	{
+		c = (unsigned char) buffer[0];
+		if (pc == CR && c == LF)
+		{
+			if (hx.empty())
+			{
+				counter++;
+				if (counter == 2)
+					break;
+			}
+			else
+			{
+				std::stringstream ss;
+				ss << std::hex << hx;
+				ss >> n;
+				_contentLength += n;
+				parseContentFragment(clientMaxBodySize, n);
+				hx = "";
+				n = 0;
+			}
 		}
+		else if (base.find(c) != std::string::npos)
+			hx.push_back(c);
+		pc = c;
 	}
 }
 

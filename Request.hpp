@@ -64,6 +64,7 @@ class Request : public Message
 		void setPart(std::string & name, std::string & value);
 		std::vector<std::string> split(std::string & s, std::string& delimiter);
 		void parseContentFragment( unsigned long max, unsigned long n );
+		void parseChunkedContent( unsigned long clientMaxBodySize );
 
 	private:
 		std::string _resource;
