@@ -26,6 +26,7 @@
 # define MINOR_VERSION 1
 # define DEFAULT_PAGE "index.html"
 # define DEFAULT_ERROR_PAGE "./config/ERROR"
+# define LAST_DATE "Sun, 28 May 2025 7:00:00 GMT" // TODO: Sunday after release
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -99,7 +100,7 @@ class Response : public Message
 		std::string getDescription( void ) const;
 
 		void initStatusDescriptions( void );
-		const std::string toString( void ) const;
+		std::string toString( void );
 
 		std::string readError( std::string status ) const;
 		std::string readStaticPage( void ) const;
@@ -130,16 +131,23 @@ class Response : public Message
 		void validateLocationMethods( void ) const;
 		std::string replaceAll( std::string str, std::string from, std::string to ) const;
 		void p( std::string s ) const;
+		void checkAuthorization( void );
 
 		void processUpload( void );
 		bool isContentAvailable( void ) const;
 		bool isPOST( void ) const;
 		bool isCGI( void ) const;
+		bool eq( std::string s1, std::string s2 );
 
 		/* 400 */
 		class BadRequestException : public std::exception {
 			public:
 				const char * what () { return "Bad Request"; }
+		};
+		/* 401 */
+		class UnauthorizedException : public std::exception {
+			public:
+				const char * what () { return "Unauthorized"; }
 		};
 		/* 403 */
 		class ForbiddenException : public std::exception {

@@ -5,7 +5,7 @@ const char Request::HEADER_SEP = ':';
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Request::Request(int clientSocket, Configuration & cfg, int port) : Message(clientSocket, cfg)
+Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & sess) : Message(clientSocket, cfg), _sessions(sess)
 {
 	this->_body = "";
 	this->_resource = "";
@@ -13,6 +13,7 @@ Request::Request(int clientSocket, Configuration & cfg, int port) : Message(clie
 	this->_contentType = "";
 	this->_charSet = "";
 	this->_boundary = "";
+	this->_sessionId = "";
 	this->_contentLength = 0;
 
 	try {
@@ -139,6 +140,49 @@ void Request::parseHeaders( void )
 		}
 		this->_headers[key] = v;
 	}
+
+	if (eq(header("Authorization"), BASE64_HASH) && getSessionCookie().empty())
+	{
+		_sessionId = "0123456789ABCDEF";
+		_sessions.insert(std::pair<std::string, Session>(_sessionId, std::map<std::string, std::string>()));
+	}
+}
+
+std::string Request::getSessionCookie( void )
+{
+	std::string cookie = header("Cookie");
+	std::string delim = ";";
+	std::vector<std::string> cookies = split(cookie, delim);	
+	for(std::vector<std::string>::iterator it = cookies.begin(); it < cookies.end(); it++)
+	{
+		if((*it).find(SESSION_KEY) != std::string::npos)
+		{
+			std::istringstream f(*it);
+			std::string s;
+			std::getline(f, s, '=');
+			std::getline(f, s, '=');
+			return s;
+		}
+	}
+	return "";
+}
+
+std::string Request::getSessionId( void ) const
+{
+	return _sessionId;
+}
+
+Session Request::getSession( void )
+{
+	Sessions::iterator it = _sessions.find(getSessionCookie());
+	if (it != _sessions.end())
+		return it->second;
+	return Session();
+}
+
+bool Request::isInSession( void )
+{
+	return _sessions.find(getSessionCookie()) != _sessions.end() || !_sessionId.empty();
 }
 
 void Request::parseContent( unsigned long clientMaxBodySize )
@@ -231,11 +275,15 @@ void Request::setPart(std::string & name, std::string & value)
 		std::ofstream MyFile(path.c_str());
 		MyFile << _content[nm];
 		MyFile.close();
+		if (isInSession())
+			getSession().insert(std::pair<std::string, std::string>(nm, file));
 	}
 	else
 	{
 		std::string nm = name.substr(6, name.rfind("\"") - 6);
 		_content[nm] = value;
+		if (isInSession())
+			getSession().insert(std::pair<std::string, std::string>(nm, value));
 	}
 }
 
@@ -312,6 +360,11 @@ void Request::parseMultipartContent( void )
 ** --------------------------------- UTILITIES ---------------------------------
 */
 
+void Request::p( std::string s ) const
+{
+	std::cout << s << std::endl;
+}
+
 bool Request::eq( std::string s1, std::string s2 )
 {
 	return (s1.compare(s2) == 0);
@@ -381,7 +434,7 @@ bool Request::isFormContentType( void )
 			_contentType.compare(FORM_TYPE_PLAIN) == 0;
 }
 
-std::vector<std::string> Request::split(std::string& s, std::string& delimiter)
+std::vector<std::string> Request::split(std::string & s, std::string & delimiter)
 {
     std::vector<std::string> tokens;
     size_t pos = 0;
@@ -391,6 +444,7 @@ std::vector<std::string> Request::split(std::string& s, std::string& delimiter)
         tokens.push_back(token);
         s.erase(0, pos + delimiter.length());
     }
+	tokens.push_back(s);
     return tokens;
 }
 

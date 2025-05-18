@@ -17,6 +17,7 @@ Configuration::Configuration( std::string const configFile )
 	level1.push_back("autoindex");
 	level1.push_back("location");
 	level1.push_back("client_max_body_size");
+	level1.push_back("auth_basic");
 	level2.push_back("methods");
 	level2.push_back("cgi_pass");
 	level2.push_back("root");
@@ -25,6 +26,7 @@ Configuration::Configuration( std::string const configFile )
 	level2.push_back("error_page");
 	level2.push_back("return");
 	level2.push_back("client_max_body_size");
+	level2.push_back("auth_basic");
 
 	levels[0] = level0;
 	levels[1] = level1;
@@ -216,6 +218,8 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		cxt.setPassCGI(path(parsedValue));
 	else if (directive.first.compare("client_max_body_size") == 0)
 		cxt.setClientMaxBodySize(size(parsedValue));
+	else if (directive.first.compare("auth_basic") == 0)
+		cxt.setAuthBasic(word(parsedValue));
 }
 
 /*
@@ -245,21 +249,24 @@ int Configuration::port( std::string raw )
 std::string Configuration::word( std::string raw )
 {
 	std::istringstream f(raw);
-	std::string s, extra = "/.-_";
+	std::string s, extra = "/.-_'\"";
 	size_t i = 0;
 	getline(f, s, ' ');
+	std::string cmp;
 	for(std::string::iterator it = s.begin(); it < s.end(); it++)
 	{
 		if (i > 256)
 			throw std::runtime_error("[Error] excessive number of token characters");
-		if (isalpha(*it) || (extra.find(*it) != std::string::npos) || (i > 0 && std::isdigit(*it))){}
+		if (std::isalpha(*it) || (extra.find(*it) != std::string::npos) || (i > 0 && std::isdigit(*it))){}
 		else
 			throw std::runtime_error("[Error] provided directive value should be a word: '" + raw + "'");
+		if (*it != '"')
+			cmp.push_back(*it);
 		i++;
 	}
-	if (s.size() == 0)
+	if (cmp.size() == 0)
 		throw std::runtime_error("[Error] provided empty directive value");
-	return s;
+	return cmp;
 }
 
 std::string Configuration::path( std::string raw )

@@ -9,6 +9,7 @@ Context::Context( )
 	this->_root = "./html";
 	this->_autoIndex = false;
 	this->_clientMaxBodySize = 0;
+	this->_authBasic = "";
 }
 
 Context::Context( const Context & c )
@@ -38,6 +39,7 @@ Context & Context::operator=( Context const & rhs )
 		this->_return = rhs.getReturn();
 		this->_autoIndex = rhs.getAutoIndex();
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+		this->_authBasic = rhs.getAuthBasic();
 	}
 	return *this;
 }
@@ -114,6 +116,16 @@ unsigned long Context::getClientMaxBodySize( void ) const
 void Context::setClientMaxBodySize( unsigned long sz )
 {
 	this->_clientMaxBodySize = sz;
+}
+
+std::string Context::getAuthBasic( void ) const
+{
+	return _authBasic;
+}
+
+void Context::setAuthBasic( std::string authBasic )
+{
+	_authBasic = authBasic;
 }
 
 /*

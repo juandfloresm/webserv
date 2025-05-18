@@ -148,7 +148,7 @@ void Connection::processClientRequest( int clientSocketFD )
 	SocketDataEventsIterator it = e.find(clientSocketFD);
 	if (it != e.end())
 	{
-		Request req(clientSocketFD, _cfg, it->second.port);
+		Request req(clientSocketFD, _cfg, it->second.port, _sessions);
 		e.erase(it);
 	}
 }

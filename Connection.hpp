@@ -36,6 +36,8 @@ typedef struct _data
 
 typedef std::map<int, SocketData> SocketDataEvents;
 typedef SocketDataEvents::iterator SocketDataEventsIterator;
+typedef std::map<std::string, std::string> Session;
+typedef std::map<std::string, Session> Sessions;
 
 class Connection
 {
@@ -55,6 +57,8 @@ class Connection
 		static void handleSigint( int sgn );
 		Configuration & getConfiguration( void ) const;
 
+		std::vector<std::string> & getSession( void );
+
 	private:
 		unsigned int _port;
 
@@ -67,6 +71,7 @@ class Connection
 		struct epoll_event _events[MAX_EVENTS];
 		int _epollfd;
 
+		Sessions _sessions;
 };
 
 #endif

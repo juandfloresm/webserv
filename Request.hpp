@@ -25,18 +25,22 @@
 # define CONTENT_DISPOSITION "Content-Disposition: form-data; name=\""
 # define TRANSFER_ENCODING "Transfer-Encoding"
 # define CHUNKED "chunked"
+# define SESSION_KEY "ZWEBSESSID"
+# define BASE64_HASH "Basic YWRtaW46MTIzNA=="
 
 typedef enum { GET, POST, DELETE, HEAD, PUT, CONNECT, OPTIONS, TRACE, PATCH, UNKNOWN } Method;
 
 typedef std::map<std::string, std::string> Header;
 typedef Header::iterator HeaderIterator;
+typedef std::map<std::string, std::string> Session;
+typedef std::map<std::string, Session> Sessions;
 
 class Request : public Message
 {
 
 	public:
 
-		Request(int clientSocket, Configuration & cfg, int port);
+		Request(int clientSocket, Configuration & cfg, int port, Sessions & sess);
 		~Request();
 
 		Method getMethod( void ) const;
@@ -65,6 +69,11 @@ class Request : public Message
 		std::vector<std::string> split(std::string & s, std::string& delimiter);
 		void parseContentFragment( unsigned long max, unsigned long n );
 		void parseChunkedContent( unsigned long clientMaxBodySize );
+		void p( std::string s ) const;
+		Session getSession( void );
+		bool isInSession( void );
+		std::string getSessionCookie( void );
+		std::string getSessionId( void ) const;
 
 	private:
 		std::string _resource;
@@ -80,6 +89,9 @@ class Request : public Message
 		static const char HEADER_SEP;
 
 		std::map<std::string, std::string> _content;
+		Sessions & _sessions;
+		Session _session;
+		std::string _sessionId;
 		
 };
 

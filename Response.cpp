@@ -19,6 +19,8 @@ Response::Response(Status status, int clientSocket, Configuration & cfg, int por
 			doResponse();
 		} catch ( Response::ForbiddenException & e ) {
 			errorHandler(FORBIDDEN);
+		} catch ( Response::UnauthorizedException & e ) {
+			errorHandler(UNAUTHORIZED);
 		} catch ( Response::BadRequestException & e ) {
 			errorHandler(BAD_REQUEST);
 		} catch ( Response::NotFoundException & e ) {
@@ -110,6 +112,8 @@ void Response::matchLocation( void )
 				_server.setRoot(loc.getRoot());
 			if (loc.getClientMaxBodySize() > 0)
 				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
+			if (!loc.getAuthBasic().empty())
+				_server.setAuthBasic(loc.getAuthBasic());
 			_server.setAutoIndex(loc.getAutoIndex());
 			_location = loc;
 			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
@@ -158,9 +162,19 @@ void Response::validateLocationMethods( void ) const
 	}
 }
 
+void Response::checkAuthorization( void )
+{
+	if (!_server.getAuthBasic().empty() && !_request.isInSession() && _request.getSessionId().empty())
+	{
+		throw UnauthorizedException();
+	}
+}
+
 void Response::doResponse( void )
 {
 	validateLocationMethods();										// ................................... CHECK MATCHING METHODS
+
+	checkAuthorization();											// ................................... CHECK AUTHORIZED REQUESTS
 
 	_request.parseContent(_server.getClientMaxBodySize());			// ................................... CHECK CONTENT SIZE
 
@@ -195,7 +209,6 @@ void Response::doResponse( void )
 
 void Response::doSend( int fd )
 {
-	_contentLength = _content.size();
 	std::ostringstream ss;
 	ss << _status;
 	_description = _statusDescriptions[_status];
@@ -205,7 +218,7 @@ void Response::doSend( int fd )
 	close(_clientSocket);
 }
 
-const std::string Response::toString( void ) const
+std::string Response::toString( void )
 {
 	std::ostringstream ss;
     ss << getMajorVersion();
@@ -221,6 +234,12 @@ const std::string Response::toString( void ) const
 
 	ss.str("");
 	ss.clear();
+
+	if (_request.isInSession())
+		_content += "<center style=\"color:blue\">SESSION STABLISHED!!</center>";
+
+	_contentLength = _content.size();
+
 	ss << _contentLength;
 	std::string contentLength = ss.str();
 
@@ -247,6 +266,22 @@ const std::string Response::toString( void ) const
 	else
 	{
 		r += _statusString + " " + getDescription() + CRLF;
+
+		if(!_request.getSessionId().empty())
+		{
+			std::string key = SESSION_KEY;
+			r += "Set-Cookie: " + key + "=" + _request.getSessionId() + CRLF;
+		}
+		else if (_status == UNAUTHORIZED)
+		{
+			std::string realm = _server.getAuthBasic();
+			std::string date = LAST_DATE;
+			r += "Date: " + date + CRLF;
+			r += "WWW-Authenticate: Basic realm=\"" + realm + "\"" + CRLF;
+			r += CRLF;
+			return r;
+		}
+
 		r += "Content-Type: " + contentType + CRLF;
 		r += "Content-Length: " + contentLength + CRLF;
 		if (_page.size() > 0)
@@ -369,8 +404,11 @@ std::string Response::readStaticPage( void ) const
 	if (!file.is_open())
 		throw NotFoundException();
 	std::ostringstream content;
+
 	content << file.rdbuf();
+
 	file.close();
+	
 	return content.str();
 }
 
@@ -459,7 +497,7 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 	{
 		if (!compile)
 			_headerSection += response[i];
-		if (response[i] == 10 || response[i] == 13)
+		if (response[i] == LF || response[i] == CR)
 		{
 			counter++;
 			if (counter == 4)
@@ -482,6 +520,11 @@ std::string const Response::getParsedCGIResponse( std::string const response )
 void Response::p( std::string s ) const
 {
 	std::cout << s << std::endl;
+}
+
+bool Response::eq( std::string s1, std::string s2 )
+{
+	return (s1.compare(s2) == 0);
 }
 
 void Response::errorHandler( Status status )

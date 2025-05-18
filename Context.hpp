@@ -26,6 +26,8 @@ class Context
 		void setAutoIndex( bool autoIndex );
 		unsigned long getClientMaxBodySize( void ) const;
 		void setClientMaxBodySize( unsigned long sz );
+		std::string getAuthBasic( void ) const;
+		void setAuthBasic( std::string authBasic );
 
 		virtual int getPort( void ) const;
 		virtual void setPort( int port );
@@ -42,6 +44,7 @@ class Context
 		std::vector<std::pair<int, std::string> > _errorPages;
 		std::pair<int, std::string> _return;
 		std::vector<std::string> _index;
+		std::string _authBasic;
 		bool _autoIndex;
 		unsigned long _clientMaxBodySize;
 };

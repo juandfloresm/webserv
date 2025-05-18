@@ -39,6 +39,7 @@ Server & Server::operator=( Server const & rhs )
 		this->_autoIndex = rhs.getAutoIndex();
 		this->_locations = rhs.getLocations();
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+		this->_authBasic = rhs.getAuthBasic();
 	}
 	return *this;
 }
