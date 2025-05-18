@@ -143,7 +143,7 @@ void Request::parseHeaders( void )
 
 	if (eq(header("Authorization"), BASE64_HASH) && getSessionCookie().empty())
 	{
-		_sessionId = "0123456789ABCDEF";
+		_sessionId = "0123456789ABCDEF"; // TODO: Should be random but for demonstration purposes, counts.
 		_sessions.insert(std::pair<std::string, Session>(_sessionId, std::map<std::string, std::string>()));
 	}
 }
