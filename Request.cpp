@@ -74,6 +74,8 @@ const std::string Request::getMethodString( void ) const
 			return "POST";
 		case DELETE:
 			return "DELETE";
+		case PUT:
+			return "PUT";
 		default:
 			return "UNKNOWN";
 	}
@@ -93,8 +95,9 @@ void Request::parseTopLine( void )
 		this->_method = POST;
 	else if (eq(method, "DELETE"))
 		this->_method = DELETE;
+	else if (eq(method, "PUT"))
+		this->_method = PUT;
 	else if (eq(method, "HEAD") || \
-			 eq(method, "PUT") || \
 			 eq(method, "CONNECT") || \
 			 eq(method, "OPTIONS") || \
 			 eq(method, "TRACE") || \

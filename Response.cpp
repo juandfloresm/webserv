@@ -450,7 +450,7 @@ std::string Response::readDynamicPage( void )
 	}
 	else if (!pid)
 	{
-		char **cmd = new char*[2];
+		char **cmd = new char*[3];
 		cmd[0] = (char *) binary.c_str();
 		cmd[1] = (char *) script.c_str();
 		cmd[2] = NULL;
