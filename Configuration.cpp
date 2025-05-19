@@ -19,6 +19,7 @@ Configuration::Configuration( std::string const configFile )
 	level1.push_back("client_max_body_size");
 	level1.push_back("auth_basic");
 	level1.push_back("mime_types");
+	level1.push_back("upload_path");
 	level2.push_back("methods");
 	level2.push_back("cgi_pass");
 	level2.push_back("root");
@@ -29,6 +30,7 @@ Configuration::Configuration( std::string const configFile )
 	level2.push_back("client_max_body_size");
 	level2.push_back("auth_basic");
 	level2.push_back("mime_types");
+	level2.push_back("upload_path");
 
 	levels[0] = level0;
 	levels[1] = level1;
@@ -230,6 +232,8 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		while (getline(f, s, ' '))
 			cxt.setMimeType(word(s));
 	}
+	else if (directive.first.compare("upload_path") == 0)
+		cxt.setUploadPath(path(parsedValue));
 }
 
 /*

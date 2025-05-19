@@ -41,6 +41,7 @@ Server & Server::operator=( Server const & rhs )
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 		this->_authBasic = rhs.getAuthBasic();
 		this->_mimeTypes = rhs.getMimeTypes();
+		this->_uploadPath = rhs.getUploadPath();
 	}
 	return *this;
 }

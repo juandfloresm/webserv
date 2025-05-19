@@ -10,6 +10,7 @@ Context::Context( )
 	this->_autoIndex = false;
 	this->_clientMaxBodySize = 0;
 	this->_authBasic = "";
+	this->_uploadPath = "";
 }
 
 Context::Context( const Context & c )
@@ -41,6 +42,7 @@ Context & Context::operator=( Context const & rhs )
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 		this->_authBasic = rhs.getAuthBasic();
 		this->_mimeTypes = rhs.getMimeTypes();
+		this->_uploadPath = rhs.getUploadPath();
 	}
 	return *this;
 }
@@ -143,6 +145,17 @@ void Context::setMimeTypes( std::vector<std::string> types )
 {
 	this->_mimeTypes = types;
 }
+
+std::string Context::getUploadPath( void ) const
+{
+	return _uploadPath;
+}
+
+void Context::setUploadPath( std::string path )
+{
+	_uploadPath = path;
+}
+
 
 
 /*

@@ -335,8 +335,15 @@ void Request::setPart(std::string & name, std::string & value)
 		file = file.substr(0, file.size() - 1);
 		_content["filename"] = file;
 		_content[nm] = value;
-		std::string path = std::getenv("WPATH");
-		path +=  ("/html/uploads/" + file);
+
+		std::string path = "";
+		std::string env = std::getenv("WPATH");
+		std::string uploadPath = _cfg.getServer().getUploadPath() + "";
+		if (uploadPath.empty())
+			path = env + UPLOAD_PATH + file;
+		else
+			path = uploadPath + "/" + file;
+
 		std::ofstream MyFile(path.c_str());
 		MyFile << _content[nm];
 		MyFile.close();

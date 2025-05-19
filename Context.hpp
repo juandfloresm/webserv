@@ -31,6 +31,8 @@ class Context
 		void setClientMaxBodySize( unsigned long sz );
 		std::string getAuthBasic( void ) const;
 		void setAuthBasic( std::string authBasic );
+		std::string getUploadPath( void ) const;
+		void setUploadPath( std::string path );
 
 		virtual int getPort( void ) const;
 		virtual void setPort( int port );
@@ -49,6 +51,7 @@ class Context
 		std::vector<std::string> _index;
 		std::vector<std::string> _mimeTypes;
 		std::string _authBasic;
+		std::string _uploadPath;
 		bool _autoIndex;
 		unsigned long _clientMaxBodySize;
 };

@@ -30,6 +30,7 @@
 # define SESSION_KEY "ZWEBSESSID"
 # define BASE64_HASH "Basic YWRtaW46MTIzNA=="
 # define BASE_16 "0123456789abcdefABCDEF"
+# define UPLOAD_PATH "/html/uploads/"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()

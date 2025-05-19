@@ -116,6 +116,8 @@ void Response::matchLocation( void )
 				_server.setAuthBasic(loc.getAuthBasic());
 			if (loc.getMimeTypes().size() > 0)
 				_server.setMimeTypes(loc.getMimeTypes());
+			if (!loc.getUploadPath().empty())
+				_server.setUploadPath(loc.getUploadPath());
 			_server.setAutoIndex(loc.getAutoIndex());
 			_location = loc;
 			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
