@@ -244,19 +244,25 @@ TEST_CASE("Multipart Form Upload", "[http]") {
     curl_mime* mime = curl_mime_init(curl);
     curl_mimepart* part = curl_mime_addpart(mime);
 
-    curl_mime_name(part, "file");
-    curl_mime_data(part, "File content to upload", CURL_ZERO_TERMINATED);
-    curl_mime_filename(part, "test_upload.txt");
+    curl_mime_name(part, "fileToUpload");
+    curl_mime_type(part, "image/png");
+    // Change route to where the test image is
+    curl_mime_filedata(part, "/home/vbcvali/Desktop/webserv/config/cgi-bin/uploads/oCCkZEQs_400x400.png");
+    curl_mime_filename(part, "test_image.png");
 
-    std::string url = "http://localhost:8080/upload.php";
+    std::string url = "http://localhost:8080/upload_script.php";
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
 
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
     CURLcode res = curl_easy_perform(curl);
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_mime_free(mime);
 
     INFO("Status code: " << response_code);
     INFO("Response text: " << response_data);
