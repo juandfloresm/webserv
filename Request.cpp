@@ -240,7 +240,7 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		}
 		else if (eq(_contentType, FORM_TYPE_PLAIN))
 		{
-			// TODO: not sure we need to handling this.
+
 		}
 		else if (eq(_contentType, FORM_TYPE_APPLICATION))
 		{
@@ -324,13 +324,12 @@ void Request::parseContentFragment( unsigned long max, unsigned long n )
 	}
 }
 
-void Request::processFileUpload( void )
+std::string Request::processFileUpload( void )
 {
 	std::string path = "";
 	std::string env = std::getenv("WPATH");
 	std::string uploadPath = _cfg.getServer().getUploadPath() + "";
 	std::string file = _content[ZWEB_FILENAME];
-
 	if (!file.empty())											// ..................... FILE UPLOAD PENDING
 	{
 		if (uploadPath.empty())
@@ -341,6 +340,20 @@ void Request::processFileUpload( void )
 		MyFile << _content[file];
 		MyFile.close();
 	}
+	else if (eq(_contentType, FORM_TYPE_PLAIN))					// ..................... RAW FILE PENDING
+	{
+		if (uploadPath.empty())
+			path = env + UPLOAD_PATH + randomString(1);
+		else
+			path = uploadPath + "/" + randomString(1);
+		std::ofstream MyFile(path.c_str());
+		MyFile << _body;
+		MyFile.close();
+		std::string wpath = std::getenv("WPATH");
+		std::string suffix = "/html";
+		return path.substr(wpath.size() + suffix.size());
+	}
+	return "";
 }
 
 void Request::setPart(std::string & name, std::string & value)

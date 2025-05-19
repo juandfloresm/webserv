@@ -197,8 +197,11 @@ void Response::doResponse( void )
 	_request.parseContent(_server.getClientMaxBodySize());			// ................................... CHECK CONTENT SIZE
 
 	if (isPOST() && !isCGI() && isContentAvailable())				// ................................... FILE UPLOAD
-		processUpload();
-
+	{
+		if (processUpload())
+			return;
+	}	
+	
 	if(_server.getReturn().first != 0)								// ................................... RETURN
 	{
 		int code = _server.getReturn().first;
@@ -245,10 +248,15 @@ std::string Response::toString( void )
 	ss.clear();
 	ss << getMinorVersion();
 	std::string minor = ss.str();
-	std::string contentType = getMimeType(_request.getResource());
+	std::string contentType = _contentType;
+	
+	if (contentType.empty())
+	{
+		contentType = getMimeType(_request.getResource());
 
-	if (isDirectory() && _server.getAutoIndex())
-		contentType = "text/html";
+		if (isDirectory() && _server.getAutoIndex())
+			contentType = "text/html";
+	}
 
 	ss.str("");
 	ss.clear();
@@ -786,10 +794,21 @@ bool Response::isContentAvailable( void ) const
 	return _request.isContentAvailable() && _request.isFormContentType();
 }
 
-void Response::processUpload( void )
+bool Response::processUpload( void )
 {
 	p("Processing file upload...");
-	_request.processFileUpload();
+	std::string path = _request.processFileUpload();
+	if (!path.empty())
+	{
+		_page = path;
+		_status = CREATED;
+		_content = _request.getBody();
+		_request.setResource(path);
+		_contentType = FORM_TYPE_PLAIN;
+		doSend(_clientSocket);
+		return true;
+	}
+	return false;
 }
 
 /*

@@ -87,7 +87,7 @@ class Request : public Message
 		int getBodyFD( void );
 		std::string randomString(const int len);
 		void removeBodyFD( void );
-		void processFileUpload( void );
+		std::string processFileUpload( void );
 
 	private:
 		std::string _resource;

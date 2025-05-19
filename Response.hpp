@@ -32,8 +32,6 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
-typedef std::map<std::string, std::string> Config;
-
 typedef enum {
 
 	CONTINUE = 100,
@@ -85,8 +83,10 @@ typedef enum {
 
 } Status;
 
+typedef std::map<std::string, std::string> Config;
 typedef std::map<Status, std::string> StatusDescription;
 typedef StatusDescription::iterator StatusDescriptionIterator;
+
 
 class Request;
 
@@ -135,7 +135,7 @@ class Response : public Message
 		void p( std::string s ) const;
 		void checkAuthorization( void );
 
-		void processUpload( void );
+		bool processUpload( void );
 		bool isContentAvailable( void ) const;
 		bool isPOST( void ) const;
 		bool isCGI( void ) const;
@@ -207,12 +207,14 @@ class Response : public Message
 				const char * what () { return "Bad Gateway"; }
 		};
 
+
 	private:
 		std::string _statusString;
 		std::string _description;
 		std::string _headerSection;
 		std::string _page;
 		std::string _content;
+		std::string _contentType;
 		std::string _prefix;
 		Status _status;
 		StatusDescription _statusDescriptions;
