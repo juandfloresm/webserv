@@ -22,6 +22,8 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 		Response(OK, clientSocket, cfg, port, *this);
 	} catch ( Response::BadRequestException & e ) {
 		Response(BAD_REQUEST, clientSocket, cfg, port, *this);
+	} catch ( Response::UpgradeRequiredException & e ) {
+		Response(UPGRADE_REQUIRED, clientSocket, cfg, port, *this);
 	} catch ( Response::LengthRequiredException & e ) {
 		Response(LENGTH_REQUIRED, clientSocket, cfg, port, *this);
 	} catch ( Response::UnsupportedMediaTypeException & e ) {
@@ -142,7 +144,11 @@ void Request::parseTopLine( void )
 
 	getline(f, major, '/');
 	getline(f, major, '.');
-	getline(f, minor, '.');	
+	getline(f, minor, '.');
+	if(major[0] != '1')
+		throw Response::UpgradeRequiredException();
+	if(minor[0] != '1')
+		throw Response::UpgradeRequiredException();
 	setMajorVersion(atoi(major.c_str()));
 	setMinorVersion(atoi(minor.c_str()));
 }

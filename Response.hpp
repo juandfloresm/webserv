@@ -68,8 +68,9 @@ typedef enum {
 	CONTENT_TOO_LARGE = 413,
 	URI_TOO_LONG = 414,
 	UNSUPPORTED_MEDIA_TYPE = 415,
+	EXPECTATION_FAILED = 417,
 	UNPROCESSABLE_CONTENT = 422,
-	EXPECTATION_FAILED = 426,
+	UPGRADE_REQUIRED = 426,
 	TOO_MANY_REQUESTS = 429,
 
 
@@ -183,6 +184,11 @@ class Response : public Message
 		class UnprocessableContentException : public std::exception {
 			public:
 				const char * what () { return "Unprocessable Content"; }
+		};
+		/* 426 */
+		class UpgradeRequiredException : public std::exception {
+			public:
+				const char * what () { return "Upgrade Required"; }
 		};
 		/* 500 */
 		class InternalServerException : public std::exception {
