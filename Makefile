@@ -10,7 +10,7 @@ SRC 				:=	main.cpp Connection.cpp Message.cpp Request.cpp Response.cpp \
 OBJ 				:=	$(SRC:.cpp=.o)
 
 ARG					:=	./config/zweb2.conf
-WWW					:=	/home/$$(whoami)/www
+WWW					:=	$(shell if [ -n "$$DOCKER_ENV" ]; then echo "/app/www"; else echo "/home/$$(whoami)/www"; fi)
 
 TESTS_BASE			:=	./config/_tests
 

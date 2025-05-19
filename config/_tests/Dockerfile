@@ -58,8 +58,11 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
 WORKDIR /app
 COPY . .
 
-RUN chmod +x ./config/cgi-bin/*.sh ./config/cgi-bin/*.py ./config/cgi-bin/*.pl
+RUN mkdir -p /app/www/html /app/www/cgi-bin && \
+    chmod -R 777 /app/www
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/bash", "-c", "cd /app && make runner & tail -f /dev/null"]
+ENV TERM=xterm
+
+ENTRYPOINT ["/bin/bash", "-c", "cd /app && DOCKER_ENV=1 && make runner & tail -f /dev/null"]
