@@ -163,6 +163,8 @@ void Request::parseHeaders( void )
 		std::istringstream f(line);
 		getline(f, key, Request::HEADER_SEP);
 		getline(f, value, Request::HEADER_SEP);
+		if (key.empty() || value.empty())
+			throw BadRequestException();
 		std::string v = "";
 		bool init = false;
 		for (size_t i = 0; i < value.size(); i++)
