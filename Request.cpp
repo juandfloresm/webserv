@@ -174,7 +174,7 @@ std::string Request::getSessionCookie( void )
 {
 	std::string cookie = header("Cookie");
 	std::string delim = ";";
-	std::vector<std::string> cookies = split(cookie, delim);	
+	std::vector<std::string> cookies = split(cookie, delim, true);	
 	for(std::vector<std::string>::iterator it = cookies.begin(); it < cookies.end(); it++)
 	{
 		if((*it).find(SESSION_KEY) != std::string::npos)
@@ -221,7 +221,9 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
+		{
 			parseMultipartContent();
+		}
 		else if (_contentType.compare(FORM_TYPE_PLAIN) == 0)
 		{
 			// TODO: not sure we need to handling this.
@@ -235,7 +237,7 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 
 void Request::fdBody( void )
 {
-	_fdFile = "./config/bodies/" + randomString(5);
+	_fdFile = "./config/bodies/" + randomString(5) + ".body";
 	std::ofstream outfile(_fdFile.c_str());
 	outfile << _body << std::endl;
 	outfile.close();
@@ -264,7 +266,7 @@ void Request::parseChunkedContent( unsigned long clientMaxBodySize )
 	std::string hx = "";
 	unsigned char buffer[BUFFER];
 	size_t bufferSize = BUFFER;
-	std::string base = "0123456789abcdefABCDEF";
+	std::string base = BASE_16;
 	unsigned int counter = 0;
 	while(read(_clientSocket, buffer, bufferSize) > 0)
 	{
@@ -343,10 +345,11 @@ void Request::parseMultipartContent( void )
 	std::string line, name, type, value;
 	std::string delimiter = _boundary;
 	std::string liner = "\r\n";
-	std::vector<std::string> parts = split(_body, delimiter), lines;
+	std::string myBody = _body + "";
+	std::vector<std::string> parts = split(myBody, delimiter, false), lines;
 	for(size_t i = 1; i < parts.size(); i++)
 	{
-		lines = split(parts[i], liner);
+		lines = split(parts[i], liner, false);
 
 		if (lines.size() < 4) {
 			throw Response::UnprocessableContentException();
@@ -492,7 +495,7 @@ bool Request::isFormContentType( void )
 			_contentType.compare(FORM_TYPE_PLAIN) == 0;
 }
 
-std::vector<std::string> Request::split(std::string & s, std::string & delimiter)
+std::vector<std::string> Request::split(std::string & s, std::string & delimiter, bool last)
 {
     std::vector<std::string> tokens;
     size_t pos = 0;
@@ -502,7 +505,8 @@ std::vector<std::string> Request::split(std::string & s, std::string & delimiter
         tokens.push_back(token);
         s.erase(0, pos + delimiter.length());
     }
-	tokens.push_back(s);
+	if (last)
+		tokens.push_back(s);
     return tokens;
 }
 

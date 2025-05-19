@@ -7,3 +7,4 @@ webserv
 config/_tests/YoupiBanane
 config/tester.conf
 config/ubuntu*
+*.body

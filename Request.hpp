@@ -29,6 +29,7 @@
 # define CHUNKED "chunked"
 # define SESSION_KEY "ZWEBSESSID"
 # define BASE64_HASH "Basic YWRtaW46MTIzNA=="
+# define BASE_16 "0123456789abcdefABCDEF"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -71,7 +72,7 @@ class Request : public Message
 		void parseMultipartContent( void );
 		void parseContentPart( void );
 		void setPart(std::string & name, std::string & value);
-		std::vector<std::string> split(std::string & s, std::string& delimiter);
+		std::vector<std::string> split(std::string & s, std::string& delimiter, bool last);
 		void parseContentFragment( unsigned long max, unsigned long n );
 		void parseChunkedContent( unsigned long clientMaxBodySize );
 		void p( std::string s ) const;
