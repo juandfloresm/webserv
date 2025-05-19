@@ -115,6 +115,22 @@ docker: docker-run
 docker-clean: docker-stop
 	docker rmi $(DOCKER_IMAGE) 2>/dev/null || true
 
+ab-check:
+	@if ! command -v ab > /dev/null; then \
+		sudo apt-get update && sudo apt-get install -y apache2-utils; \
+	fi
+
+wrk-check:
+	@if ! command -v wrk > /dev/null; then \
+		sudo apt-get update && sudo apt-get install -y wrk; \
+	fi
+
+wrk: wrk-check
+	wrk -t4 -c400 -d30s http://127.0.0.1:8080/
+
+ab: ab-check
+	ab -n 10000 -c 100 http://127.0.0.1:8080/
+
 gitter: fclean
 	git add -A
 	git commit -am '$(m)'
@@ -122,4 +138,5 @@ gitter: fclean
 
 .PHONY: all clean fclean re runner valgrind fds sanitize \
 		docker docker-build docker-run docker-stop docker-shell \
-		docker-logs docker-rebuild docker-restart docker-clean
+		docker-logs docker-rebuild docker-restart docker-clean \
+		ab-check wrk-check ab wrk
