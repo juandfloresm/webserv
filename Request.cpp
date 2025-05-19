@@ -165,7 +165,7 @@ void Request::parseHeaders( void )
 
 	if (eq(header("Authorization"), BASE64_HASH) && getSessionCookie().empty())
 	{
-		_sessionId = "0123456789ABCDEF"; // TODO: Should be random but for demonstration purposes, counts.
+		_sessionId = randomString(16);
 		_sessions.insert(std::pair<std::string, Session>(_sessionId, std::map<std::string, std::string>()));
 	}
 }
@@ -218,7 +218,7 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		{
 			parseContentLength();
 			parseContentFragment(clientMaxBodySize, _contentLength);
-			p(_body);
+			fdBody();
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
@@ -232,6 +232,19 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 			// TODO: not sure we need to handling this.
 		}
 	}
+}
+
+void Request::fdBody( void )
+{
+	_fdFile = "./config/bodies/" + randomString(5);
+	std::ofstream outfile(_fdFile.c_str());
+	outfile << _body << std::endl;
+	outfile.close();
+}
+
+int Request::getBodyFD( void ) const
+{
+	return open(_fdFile.c_str(), O_RDONLY);
 }
 
 void Request::parseChunkedContent( unsigned long clientMaxBodySize )
@@ -397,6 +410,19 @@ bool Request::eq( std::string s1, std::string s2 )
 	return (s1.compare(s2) == 0);
 }
 
+std::string Request::randomString(const int len)
+{
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    std::string tmp_s;
+    tmp_s.reserve(len);
+    for (int i = 0; i < len; ++i)
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    return tmp_s;
+}
+
 void Request::parseContentLength( void )
 {
 	std::string len = header(CONTENT_LENGTH);
@@ -534,4 +560,9 @@ std::string const Request::getQueryString( void ) const
 Header & Request::getHeaders( void )
 {
 	return this->_headers;
+}
+
+std::string Request::getBody( void ) const
+{
+	return _body;
 }

@@ -74,6 +74,10 @@ class Request : public Message
 		bool isInSession( void );
 		std::string getSessionCookie( void );
 		std::string getSessionId( void ) const;
+		void fdBody( void );
+		std::string getBody( void ) const;
+		int getBodyFD( void ) const;
+		std::string randomString(const int len);
 
 	private:
 		std::string _resource;
@@ -92,7 +96,8 @@ class Request : public Message
 		Sessions & _sessions;
 		Session _session;
 		std::string _sessionId;
-		
+		int _bodyFD;
+		std::string _fdFile;
 };
 
 std::ostream & operator<<( std::ostream & o, Request const & i );

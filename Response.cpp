@@ -454,8 +454,10 @@ std::string Response::readDynamicPage( void )
 		cmd[0] = (char *) binary.c_str();
 		cmd[1] = (char *) script.c_str();
 		cmd[2] = NULL;
-		dup2(_clientSocket, STDIN_FILENO);
+		int bfd = _request.getBodyFD();
+		dup2(bfd, STDIN_FILENO);
 		dup2(fd[1], STDOUT_FILENO);
+		close(bfd);
 		close(fd[0]);
 		close(fd[1]);
 		execve(cmd[0], cmd, env);
@@ -614,9 +616,9 @@ char **Response::getEnv( void )
 		key = headerTransform(it->first);
 		headerList.push_back("HTTP_" + key + "=" + it->second);
 	}
+	headerList.push_back("PATH_INFO=" + base + path);
 	headerList.push_back("SCRIPT_NAME=" + base + path);
 	headerList.push_back("SCRIPT_FILENAME=" + base + path);
-	headerList.push_back("PATH_INFO=" + base + path);
 	headerList.push_back("PATH_TRANSLATED=" + base + path);
 	headerList.push_back("REQUEST_URI=/");
 	headerList.push_back("QUERY_STRING=" + _request.getQueryString());
@@ -627,6 +629,8 @@ char **Response::getEnv( void )
 	headerList.push_back("SERVER_PORT=80");
 	headerList.push_back("SERVER_SOFTWARE=zweb/1.1");
 	headerList.push_back("REMOTE_HOST=" + _request.header("Host"));
+	headerList.push_back("CONTENT_TYPE=" + _request.header("Content-Type"));
+	headerList.push_back(SSTR("CONTENT_LENGTH=" << _request.getBody().size()));
 
 	std::string auth = _request.header("Authorization");
 	if (auth.length() > 0)
