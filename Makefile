@@ -54,14 +54,14 @@ runner-t: re
 	@echo "Server started with PID: $$(cat server.pid)"
 	@sleep 2
 	@echo "Building and running tests..."
-	@if $(MAKE) -C $(TESTS_BASE)/tests/ && $(TESTS_BASE)/tests/test_basic; then \
+	@if $(MAKE) -C $(TESTS_BASE)/tests/ && $(TESTS_BASE)/tests/test_basic > tests.log; then \
 		echo "✅ Tests completed successfully"; \
 	else \
 		echo "❌ Tests failed"; \
 	fi
 	@echo "Shutting down server..."
 	@kill $$(cat server.pid) || kill -9 $$(cat server.pid) || true
-	@rm -f server.pid server.log
+	@rm -f server.pid
 	@rm -f $(TESTS_BASE)/tests/test_basic
 	@echo "Test run complete."
 
