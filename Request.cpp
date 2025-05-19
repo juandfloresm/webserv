@@ -115,7 +115,7 @@ void Request::parseTopLine( void )
 		this->_method = OPTIONS;
 	else if (eq(method, "TRACE"))
 		this->_method = TRACE;
-	else if (eq(method, "HEAD") || \ // TODO: remove these 6 methods above...
+	else if (eq(method, "HEAD") || \
 	 		 eq(method, "PUT") || \
 			 eq(method, "CONNECT") || \
 			 eq(method, "OPTIONS") || \

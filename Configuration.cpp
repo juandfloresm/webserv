@@ -282,8 +282,8 @@ std::string Configuration::methods( std::string raw )
 	std::istringstream f(raw);
 	std::string s;
 	getline(f, s, ' ');
-	if (s.compare("GET") == 0 || s.compare("POST") == 0 || s.compare("DELETE") == 0 || \
-		s.compare("PUT") == 0 || s.compare("HEAD") == 0 || s.compare("OPTIONS") == 0 || \
+	if (s.compare("GET") == 0   || s.compare("POST") == 0    || s.compare("DELETE") == 0 || \
+		s.compare("PUT") == 0   || s.compare("HEAD") == 0    || s.compare("OPTIONS") == 0 || \
 		s.compare("TRACE") == 0 || s.compare("CONNECT") == 0 || s.compare("PATCH") == 0)
 		return s;
 	else
