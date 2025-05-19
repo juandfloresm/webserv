@@ -20,6 +20,8 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 		parseTopLine();
 		parseHeaders();
 		Response(OK, clientSocket, cfg, port, *this);
+	} catch ( Response::BadRequestException & e ) {
+		Response(BAD_REQUEST, clientSocket, cfg, port, *this);
 	} catch ( Response::LengthRequiredException & e ) {
 		Response(LENGTH_REQUIRED, clientSocket, cfg, port, *this);
 	} catch ( Response::UnsupportedMediaTypeException & e ) {
@@ -127,6 +129,10 @@ void Request::parseTopLine( void )
 	
 	getline(f, resource, ' ');
 	this->_resource = resource;
+
+	if(resource[0] != '/')
+		throw Response::BadRequestException();
+
 	std::size_t i = resource.find("?");
   	if (i != std::string::npos)
     {
