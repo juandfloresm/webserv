@@ -114,6 +114,8 @@ void Response::matchLocation( void )
 				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
 			if (!loc.getAuthBasic().empty())
 				_server.setAuthBasic(loc.getAuthBasic());
+			if (loc.getMimeTypes().size() > 0)
+				_server.setMimeTypes(loc.getMimeTypes());
 			_server.setAutoIndex(loc.getAutoIndex());
 			_location = loc;
 			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
@@ -175,6 +177,8 @@ void Response::checkAuthorization( void )
 
 void Response::doResponse( void )
 {
+	_cfg.setServer(_server);										// ................................... SHARE SERVER/LOCATION
+
 	validateLocationMethods();										// ................................... CHECK MATCHING METHODS
 
 	checkAuthorization();											// ................................... CHECK AUTHORIZED REQUESTS

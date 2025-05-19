@@ -49,6 +49,8 @@ class Configuration
 		bool willAdditionOverflow(unsigned long a, unsigned long b);
 		bool willMultiplicationOverflow(unsigned long a, unsigned long b);
 		unsigned long number( std::string raw );
+		void setServer(Server srv);
+		Server getServer( void );
 	
 	private:
 		bool _parsingServer;
@@ -60,6 +62,7 @@ class Configuration
 		std::vector<std::string> level0, level1, level2;
 
 		std::string _wpath;
+		Server _server;
 };
 
 #endif

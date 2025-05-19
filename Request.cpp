@@ -384,15 +384,20 @@ void Request::parseMultipartContent( void )
 			std::string s;
 			getline(f, s, ' ');
 			getline(f, type, ' ');
-			if (eq(type, "image/png") || eq(type, "image/gif") || eq(type, "image/jpg") || \
-				eq(type, "image/jpeg") || eq(type, "application/pdf") || \
-				eq(type, "text/plain") || eq(type, "text/html"))
-			{
-				// TODO: delimit supporting MIME types from config file
-			}
-			else
-				throw Response::UnsupportedMediaTypeException();
 
+			bool found = false;
+			std::vector<std::string> types = _cfg.getServer().getMimeTypes();
+			std::vector<std::string>::iterator it = types.begin();
+			for(; it < types.end(); it++)
+			{
+				if (eq(type, *it))
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				throw Response::UnsupportedMediaTypeException();
 		}
 		else
 			throw Response::UnprocessableContentException();

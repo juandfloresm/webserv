@@ -22,6 +22,9 @@ class Context
 		void setReturn( int statusCode, std::string page );
 		std::vector<std::string> getIndex( void ) const;
 		void setIndex( std::string index );
+		std::vector<std::string> getMimeTypes( void ) const;
+		void setMimeType( std::string type );
+		void setMimeTypes( std::vector<std::string> types );
 		bool getAutoIndex( void ) const;
 		void setAutoIndex( bool autoIndex );
 		unsigned long getClientMaxBodySize( void ) const;
@@ -44,6 +47,7 @@ class Context
 		std::vector<std::pair<int, std::string> > _errorPages;
 		std::pair<int, std::string> _return;
 		std::vector<std::string> _index;
+		std::vector<std::string> _mimeTypes;
 		std::string _authBasic;
 		bool _autoIndex;
 		unsigned long _clientMaxBodySize;

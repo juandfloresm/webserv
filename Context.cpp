@@ -40,6 +40,7 @@ Context & Context::operator=( Context const & rhs )
 		this->_autoIndex = rhs.getAutoIndex();
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 		this->_authBasic = rhs.getAuthBasic();
+		this->_mimeTypes = rhs.getMimeTypes();
 	}
 	return *this;
 }
@@ -127,6 +128,22 @@ void Context::setAuthBasic( std::string authBasic )
 {
 	_authBasic = authBasic;
 }
+
+std::vector<std::string> Context::getMimeTypes( void ) const
+{
+	return this->_mimeTypes;
+}
+
+void Context::setMimeType( std::string type )
+{
+	this->_mimeTypes.push_back(type);
+}
+
+void Context::setMimeTypes( std::vector<std::string> types )
+{
+	this->_mimeTypes = types;
+}
+
 
 /*
 ** --------------------------------- VIRTUAL ---------------------------------
