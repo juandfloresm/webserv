@@ -40,6 +40,7 @@ re: fclean all
 	cp -ru ./config/html $(WWW)/
 	cp -ru ./config/cgi-bin $(WWW)/
 	chmod -R 777 $(WWW)
+	chmod -R 777 ./config/bodies
 
 runner: re
 	clear

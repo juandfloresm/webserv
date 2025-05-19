@@ -5,6 +5,8 @@
 # include <string>
 # include <fstream>
 # include <cstdlib>
+# include <cstdio>
+# include <ctime>
 # include <map>
 
 # include <sys/socket.h>
@@ -27,6 +29,9 @@
 # define CHUNKED "chunked"
 # define SESSION_KEY "ZWEBSESSID"
 # define BASE64_HASH "Basic YWRtaW46MTIzNA=="
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 typedef enum { GET, POST, DELETE, HEAD, PUT, CONNECT, OPTIONS, TRACE, PATCH, UNKNOWN } Method;
 

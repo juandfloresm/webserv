@@ -244,12 +244,17 @@ void Request::fdBody( void )
 int Request::getBodyFD( void )
 {
 	fdBody();
-	return open(_fdFile.c_str(), O_RDONLY);
+	_bodyFD = open(_fdFile.c_str(), O_RDONLY);
+	return _bodyFD;
 }
 
 void Request::removeBodyFD( void )
 {
-	// std::remove(_fdFile);
+	close(_bodyFD);
+	if(std::remove(_fdFile.c_str()) != 0)
+	{
+		std::cerr << "FILE DID NOT REMOVE" << std::endl;
+	}
 }
 
 void Request::parseChunkedContent( unsigned long clientMaxBodySize )
@@ -417,15 +422,10 @@ bool Request::eq( std::string s1, std::string s2 )
 
 std::string Request::randomString(const int len)
 {
-    static const char alphanum[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-    std::string tmp_s;
-    tmp_s.reserve(len);
-    for (int i = 0; i < len; ++i)
-        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
-    return tmp_s;
+	(void) len;
+    std::srand(time(0));
+	unsigned long n = std::rand() % (100000000000001);
+    return SSTR(n);
 }
 
 void Request::parseContentLength( void )
