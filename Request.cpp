@@ -74,6 +74,8 @@ const std::string Request::getMethodString( void ) const
 			return "POST";
 		case DELETE:
 			return "DELETE";
+		case PUT:
+			return "PUT";
 		default:
 			return "UNKNOWN";
 	}
