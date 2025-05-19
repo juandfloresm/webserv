@@ -430,3 +430,70 @@ TEST_CASE("Basic Authentication", "[http]") {
     REQUIRE(res == CURLE_OK);
     REQUIRE((response_code == 200 || response_code == 401)); // 200 auth succees, 401 auth required
 }
+
+TEST_CASE("Content Type Test", "[http]") {
+    struct FileType {
+        std::string path;
+        std::string expected_type;
+        bool should_exist;
+    };
+
+    std::vector<FileType> files = {
+        {"/index.html", "text/html", true},
+        {"/", "text/html", true},
+        {"/index.php", "text/html", true},
+        {"/query.php", "text/html", true},
+        {"/post.php", "text/html", true},
+        {"/upload_script.php", "text/html", true},
+        {"/api/index.php", "text/html", true},
+        {"/api/index.html", "text/html", true},
+        {"/style.css", "text/css", false},
+        {"/script.js", "application/javascript", true},
+        {"/data.json", "application/json", true},
+
+        {"/somefile.xyz", "application/octet-stream", false}
+    };
+
+    for (const auto& file : files) {
+        SECTION("Content-Type for " + file.path) {
+            CURL* curl = curl_easy_init();
+            REQUIRE(curl != nullptr);
+
+            std::string response_data;
+            std::string header_data;
+            long response_code = 0;
+
+            std::string url = "http://localhost:8080" + file.path;
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_data);
+
+            CURLcode res = curl_easy_perform(curl);
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+            INFO("Status code: " << response_code);
+            INFO("Response headers: " << header_data);
+
+            curl_easy_cleanup(curl);
+
+            if (response_code == 200) {
+                std::string lowercase_headers = header_data;
+                std::transform(lowercase_headers.begin(), lowercase_headers.end(),
+                            lowercase_headers.begin(), ::tolower);
+                
+                std::string expected_type = file.expected_type;
+                std::transform(expected_type.begin(), expected_type.end(), expected_type.begin(), ::tolower);
+                
+                REQUIRE(lowercase_headers.find(expected_type) != std::string::npos);
+                REQUIRE(lowercase_headers.find("content-type") != std::string::npos);
+            } else if (file.should_exist) {
+                FAIL("Expected file not found error: " << file.path << " (Status: " << response_code << ")");
+            } else {
+                INFO("Optional file " << file.path << " returned status " << response_code);
+            }
+        }
+    }
+}
