@@ -232,7 +232,6 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		{
 			parseContentLength();
 			parseContentFragment(clientMaxBodySize, _contentLength);
-			fdBody();
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)

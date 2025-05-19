@@ -219,7 +219,6 @@ void Response::doSend( int fd )
 	std::string resp = toString();
 	send(fd, resp.c_str(), resp.size(), 0);
 	close(_clientSocket);
-	_request.removeBodyFD();
 }
 
 std::string Response::toString( void )
@@ -441,6 +440,7 @@ std::string Response::readDynamicPage( void )
 		return "";
 	}
 
+	_request.fdBody();
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -481,6 +481,7 @@ std::string Response::readDynamicPage( void )
 		}
 		close(fd[0]);
 		close(fd[1]);
+		_request.removeBodyFD();
 	}
 
 	dup2(stdin, STDIN_FILENO);
