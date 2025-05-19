@@ -143,6 +143,7 @@ bool Response::matchLocationExact( std::string locationPath, std::string request
 		return true;
 	if (eq(locationPath, ".pl") && requestPath.rfind(".pl") != std::string::npos)
 		return true;
+
 	if (*requestPath.rbegin() == '/' && *locationPath.rbegin() != '/')
 		locationPath += "/";
 
@@ -182,9 +183,7 @@ void Response::validateLocationMethods( void ) const
 void Response::checkAuthorization( void )
 {
 	if (!_server.getAuthBasic().empty() && !_request.isInSession() && _request.getSessionId().empty())
-	{
 		throw UnauthorizedException();
-	}
 }
 
 void Response::doResponse( void )
@@ -255,7 +254,7 @@ std::string Response::toString( void )
 	ss.clear();
 
 	if (_request.isInSession())
-		_content += "<center style=\"color:blue\">SESSION STABLISHED!!</center>";
+		_content += SESSION_ESTABLISHED;
 
 	_contentLength = _content.size();
 

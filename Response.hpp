@@ -27,6 +27,7 @@
 # define DEFAULT_PAGE "index.html"
 # define DEFAULT_ERROR_PAGE "./config/ERROR"
 # define LAST_DATE "Sun, 28 May 2025 7:00:00 GMT" // TODO: Sunday after release
+# define SESSION_ESTABLISHED "<center style=\"color:blue\">SESSION ESTABLISHED!!</center>"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
