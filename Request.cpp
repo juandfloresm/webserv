@@ -164,7 +164,7 @@ void Request::parseHeaders( void )
 		getline(f, key, Request::HEADER_SEP);
 		getline(f, value, Request::HEADER_SEP);
 		if (key.empty() || value.empty())
-			throw BadRequestException();
+			throw Response::BadRequestException();
 		std::string v = "";
 		bool init = false;
 		for (size_t i = 0; i < value.size(); i++)
@@ -232,6 +232,7 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		{
 			parseContentLength();
 			parseContentFragment(clientMaxBodySize, _contentLength);
+			fdBody();
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
@@ -259,7 +260,6 @@ void Request::fdBody( void )
 
 int Request::getBodyFD( void )
 {
-	fdBody();
 	_bodyFD = open(_fdFile.c_str(), O_RDONLY);
 	return _bodyFD;
 }
