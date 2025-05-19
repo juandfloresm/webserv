@@ -138,7 +138,7 @@ class Response : public Message
 		bool isContentAvailable( void ) const;
 		bool isPOST( void ) const;
 		bool isCGI( void ) const;
-		bool eq( std::string s1, std::string s2 );
+		bool eq( std::string s1, std::string s2 ) const;
 
 		/* 400 */
 		class BadRequestException : public std::exception {

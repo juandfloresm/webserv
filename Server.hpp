@@ -19,6 +19,8 @@ class Server : public Context
 
 		int getPort( void ) const;
 		void setPort( int port );
+		std::string getHost() const;
+		void setHost( std::string host );
 		std::vector<Location> getLocations( void ) const;
 		void setLocation( Location location );
 		bool isDefault( void ) const;
@@ -26,6 +28,7 @@ class Server : public Context
 		Location & getLastLocation( void );
 
 	private:
+		std::string _host;
 		int _port;
 		bool _default;
 		std::vector<Location> _locations;

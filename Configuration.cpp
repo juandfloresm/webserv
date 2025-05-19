@@ -116,7 +116,7 @@ void Configuration::processToken( int fd, std::string token, int * i )
 			std::string value = "";
 			while (read(fd, &c, 1) > 0)
 			{
-				if (c == ';' || ((token.compare("server") == 0 || token.compare("location") == 0) && isEnding(c, i)))
+				if (c == ';' || ((eq(token, "server") || eq(token, "location")) && isEnding(c, i)))
 					break;
 				else if (isEnding(c, i) || c == '\n')
 					throw std::runtime_error(SSTR("[Error] Error processing token: [" << token << "]. No end in site"));
@@ -134,7 +134,7 @@ bool Configuration::isTokenValid(int i, std::string token)
 {
 	for (size_t j = 0; j < levels[i].size(); j++)
 	{
-		if (token.compare(levels[i][j]) == 0)
+		if (eq(token, levels[i][j]))
 			return true;
 	}
 	return false;
@@ -142,7 +142,7 @@ bool Configuration::isTokenValid(int i, std::string token)
 
 void Configuration::parseEntry( Entry directive )
 {
-	if (directive.first.compare("server") == 0)
+	if (eq(directive.first, "server"))
 	{
 		if (_directiveCount == 0)
 			throw std::runtime_error("[Error] no directives detected for context");
@@ -150,7 +150,7 @@ void Configuration::parseEntry( Entry directive )
 		this->_parsingServer = true;
 		_directiveCount = 0;
 	}
-	else if (directive.first.compare("location") == 0)
+	else if (eq(directive.first, "location"))
 	{
 		if (_directiveCount == 0)
 			throw std::runtime_error("[Error] no directives detected for context");
@@ -175,11 +175,28 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 	
 	_directiveCount++;
 
-	if (directive.first.compare("listen") == 0)
-		cxt.setPort(port(parsedValue));
-	else if (directive.first.compare("root") == 0)
+	if (eq(directive.first, "listen"))
+	{
+		if (parsedValue.find(" ") != std::string::npos)
+			throw std::runtime_error("Bad listen directive format");
+		else if (parsedValue.find(":") == std::string::npos)
+			cxt.setPort(port(parsedValue));
+		else
+		{
+			std::istringstream f(parsedValue);
+			std::string shost, sport;
+			getline(f, shost, ':');
+			getline(f, sport, ':');
+			cxt.setPort(port(sport));
+			if (eq(sport, "80"))
+				cxt.setHost(shost);
+			else
+				cxt.setHost(parsedValue);
+		}
+	}
+	else if (eq(directive.first, "root"))
 		cxt.setRoot(path(parsedValue));
-	else if (directive.first.compare("error_page") == 0)
+	else if (eq(directive.first, "error_page"))
 	{
 		std::istringstream f(parsedValue);
 		std::string code, page;
@@ -187,7 +204,7 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		getline(f, page, ' ');
 		cxt.setErrorPage(statusCode(code), path(page));
 	}
-	else if (directive.first.compare("return") == 0)
+	else if (eq(directive.first, "return"))
 	{
 		std::istringstream f(parsedValue);
 		std::string code, page;
@@ -195,7 +212,7 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		getline(f, page, ' ');
 		cxt.setReturn(statusCode(code), path(page));
 	}
-	else if (directive.first.compare("index") == 0)
+	else if (eq(directive.first, "index"))
 	{
 		std::istringstream f(parsedValue);
 		std::string s;
@@ -203,14 +220,14 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		while (getline(f, s, ' '))
 			cxt.setIndex(word(s));
 	}
-	else if (directive.first.compare("autoindex") == 0)
+	else if (eq(directive.first, "autoindex"))
 	{
-		if (flag(parsedValue).compare("on") == 0)
+		if (eq(flag(parsedValue), "on"))
 			cxt.setAutoIndex(true);
 		else
 			cxt.setAutoIndex(false);
 	}
-	else if (directive.first.compare("methods") == 0)
+	else if (eq(directive.first, "methods"))
 	{
 		std::istringstream f(parsedValue);
 		std::string s;
@@ -218,13 +235,13 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		while (getline(f, s, ' '))
 			cxt.setMethod(methods(word(s)));
 	}
-	else if (directive.first.compare("cgi_pass") == 0)
+	else if (eq(directive.first, "cgi_pass"))
 		cxt.setPassCGI(path(parsedValue));
-	else if (directive.first.compare("client_max_body_size") == 0)
+	else if (eq(directive.first, "client_max_body_size"))
 		cxt.setClientMaxBodySize(size(parsedValue));
-	else if (directive.first.compare("auth_basic") == 0)
+	else if (eq(directive.first, "auth_basic"))
 		cxt.setAuthBasic(word(parsedValue));
-	else if (directive.first.compare("mime_types") == 0)
+	else if (eq(directive.first, "mime_types"))
 	{
 		std::istringstream f(parsedValue);
 		std::string s;
@@ -232,7 +249,7 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		while (getline(f, s, ' '))
 			cxt.setMimeType(word(s));
 	}
-	else if (directive.first.compare("upload_path") == 0)
+	else if (eq(directive.first, "upload_path"))
 		cxt.setUploadPath(path(parsedValue));
 }
 
@@ -286,7 +303,7 @@ std::string Configuration::word( std::string raw )
 std::string Configuration::path( std::string raw )
 {
 	std::string s = word(raw);
-	if (!(s[0] == '/' || s.compare(".php") == 0 || s.compare(".py") == 0 || s.compare(".pl") == 0))
+	if (!(s[0] == '/' || eq(s, ".php") || eq(s, ".py") || eq(s, ".pl")))
 		throw std::runtime_error("[Error] paths should be absolute '" + raw + "'");
 	return s;
 }
@@ -296,9 +313,9 @@ std::string Configuration::methods( std::string raw )
 	std::istringstream f(raw);
 	std::string s;
 	getline(f, s, ' ');
-	if (s.compare("GET") == 0   || s.compare("POST") == 0    || s.compare("DELETE") == 0 || \
-		s.compare("PUT") == 0   || s.compare("HEAD") == 0    || s.compare("OPTIONS") == 0 || \
-		s.compare("TRACE") == 0 || s.compare("CONNECT") == 0 || s.compare("PATCH") == 0)
+	if (eq(s, "GET")   || eq(s, "POST")    || eq(s, "DELETE") || \
+		eq(s, "PUT")   || eq(s, "HEAD")    || eq(s, "OPTIONS") || \
+		eq(s, "TRACE") || eq(s, "CONNECT") || eq(s, "PATCH"))
 		return s;
 	else
 		throw std::runtime_error("[Error] unsupported method '" + raw + "'");
@@ -309,7 +326,7 @@ std::string Configuration::flag( std::string raw )
 	std::istringstream f(raw);
 	std::string s;
 	getline(f, s, ' ');
-	if (s.compare("on") == 0 || s.compare("off") == 0)
+	if (eq(s, "on") || eq(s, "off"))
 		return s;
 	else
 		throw std::runtime_error("[Error] unsupported flag value '" + raw + "'");
@@ -394,6 +411,11 @@ bool Configuration::willMultiplicationOverflow(unsigned long a, unsigned long b)
     if (a == 0 || b == 0)
         return false;
     return a > std::numeric_limits<unsigned long>::max() / b;
+}
+
+bool Configuration::eq( std::string s1, std::string s2 )
+{
+	return (s1.compare(s2) == 0 && s1.size() == s2.size());
 }
 
 /*

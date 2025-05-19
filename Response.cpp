@@ -62,7 +62,17 @@ void Response::matchServer( void )
 {
 	ServerList list = _cfg.getServerList();
 	ServerList::iterator it = list.begin();
-	for(; it < list.end(); it++) // ................................... filter server by PORT
+	std::string host = _request.header("Host");
+	for(; it < list.end(); it++) // ................................... by HOST
+	{
+		if (eq(it->getHost(), host))
+		{
+			_server = *it;
+			return;
+		}
+	}
+	it = list.begin();
+	for(; it < list.end(); it++) // ................................... by PORT
 	{
 		if (it->getPort() == _port)
 		{
@@ -108,7 +118,7 @@ void Response::matchLocation( void )
 			throw NotFoundException();	
 		else
 		{
-			if (loc.getRoot().compare("./html") != 0)
+			if (!eq(loc.getRoot(), "./html"))
 				_server.setRoot(loc.getRoot());
 			if (loc.getClientMaxBodySize() > 0)
 				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
@@ -127,11 +137,11 @@ void Response::matchLocation( void )
 
 bool Response::matchLocationExact( std::string locationPath, std::string requestPath )
 {	
-	if (locationPath.compare(".php") == 0 && requestPath.rfind(".php") != std::string::npos)
+	if (eq(locationPath, ".php") && requestPath.rfind(".php") != std::string::npos)
 		return true;
-	if (locationPath.compare(".py") == 0 && requestPath.rfind(".py") != std::string::npos)
+	if (eq(locationPath, ".py") && requestPath.rfind(".py") != std::string::npos)
 		return true;
-	if (locationPath.compare(".pl") == 0 && requestPath.rfind(".pl") != std::string::npos)
+	if (eq(locationPath, ".pl") && requestPath.rfind(".pl") != std::string::npos)
 		return true;
 	if (*requestPath.rbegin() == '/' && *locationPath.rbegin() != '/')
 		locationPath += "/";
@@ -148,7 +158,7 @@ int Response::matchLocationLogestPrefix( std::string locationPath, std::string r
 	std::istringstream f(locationPath);
 	std::istringstream r(requestPath);
 	std::string locationSegment, requestSegment;
-	while (getline(f, locationSegment, '/') && getline(r, requestSegment, '/') && locationSegment.compare(requestSegment) == 0)
+	while (getline(f, locationSegment, '/') && getline(r, requestSegment, '/') && eq(locationSegment, requestSegment))
 		i++;
 	return i;
 }
@@ -162,7 +172,7 @@ void Response::validateLocationMethods( void ) const
 		std::vector<std::string>::iterator it = methods.begin();
 		for( ; it < methods.end(); it++)
 		{
-			if (method.compare(*it) == 0)
+			if (eq(method, *it))
 				return ;
 		}
 		throw MethodNotAllowedException();
@@ -538,9 +548,9 @@ void Response::p( std::string s ) const
 	std::cout << s << std::endl;
 }
 
-bool Response::eq( std::string s1, std::string s2 )
+bool Response::eq( std::string s1, std::string s2 ) const
 {
-	return (s1.compare(s2) == 0);
+	return (s1.compare(s2) == 0 && s1.size() == s2.size());
 }
 
 void Response::errorHandler( Status status )
@@ -715,7 +725,7 @@ void Response::initStatusDescriptions( void )
 std::string Response::getMimeType(const std::string& path) const {
 	std::string extension = "";
 
-	if (path.compare("/") == 0)
+	if (eq(path, "/"))
 		return "text/html";
 	size_t pos = path.find_last_of('.');
 	if (pos == std::string::npos) {

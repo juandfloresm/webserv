@@ -43,6 +43,8 @@ class Context
 		virtual void setMethod( std::string method );
 		virtual std::string getPassCGI( void ) const;
 		virtual void setPassCGI( std::string passGCI );
+		virtual std::string getHost() const;
+		virtual void setHost( std::string host );
 
 	protected:
 		std::string _root;

@@ -162,7 +162,7 @@ void Request::parseHeaders( void )
 		std::string key, value;
 		std::istringstream f(line);
 		getline(f, key, Request::HEADER_SEP);
-		getline(f, value, Request::HEADER_SEP);
+		getline(f, value);
 		if (key.empty() || value.empty())
 			throw Response::BadRequestException();
 		std::string v = "";
@@ -234,15 +234,15 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 			parseContentFragment(clientMaxBodySize, _contentLength);
 		}
 
-		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
+		if (eq(_contentType, FORM_TYPE_MULTIPART) == 0)
 		{
 			parseMultipartContent();
 		}
-		else if (_contentType.compare(FORM_TYPE_PLAIN) == 0)
+		else if (eq(_contentType, FORM_TYPE_PLAIN) == 0)
 		{
 			// TODO: not sure we need to handling this.
 		}
-		else if (_contentType.compare(FORM_TYPE_APPLICATION) == 0)
+		else if (eq(_contentType, FORM_TYPE_APPLICATION) == 0)
 		{
 			// TODO: not sure we need to handling this.
 		}
@@ -445,7 +445,7 @@ void Request::p( std::string s ) const
 
 bool Request::eq( std::string s1, std::string s2 )
 {
-	return (s1.compare(s2) == 0);
+	return (s1.compare(s2) == 0 && s1.size() == s2.size());
 }
 
 std::string Request::randomString(const int len)
@@ -486,7 +486,7 @@ void Request::parseContentType( void )
 		std::getline(r, b, ';');
 		_contentType = h;
 
-		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
+		if (eq(_contentType, FORM_TYPE_MULTIPART) == 0)
 		{
 			if (b.find("boundary=") == 1)
 			{
@@ -501,7 +501,7 @@ void Request::parseContentType( void )
 			if (b.find("charset=") == 1)
 			{
 				_charSet = b.substr(9);
-				if (_charSet.compare("UTF-8") != 0)
+				if (eq(_charSet, "UTF-8") != 0)
 					throw Response::UnsupportedMediaTypeException();
 			}
 		}
@@ -515,9 +515,9 @@ bool Request::isContentAvailable( void ) const
 
 bool Request::isFormContentType( void )
 {
-	return 	_contentType.compare(FORM_TYPE_MULTIPART) == 0 || \
-			_contentType.compare(FORM_TYPE_APPLICATION) == 0|| \
-			_contentType.compare(FORM_TYPE_PLAIN) == 0;
+	return 	eq(_contentType, FORM_TYPE_MULTIPART) == 0 || \
+			eq(_contentType, FORM_TYPE_APPLICATION) == 0|| \
+			eq(_contentType, FORM_TYPE_PLAIN) == 0;
 }
 
 std::vector<std::string> Request::split(std::string & s, std::string & delimiter, bool last)

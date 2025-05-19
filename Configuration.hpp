@@ -51,6 +51,7 @@ class Configuration
 		unsigned long number( std::string raw );
 		void setServer(Server srv);
 		Server getServer( void );
+		bool eq( std::string s1, std::string s2 );
 	
 	private:
 		bool _parsingServer;

@@ -201,3 +201,13 @@ void Context::setPassCGI( std::string passCGI )
 {
 	(void) passCGI;
 }
+
+std::string Context::getHost() const
+{
+	return "";
+}
+
+void Context::setHost( std::string host )
+{
+	(void) host;
+}

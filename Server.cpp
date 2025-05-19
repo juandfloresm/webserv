@@ -8,6 +8,7 @@ Server::Server( )
 {
 	this->_port = 80;
 	this->_default = false;
+	this->_host = "";
 }
 
 Server::Server( const Server & server ) : Context(server)
@@ -42,6 +43,7 @@ Server & Server::operator=( Server const & rhs )
 		this->_authBasic = rhs.getAuthBasic();
 		this->_mimeTypes = rhs.getMimeTypes();
 		this->_uploadPath = rhs.getUploadPath();
+		this->_host = rhs.getHost();
 	}
 	return *this;
 }
@@ -88,4 +90,14 @@ bool Server::isDefault( void ) const
 void Server::setDefault( bool _default )
 {
 	this->_default = _default;
+}
+
+std::string Server::getHost() const
+{
+	return _host;
+}
+
+void Server::setHost( std::string host )
+{
+	_host = host;
 }
