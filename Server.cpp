@@ -40,6 +40,7 @@ Server & Server::operator=( Server const & rhs )
 		this->_locations = rhs.getLocations();
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
 		this->_authBasic = rhs.getAuthBasic();
+		this->_mimeTypes = rhs.getMimeTypes();
 	}
 	return *this;
 }

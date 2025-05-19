@@ -18,6 +18,7 @@ Configuration::Configuration( std::string const configFile )
 	level1.push_back("location");
 	level1.push_back("client_max_body_size");
 	level1.push_back("auth_basic");
+	level1.push_back("mime_types");
 	level2.push_back("methods");
 	level2.push_back("cgi_pass");
 	level2.push_back("root");
@@ -27,6 +28,7 @@ Configuration::Configuration( std::string const configFile )
 	level2.push_back("return");
 	level2.push_back("client_max_body_size");
 	level2.push_back("auth_basic");
+	level2.push_back("mime_types");
 
 	levels[0] = level0;
 	levels[1] = level1;
@@ -220,6 +222,14 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		cxt.setClientMaxBodySize(size(parsedValue));
 	else if (directive.first.compare("auth_basic") == 0)
 		cxt.setAuthBasic(word(parsedValue));
+	else if (directive.first.compare("mime_types") == 0)
+	{
+		std::istringstream f(parsedValue);
+		std::string s;
+		cxt.getMimeTypes().clear();
+		while (getline(f, s, ' '))
+			cxt.setMimeType(word(s));
+	}
 }
 
 /*
@@ -388,4 +398,14 @@ bool Configuration::willMultiplicationOverflow(unsigned long a, unsigned long b)
 ServerList & Configuration::getServerList( void )
 {
 	return this->_servers;
+}
+
+void Configuration::setServer(Server srv)
+{
+	this->_server = srv;
+}
+
+Server Configuration::getServer( void )
+{
+	return this->_server;
 }
