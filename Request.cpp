@@ -74,8 +74,18 @@ const std::string Request::getMethodString( void ) const
 			return "POST";
 		case DELETE:
 			return "DELETE";
-		case PUT:
+		case PUT:				// TODO: remove methods below
 			return "PUT";
+		case HEAD:
+			return "HEAD";
+		case TRACE:
+			return "TRACE";
+		case OPTIONS:
+			return "OPTIONS";
+		case CONNECT:
+			return "CONNECT";
+		case PATCH:
+			return "PATCH";
 		default:
 			return "UNKNOWN";
 	}
@@ -97,7 +107,16 @@ void Request::parseTopLine( void )
 		this->_method = DELETE;
 	else if (eq(method, "PUT"))
 		this->_method = PUT;
-	else if (eq(method, "HEAD") || \
+	else if (eq(method, "HEAD"))
+		this->_method = HEAD;
+	else if (eq(method, "CONNECT"))
+		this->_method = CONNECT;
+	else if (eq(method, "OPTIONS"))
+		this->_method = OPTIONS;
+	else if (eq(method, "TRACE"))
+		this->_method = TRACE;
+	else if (eq(method, "HEAD") || \ // TODO: remove these 6 methods above...
+	 		 eq(method, "PUT") || \
 			 eq(method, "CONNECT") || \
 			 eq(method, "OPTIONS") || \
 			 eq(method, "TRACE") || \
@@ -199,14 +218,19 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		{
 			parseContentLength();
 			parseContentFragment(clientMaxBodySize, _contentLength);
+			p(_body);
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
 			parseMultipartContent();
 		else if (_contentType.compare(FORM_TYPE_PLAIN) == 0)
-			throw Response::UnprocessableContentException();
+		{
+			// TODO: not sure we need to handling this.
+		}
 		else if (_contentType.compare(FORM_TYPE_APPLICATION) == 0)
-			throw Response::UnprocessableContentException();
+		{
+			// TODO: not sure we need to handling this.
+		}
 	}
 }
 
