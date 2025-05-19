@@ -201,6 +201,11 @@ void Response::doResponse( void )
 		if (processUpload())
 			return;
 	}	
+	if (isDELETE() && !isCGI())										// ................................... DELETE FILE
+	{
+		if (processDelete())
+			return;
+	}
 	
 	if(_server.getReturn().first != 0)								// ................................... RETURN
 	{
@@ -395,7 +400,7 @@ std::string Response::readDirectory( void ) const
 	return result;
 }
 
-std::string Response::readStaticPage( void ) const
+std::string Response::getFilePath( void ) const
 {
 	std::string base = _server.getRoot();
 	std::string path = _request.getResource();
@@ -404,6 +409,13 @@ std::string Response::readStaticPage( void ) const
 		path = "/" + path;
 	
 	std::string filePath = base + path;
+	return filePath;
+}
+
+std::string Response::readStaticPage( void ) const
+{
+	std::string path = _request.getResource();
+	std::string filePath = getFilePath();
 	
 	if (isDirectory())
 	{
@@ -789,6 +801,11 @@ bool Response::isPOST( void ) const
 	return eq(_request.getMethodString(), "POST");
 }
 
+bool Response::isDELETE( void ) const
+{
+	return eq(_request.getMethodString(), "DELETE");
+}
+
 bool Response::isContentAvailable( void ) const
 {
 	return _request.isContentAvailable() && _request.isFormContentType();
@@ -803,12 +820,31 @@ bool Response::processUpload( void )
 		_page = path;
 		_status = CREATED;
 		_content = _request.getBody();
-		_request.setResource(path);
 		_contentType = FORM_TYPE_PLAIN;
 		doSend(_clientSocket);
 		return true;
 	}
 	return false;
+}
+
+bool Response::processDelete( void )
+{
+	p("Processing file delete...");
+	std::string filePath = getFilePath();
+	if(std::remove(filePath.c_str()) == 0)
+	{
+		_status = NO_CONTENT;
+		_content = "";
+		doSend(_clientSocket);
+	}
+	else
+	{
+		if (access(filePath.c_str(), F_OK) == 0)
+			throw ForbiddenException();
+		else
+			throw NotFoundException();
+	}
+	return true;
 }
 
 /*

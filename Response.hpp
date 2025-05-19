@@ -136,10 +136,13 @@ class Response : public Message
 		void checkAuthorization( void );
 
 		bool processUpload( void );
+		bool processDelete( void );
 		bool isContentAvailable( void ) const;
 		bool isPOST( void ) const;
+		bool isDELETE( void ) const;
 		bool isCGI( void ) const;
 		bool eq( std::string s1, std::string s2 ) const;
+		std::string getFilePath( void ) const;
 
 		/* 400 */
 		class BadRequestException : public std::exception {
