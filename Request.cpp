@@ -218,7 +218,6 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 		{
 			parseContentLength();
 			parseContentFragment(clientMaxBodySize, _contentLength);
-			fdBody();
 		}
 
 		if (_contentType.compare(FORM_TYPE_MULTIPART) == 0)
@@ -242,9 +241,15 @@ void Request::fdBody( void )
 	outfile.close();
 }
 
-int Request::getBodyFD( void ) const
+int Request::getBodyFD( void )
 {
+	fdBody();
 	return open(_fdFile.c_str(), O_RDONLY);
+}
+
+void Request::removeBodyFD( void )
+{
+	// std::remove(_fdFile);
 }
 
 void Request::parseChunkedContent( unsigned long clientMaxBodySize )

@@ -469,6 +469,7 @@ std::string Response::readDynamicPage( void )
 	{
 		char buffer[CGI_BUFFSIZE] = {0};
 		waitpid(-1, NULL, 0);
+		_request.removeBodyFD();
 		int j = 1;
 		while (j > 0)
 		{

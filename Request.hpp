@@ -76,8 +76,9 @@ class Request : public Message
 		std::string getSessionId( void ) const;
 		void fdBody( void );
 		std::string getBody( void ) const;
-		int getBodyFD( void ) const;
+		int getBodyFD( void );
 		std::string randomString(const int len);
+		void removeBodyFD( void );
 
 	private:
 		std::string _resource;
