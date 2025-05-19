@@ -778,7 +778,7 @@ bool Response::isCGI( void ) const
 
 bool Response::isPOST( void ) const
 {
-	return _request.getMethodString().compare("POST") == 0;
+	return eq(_request.getMethodString(), "POST");
 }
 
 bool Response::isContentAvailable( void ) const
@@ -789,6 +789,7 @@ bool Response::isContentAvailable( void ) const
 void Response::processUpload( void )
 {
 	p("Processing file upload...");
+	_request.processFileUpload();
 }
 
 /*

@@ -234,15 +234,15 @@ void Request::parseContent( unsigned long clientMaxBodySize )
 			parseContentFragment(clientMaxBodySize, _contentLength);
 		}
 
-		if (eq(_contentType, FORM_TYPE_MULTIPART) == 0)
+		if (eq(_contentType, FORM_TYPE_MULTIPART))
 		{
 			parseMultipartContent();
 		}
-		else if (eq(_contentType, FORM_TYPE_PLAIN) == 0)
+		else if (eq(_contentType, FORM_TYPE_PLAIN))
 		{
 			// TODO: not sure we need to handling this.
 		}
-		else if (eq(_contentType, FORM_TYPE_APPLICATION) == 0)
+		else if (eq(_contentType, FORM_TYPE_APPLICATION))
 		{
 			// TODO: not sure we need to handling this.
 		}
@@ -324,6 +324,25 @@ void Request::parseContentFragment( unsigned long max, unsigned long n )
 	}
 }
 
+void Request::processFileUpload( void )
+{
+	std::string path = "";
+	std::string env = std::getenv("WPATH");
+	std::string uploadPath = _cfg.getServer().getUploadPath() + "";
+	std::string file = _content[ZWEB_FILENAME];
+
+	if (!file.empty())											// ..................... FILE UPLOAD PENDING
+	{
+		if (uploadPath.empty())
+			path = env + UPLOAD_PATH + file;
+		else
+			path = uploadPath + "/" + file;
+		std::ofstream MyFile(path.c_str());
+		MyFile << _content[file];
+		MyFile.close();
+	}
+}
+
 void Request::setPart(std::string & name, std::string & value)
 {
 	if (value.empty())
@@ -333,20 +352,8 @@ void Request::setPart(std::string & name, std::string & value)
 		std::string nm = name.substr(6, name.find(";") - 1 - 6);
 		std::string file = name.substr(name.find(";") + 12, name.size() - name.find(";") + 12);
 		file = file.substr(0, file.size() - 1);
-		_content["filename"] = file;
-		_content[nm] = value;
-
-		std::string path = "";
-		std::string env = std::getenv("WPATH");
-		std::string uploadPath = _cfg.getServer().getUploadPath() + "";
-		if (uploadPath.empty())
-			path = env + UPLOAD_PATH + file;
-		else
-			path = uploadPath + "/" + file;
-
-		std::ofstream MyFile(path.c_str());
-		MyFile << _content[nm];
-		MyFile.close();
+		_content[ZWEB_FILENAME] = file;
+		_content[file] = value;
 		if (isInSession())
 			getSession().insert(std::pair<std::string, std::string>(nm, file));
 	}
@@ -486,7 +493,7 @@ void Request::parseContentType( void )
 		std::getline(r, b, ';');
 		_contentType = h;
 
-		if (eq(_contentType, FORM_TYPE_MULTIPART) == 0)
+		if (eq(_contentType, FORM_TYPE_MULTIPART))
 		{
 			if (b.find("boundary=") == 1)
 			{
@@ -515,9 +522,9 @@ bool Request::isContentAvailable( void ) const
 
 bool Request::isFormContentType( void )
 {
-	return 	eq(_contentType, FORM_TYPE_MULTIPART) == 0 || \
-			eq(_contentType, FORM_TYPE_APPLICATION) == 0|| \
-			eq(_contentType, FORM_TYPE_PLAIN) == 0;
+	return 	eq(_contentType, FORM_TYPE_MULTIPART) || \
+			eq(_contentType, FORM_TYPE_APPLICATION) || \
+			eq(_contentType, FORM_TYPE_PLAIN);
 }
 
 std::vector<std::string> Request::split(std::string & s, std::string & delimiter, bool last)

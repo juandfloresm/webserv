@@ -31,6 +31,7 @@
 # define BASE64_HASH "Basic YWRtaW46MTIzNA=="
 # define BASE_16 "0123456789abcdefABCDEF"
 # define UPLOAD_PATH "/html/uploads/"
+# define ZWEB_FILENAME "ZWEB_FILENAME_"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -86,6 +87,7 @@ class Request : public Message
 		int getBodyFD( void );
 		std::string randomString(const int len);
 		void removeBodyFD( void );
+		void processFileUpload( void );
 
 	private:
 		std::string _resource;
