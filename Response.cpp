@@ -31,6 +31,8 @@ Response::Response(Status status, int clientSocket, Configuration & cfg, int por
 			errorHandler(CONTENT_TOO_LARGE);
 		} catch ( Response::InternalServerException & e ) {
 			errorHandler(INTERNAL_SERVER_ERROR);
+		} catch ( Response::ImATeaPotException & e ) {
+			errorHandler(TEAPOT);
 		} catch ( Response::NotImplementedException & e ) {
 			errorHandler(NOT_IMPLEMENTED);
 		} catch ( Response::BadGatewayException & e ) {
@@ -130,6 +132,8 @@ void Response::matchLocation( void )
 				_server.setMimeTypes(loc.getMimeTypes());
 			if (!loc.getUploadPath().empty())
 				_server.setUploadPath(loc.getUploadPath());
+			if (loc.getReturn().first > 0)
+				_server.setReturn(loc.getReturn().first, loc.getReturn().second);
 			_server.setAutoIndex(loc.getAutoIndex());
 			_location = loc;
 			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
@@ -743,6 +747,7 @@ void Response::initStatusDescriptions( void )
 	_statusDescriptions[UNPROCESSABLE_CONTENT] = "Unprocessable Content";
 	_statusDescriptions[UPGRADE_REQUIRED] = "Upgrade Required";
 	_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";
+	_statusDescriptions[TEAPOT] = "I'm a teapot";
 	_statusDescriptions[TOO_MANY_REQUESTS] = "Too Many Requests";
 
 	/* 500 - 599 .............................. */

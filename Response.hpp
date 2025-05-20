@@ -71,6 +71,7 @@ typedef enum {
 	UNSUPPORTED_MEDIA_TYPE = 415,
 	RANGE_NOT_SATISFIABLE = 416,
 	EXPECTATION_FAILED = 417,
+	TEAPOT = 418,
 	UNPROCESSABLE_CONTENT = 422,
 	UPGRADE_REQUIRED = 426,
 	TOO_MANY_REQUESTS = 429,
@@ -212,6 +213,11 @@ class Response : public Message
 		class ExpectationFailedException : public std::exception {
 			public:
 				const char * what () { return "Expectation Failed"; }
+		};
+		/* 418 */
+		class ImATeaPotException : public std::exception {
+			public:
+				const char * what () { return "I'm a teapot"; }
 		};
 		/* 422 */
 		class UnprocessableContentException : public std::exception {
