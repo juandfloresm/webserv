@@ -70,15 +70,17 @@ void Response::matchServer( void )
 		if (eq(it->getHost(), host))
 		{
 			_server = *it;
+			std::cout << "HOST " << it->getHost() << std::endl;
 			return;
 		}
 	}
 	it = list.begin();
 	for(; it < list.end(); it++) // ................................... by PORT
 	{
-		if (it->getPort() == _port)
+		if (it->getHost().empty() && it->getPort() == _port)
 		{
 			_server = *it;
+			std::cout << "PORT " << it->getPort() << std::endl;
 			return;
 		}
 	}
