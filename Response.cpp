@@ -840,7 +840,7 @@ bool Response::processDelete( void )
 	else
 	{
 		if (access(filePath.c_str(), F_OK) == 0)
-			throw ForbiddenException();
+			throw MethodNotAllowedException();
 		else
 			throw NotFoundException();
 	}
