@@ -78,7 +78,7 @@ sanitize: fclean $(OBJ)
 	WPATH=$(WWW) ./$(NAME) $(ARG)
 
 siege:
-	siege --time=1m --concurrent=1000 http://127.0.0.1:8080/index.php
+	siege --time=1m --concurrent=1000 -b http://127.0.0.1:8080/index.php
 
 docker-build:
 	@if ! docker image inspect $(DOCKER_IMAGE) > /dev/null 2>&1; then \
