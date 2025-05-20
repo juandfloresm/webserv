@@ -122,6 +122,8 @@ void Response::matchLocation( void )
 				_server.setRoot(loc.getRoot());
 			if (loc.getClientMaxBodySize() > 0)
 				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
+			if (loc.getClientMaxHeaderSize() > 0)
+				_server.setClientMaxHeaderSize(loc.getClientMaxHeaderSize());
 			if (!loc.getAuthBasic().empty())
 				_server.setAuthBasic(loc.getAuthBasic());
 			if (loc.getMimeTypes().size() > 0)
@@ -186,6 +188,12 @@ void Response::checkAuthorization( void )
 		throw UnauthorizedException();
 }
 
+void Response::checkHeaderSize( void )
+{
+	if (_server.getClientMaxHeaderSize() > 0 && _server.getClientMaxHeaderSize() < _request.getHeaderLength())
+		throw URITooLongException();
+}
+
 void Response::doResponse( void )
 {
 	_cfg.setServer(_server);										// ................................... SHARE SERVER/LOCATION
@@ -193,6 +201,8 @@ void Response::doResponse( void )
 	validateLocationMethods();										// ................................... CHECK MATCHING METHODS
 
 	checkAuthorization();											// ................................... CHECK AUTHORIZED REQUESTS
+
+	checkHeaderSize();												// ................................... CHECK HEADER SIZE
 
 	_request.parseContent(_server.getClientMaxBodySize());			// ................................... CHECK CONTENT SIZE
 
@@ -826,9 +836,7 @@ bool Response::processUpload( void )
 		return true;
 	}
 	else
-	{
 		_status = RESET_CONTENT;
-	}
 	return false;
 }
 

@@ -144,6 +144,7 @@ class Response : public Message
 		bool isCGI( void ) const;
 		bool eq( std::string s1, std::string s2 ) const;
 		std::string getFilePath( void ) const;
+		void checkHeaderSize( void );
 
 		/* 400 */
 		class BadRequestException : public std::exception {
@@ -184,6 +185,11 @@ class Response : public Message
 		class ContentTooLargeException : public std::exception {
 			public:
 				const char * what () { return "Content Too Large"; }
+		};
+		/* 414 */
+		class URITooLongException : public std::exception {
+			public:
+				const char * what () { return "URI Too Long"; }
 		};
 		/* 415 */
 		class UnsupportedMediaTypeException : public std::exception {

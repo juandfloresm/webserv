@@ -15,6 +15,7 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 	this->_boundary = "";
 	this->_sessionId = "";
 	this->_contentLength = 0;
+	this->_headerLength = 0;
 
 	try {
 		parseTopLine();
@@ -36,6 +37,8 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 		Response(NOT_ACCEPTABLE, clientSocket, cfg, port, *this);
 	} catch ( Response::ContentTooLargeException & e ) {
 		Response(CONTENT_TOO_LARGE, clientSocket, cfg, port, *this);
+	} catch ( Response::URITooLongException & e ) {
+		Response(URI_TOO_LONG, clientSocket, cfg, port, *this);
 	} catch ( Response::InternalServerException & e ) {
 		Response(INTERNAL_SERVER_ERROR, clientSocket, cfg, port, *this);
 	} catch ( Response::NotImplementedException & e ) {
@@ -161,6 +164,7 @@ void Request::parseHeaders( void )
 	this->_headers.clear();
 	while (!(line = getMessageLine()).empty())
 	{
+		_headerLength += line.size();
 		std::string key, value;
 		std::istringstream f(line);
 		getline(f, key, Request::HEADER_SEP);
@@ -629,4 +633,9 @@ Header & Request::getHeaders( void )
 std::string Request::getBody( void ) const
 {
 	return _body;
+}
+
+unsigned long Request::getHeaderLength( void ) const
+{
+	return _headerLength;
 }

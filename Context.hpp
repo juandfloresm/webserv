@@ -29,6 +29,8 @@ class Context
 		void setAutoIndex( bool autoIndex );
 		unsigned long getClientMaxBodySize( void ) const;
 		void setClientMaxBodySize( unsigned long sz );
+		unsigned long getClientMaxHeaderSize( void ) const;
+		void setClientMaxHeaderSize( unsigned long sz );
 		std::string getAuthBasic( void ) const;
 		void setAuthBasic( std::string authBasic );
 		std::string getUploadPath( void ) const;
@@ -56,6 +58,7 @@ class Context
 		std::string _uploadPath;
 		bool _autoIndex;
 		unsigned long _clientMaxBodySize;
+		unsigned long _clientMaxHeaderSize;
 };
 
 #endif

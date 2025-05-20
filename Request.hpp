@@ -91,6 +91,8 @@ class Request : public Message
 		std::string getFilePath( void ) const;
 		void headerDelegate( std::string key, std::string value );
 
+		unsigned long getHeaderLength( void ) const;
+
 	private:
 		std::string _resource;
 		std::string _queryString;
@@ -99,6 +101,7 @@ class Request : public Message
 		std::string _boundary;
 		std::string _charSet;
 		unsigned long _contentLength;
+		unsigned long _headerLength;
 		Method _method;
 		Header _headers;
 		char _buffer[BUFFER];

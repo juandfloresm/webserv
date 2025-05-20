@@ -9,6 +9,7 @@ Context::Context( )
 	this->_root = "./html";
 	this->_autoIndex = false;
 	this->_clientMaxBodySize = 0;
+	this->_clientMaxHeaderSize = 0;
 	this->_authBasic = "";
 	this->_uploadPath = "";
 }
@@ -40,6 +41,7 @@ Context & Context::operator=( Context const & rhs )
 		this->_return = rhs.getReturn();
 		this->_autoIndex = rhs.getAutoIndex();
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+		this->_clientMaxHeaderSize = rhs.getClientMaxHeaderSize();
 		this->_authBasic = rhs.getAuthBasic();
 		this->_mimeTypes = rhs.getMimeTypes();
 		this->_uploadPath = rhs.getUploadPath();
@@ -119,6 +121,16 @@ unsigned long Context::getClientMaxBodySize( void ) const
 void Context::setClientMaxBodySize( unsigned long sz )
 {
 	this->_clientMaxBodySize = sz;
+}
+
+unsigned long Context::getClientMaxHeaderSize( void ) const
+{
+	return this->_clientMaxHeaderSize;
+}
+
+void Context::setClientMaxHeaderSize( unsigned long sz )
+{
+	this->_clientMaxHeaderSize = sz;
 }
 
 std::string Context::getAuthBasic( void ) const

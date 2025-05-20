@@ -40,6 +40,7 @@ Server & Server::operator=( Server const & rhs )
 		this->_autoIndex = rhs.getAutoIndex();
 		this->_locations = rhs.getLocations();
 		this->_clientMaxBodySize = rhs.getClientMaxBodySize();
+		this->_clientMaxHeaderSize = rhs.getClientMaxHeaderSize();
 		this->_authBasic = rhs.getAuthBasic();
 		this->_mimeTypes = rhs.getMimeTypes();
 		this->_uploadPath = rhs.getUploadPath();

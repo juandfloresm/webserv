@@ -17,6 +17,7 @@ Configuration::Configuration( std::string const configFile )
 	level1.push_back("autoindex");
 	level1.push_back("location");
 	level1.push_back("client_max_body_size");
+	level1.push_back("client_max_header_size");
 	level1.push_back("auth_basic");
 	level1.push_back("mime_types");
 	level1.push_back("upload_path");
@@ -28,6 +29,7 @@ Configuration::Configuration( std::string const configFile )
 	level2.push_back("error_page");
 	level2.push_back("return");
 	level2.push_back("client_max_body_size");
+	level2.push_back("client_max_header_size");
 	level2.push_back("auth_basic");
 	level2.push_back("mime_types");
 	level2.push_back("upload_path");
@@ -239,6 +241,8 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		cxt.setPassCGI(path(parsedValue));
 	else if (eq(directive.first, "client_max_body_size"))
 		cxt.setClientMaxBodySize(size(parsedValue));
+	else if (eq(directive.first, "client_max_header_size"))
+		cxt.setClientMaxHeaderSize(size(parsedValue));
 	else if (eq(directive.first, "auth_basic"))
 		cxt.setAuthBasic(word(parsedValue));
 	else if (eq(directive.first, "mime_types"))
