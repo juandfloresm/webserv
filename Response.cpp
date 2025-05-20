@@ -110,7 +110,7 @@ void Response::matchLocation( void )
 			for (std::vector<Location>::iterator lit = lcs.begin(); lit < lcs.end(); lit++)
 			{
 				t = matchLocationLogestPrefix(lit->getPath(), requestPath);
-				if (t > i)
+				if (t > 0 && t > i)
 				{
 					i = t;
 					loc = *lit;
@@ -177,7 +177,10 @@ int Response::matchLocationLogestPrefix( std::string locationPath, std::string r
 	std::string locationSegment, requestSegment;
 	while (getline(f, locationSegment, '/') && getline(r, requestSegment, '/') && eq(locationSegment, requestSegment))
 		i++;
-	return i;
+	if (requestSegment.size() > locationSegment.size())
+		return i;
+	else
+		return 0;
 }
 
 void Response::validateLocationMethods( void ) const
