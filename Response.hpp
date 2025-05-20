@@ -108,7 +108,7 @@ class Response : public Message
 		void initStatusDescriptions( void );
 		std::string toString( void );
 
-		std::string readError( std::string status ) const;
+		std::string readError( std::string status );
 		std::string readStaticPage( void ) const;
 		std::string readDynamicPage( void );
 		void clearEnv( char **env );

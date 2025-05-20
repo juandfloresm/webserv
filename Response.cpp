@@ -350,7 +350,7 @@ std::string Response::replaceAll( std::string str, std::string from, std::string
 	return str;
 }
 
-std::string Response::readError( std::string filePath ) const
+std::string Response::readError( std::string filePath )
 {
 	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open()) {
@@ -362,6 +362,7 @@ std::string Response::readError( std::string filePath ) const
 	file.close();
 	std::string desc = _statusDescriptions.at(_status);
 	std::string s = content.str();
+	_contentType = "text/html";
 	return replaceAll(replaceAll(s, "[STATUS_CODE]", SSTR(_status)), "[STATUS_DESCRIPTION]", desc);
 }
 
