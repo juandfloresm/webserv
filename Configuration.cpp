@@ -212,7 +212,9 @@ void Configuration::parseContext( Context & cxt, Entry directive )
 		std::string code, page;
 		getline(f, code, ' ');
 		getline(f, page, ' ');
-		cxt.setReturn(statusCode(code), path(page));
+		if (!page.empty())
+			page = path(page);
+		cxt.setReturn(statusCode(code), page);
 	}
 	else if (eq(directive.first, "index"))
 	{
