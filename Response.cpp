@@ -122,19 +122,27 @@ void Response::matchLocation( void )
 		{
 			if (!eq(loc.getRoot(), "./html"))
 				_server.setRoot(loc.getRoot());
-			if (loc.getClientMaxBodySize() > 0)
-				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
-			if (loc.getClientMaxHeaderSize() > 0)
-				_server.setClientMaxHeaderSize(loc.getClientMaxHeaderSize());
-			if (!loc.getAuthBasic().empty())
-				_server.setAuthBasic(loc.getAuthBasic());
-			if (loc.getMimeTypes().size() > 0)
-				_server.setMimeTypes(loc.getMimeTypes());
-			if (!loc.getUploadPath().empty())
-				_server.setUploadPath(loc.getUploadPath());
+
+			_server.setAutoIndex(loc.getAutoIndex());
+
 			if (loc.getReturn().first > 0)
 				_server.setReturn(loc.getReturn().first, loc.getReturn().second);
-			_server.setAutoIndex(loc.getAutoIndex());
+
+			if (loc.getClientMaxBodySize() > 0)
+				_server.setClientMaxBodySize(loc.getClientMaxBodySize());
+
+			if (loc.getClientMaxHeaderSize() > 0)
+				_server.setClientMaxHeaderSize(loc.getClientMaxHeaderSize());
+
+			if (!loc.getAuthBasic().empty())
+				_server.setAuthBasic(loc.getAuthBasic());
+
+			if (loc.getMimeTypes().size() > 0)
+				_server.setMimeTypes(loc.getMimeTypes());
+
+			if (!loc.getUploadPath().empty())
+				_server.setUploadPath(loc.getUploadPath());
+
 			_location = loc;
 			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
 		}
@@ -434,9 +442,20 @@ std::string Response::readStaticPage( void ) const
 	
 	if (isDirectory())
 	{
-		std::vector<std::string> list = _server.getIndex();
-		std::vector<std::string>::iterator sit = list.begin();
 		bool found = false;
+		std::vector<std::string> list = _location.getIndex();
+		std::vector<std::string>::iterator sit = list.begin();
+		for(; sit < list.end(); sit++)
+		{
+			if (access((filePath + *sit).c_str(), F_OK) == 0)
+			{
+				filePath += *sit;
+				found = true;
+				break;
+			}
+		}
+		list = _server.getIndex();
+		sit = list.begin();
 		for(; sit < list.end(); sit++)
 		{
 			if (access((filePath + *sit).c_str(), F_OK) == 0)
@@ -603,8 +622,19 @@ void Response::showError( const std::string err ) const
 
 void Response::setErrorPage(void)
 {
-	std::vector<std::pair<int, std::string> > ep = _server.getErrorPages();
-	for (std::vector<std::pair<int, std::string> >::iterator it = ep.begin(); it < ep.end(); it++)
+	std::vector<std::pair<int, std::string> > ep = _location.getErrorPages();
+	std::vector<std::pair<int, std::string> >::iterator it = ep.begin();
+	for (; it < ep.end(); it++)
+	{
+		if (it->first == static_cast<int>(_status))
+		{
+			_content = readError(it->second);
+			return;
+		}
+	}
+	ep = _server.getErrorPages();
+	it = ep.begin();
+	for (; it < ep.end(); it++)
 	{
 		if (it->first == static_cast<int>(_status))
 		{
