@@ -27,6 +27,8 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 		Response(UPGRADE_REQUIRED, clientSocket, cfg, port, *this);
 	} catch ( Response::LengthRequiredException & e ) {
 		Response(LENGTH_REQUIRED, clientSocket, cfg, port, *this);
+	} catch ( Response::PreconditionFailedException & e ) {
+		Response(PRECONDITION_FAILED, clientSocket, cfg, port, *this);
 	} catch ( Response::UnsupportedMediaTypeException & e ) {
 		Response(UNSUPPORTED_MEDIA_TYPE, clientSocket, cfg, port, *this);
 	} catch ( Response::UnprocessableContentException & e ) {
@@ -196,6 +198,8 @@ void Request::headerDelegate( std::string key, std::string value )
 		_sessionId = randomString(16);
 		_sessions.insert(std::pair<std::string, Session>(_sessionId, std::map<std::string, std::string>()));
 	}
+	if (eq(key, "If-Modified-Since") || eq(key, "If-Unmodified-Since") || eq(key, "If-Match") || eq(key, "If-None-Match") || eq(key, "If-Range") )
+		throw Response::PreconditionFailedException();
 }
 
 std::string Request::getSessionCookie( void )

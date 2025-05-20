@@ -735,6 +735,7 @@ void Response::initStatusDescriptions( void )
 	_statusDescriptions[CONFLICT] = "Conlifct";
 	_statusDescriptions[GONE] = "Gone";
 	_statusDescriptions[LENGTH_REQUIRED] = "Length Required";
+	_statusDescriptions[PRECONDITION_FAILED] = "Precondition Failed";
 	_statusDescriptions[CONTENT_TOO_LARGE] = "Content Too Large";
 	_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
 	_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";

@@ -65,6 +65,7 @@ typedef enum {
 	CONFLICT = 409,
 	GONE = 410,
 	LENGTH_REQUIRED = 411,
+	PRECONDITION_FAILED = 412,
 	CONTENT_TOO_LARGE = 413,
 	URI_TOO_LONG = 414,
 	UNSUPPORTED_MEDIA_TYPE = 415,
@@ -180,6 +181,11 @@ class Response : public Message
 		class LengthRequiredException : public std::exception {
 			public:
 				const char * what () { return "Length Required"; }
+		};
+		/* 412 */
+		class PreconditionFailedException : public std::exception {
+			public:
+				const char * what () { return "Precondition Failed"; }
 		};
 		/* 413 */
 		class ContentTooLargeException : public std::exception {
