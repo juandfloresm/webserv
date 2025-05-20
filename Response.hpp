@@ -170,6 +170,11 @@ class Response : public Message
 			public:
 				const char * what () { return "Method Not Allowed"; }
 		};
+		/* 406 */
+		class NotAcceptableException : public std::exception {
+			public:
+				const char * what () { return "Not Acceptable"; }
+		};
 		/* 411 */
 		class LengthRequiredException : public std::exception {
 			public:

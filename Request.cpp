@@ -32,6 +32,8 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 		Response(UNPROCESSABLE_CONTENT, clientSocket, cfg, port, *this);
 	} catch ( Response::MethodNotAllowedException & e ) {
 		Response(METHOD_NOT_ALLOWED, clientSocket, cfg, port, *this);
+	} catch ( Response::NotAcceptableException & e ) {
+		Response(NOT_ACCEPTABLE, clientSocket, cfg, port, *this);
 	} catch ( Response::ContentTooLargeException & e ) {
 		Response(CONTENT_TOO_LARGE, clientSocket, cfg, port, *this);
 	} catch ( Response::InternalServerException & e ) {
@@ -174,10 +176,18 @@ void Request::parseHeaders( void )
 			init = true;
 			v.push_back(value[i]);
 		}
+		headerDelegate(key, v);
 		this->_headers[key] = v;
 	}
+}
 
-	if (eq(header("Authorization"), BASE64_HASH) && getSessionCookie().empty())
+void Request::headerDelegate( std::string key, std::string value )
+{
+	if (eq(key, "Accept") && !eq(value, "*/*"))
+	{
+		throw Response::NotAcceptableException();
+	}
+	if (eq(key, "Authorization") && eq(value, BASE64_HASH) && getSessionCookie().empty())
 	{
 		_sessionId = randomString(16);
 		_sessions.insert(std::pair<std::string, Session>(_sessionId, std::map<std::string, std::string>()));

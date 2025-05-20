@@ -89,6 +89,7 @@ class Request : public Message
 		void removeBodyFD( void );
 		std::string processFileUpload( void );
 		std::string getFilePath( void ) const;
+		void headerDelegate( std::string key, std::string value );
 
 	private:
 		std::string _resource;
