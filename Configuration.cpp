@@ -286,7 +286,7 @@ int Configuration::port( std::string raw )
 std::string Configuration::word( std::string raw )
 {
 	std::istringstream f(raw);
-	std::string s, extra = "/.-_'\"";
+	std::string s, extra = "/:.-_'\"";
 	size_t i = 0;
 	getline(f, s, ' ');
 	std::string cmp;
@@ -309,7 +309,7 @@ std::string Configuration::word( std::string raw )
 std::string Configuration::path( std::string raw )
 {
 	std::string s = word(raw);
-	if (!(s[0] == '/' || eq(s, ".php") || eq(s, ".py") || eq(s, ".pl")))
+	if (!(s[0] == '/' || eq(s, ".php") || eq(s, ".py") || eq(s, ".pl") || s.find("http") == 0))
 		throw std::runtime_error("[Error] paths should be absolute '" + raw + "'");
 	return s;
 }
