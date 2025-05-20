@@ -609,7 +609,7 @@ void Response::setErrorPage(void)
 		if (it->first == static_cast<int>(_status))
 		{
 			_content = readError(it->second);
-			break ;
+			return;
 		}
 	}
 	_content = readError(DEFAULT_ERROR_PAGE);
