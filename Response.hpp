@@ -69,6 +69,7 @@ typedef enum {
 	CONTENT_TOO_LARGE = 413,
 	URI_TOO_LONG = 414,
 	UNSUPPORTED_MEDIA_TYPE = 415,
+	RANGE_NOT_SATISFIABLE = 416,
 	EXPECTATION_FAILED = 417,
 	UNPROCESSABLE_CONTENT = 422,
 	UPGRADE_REQUIRED = 426,
@@ -201,6 +202,16 @@ class Response : public Message
 		class UnsupportedMediaTypeException : public std::exception {
 			public:
 				const char * what () { return "Unsupported Media Type"; }
+		};
+		/* 416 */
+		class RangeNotSatisfiableException : public std::exception {
+			public:
+				const char * what () { return "Range Not Satisfiable"; }
+		};
+		/* 417 */
+		class ExpectationFailedException : public std::exception {
+			public:
+				const char * what () { return "Expectation Failed"; }
 		};
 		/* 422 */
 		class UnprocessableContentException : public std::exception {

@@ -739,6 +739,7 @@ void Response::initStatusDescriptions( void )
 	_statusDescriptions[CONTENT_TOO_LARGE] = "Content Too Large";
 	_statusDescriptions[URI_TOO_LONG] = "URI Too Long";
 	_statusDescriptions[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+	_statusDescriptions[RANGE_NOT_SATISFIABLE] = "Range Not Satisfiable";
 	_statusDescriptions[UNPROCESSABLE_CONTENT] = "Unprocessable Content";
 	_statusDescriptions[UPGRADE_REQUIRED] = "Upgrade Required";
 	_statusDescriptions[EXPECTATION_FAILED] = "Expectation Failed";

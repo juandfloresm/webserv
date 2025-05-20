@@ -31,6 +31,10 @@ Request::Request(int clientSocket, Configuration & cfg, int port, Sessions & ses
 		Response(PRECONDITION_FAILED, clientSocket, cfg, port, *this);
 	} catch ( Response::UnsupportedMediaTypeException & e ) {
 		Response(UNSUPPORTED_MEDIA_TYPE, clientSocket, cfg, port, *this);
+	} catch ( Response::RangeNotSatisfiableException & e ) {
+		Response(RANGE_NOT_SATISFIABLE, clientSocket, cfg, port, *this);
+	} catch ( Response::ExpectationFailedException & e ) {
+		Response(EXPECTATION_FAILED, clientSocket, cfg, port, *this);
 	} catch ( Response::UnprocessableContentException & e ) {
 		Response(UNPROCESSABLE_CONTENT, clientSocket, cfg, port, *this);
 	} catch ( Response::MethodNotAllowedException & e ) {
@@ -200,6 +204,10 @@ void Request::headerDelegate( std::string key, std::string value )
 	}
 	if (eq(key, "If-Modified-Since") || eq(key, "If-Unmodified-Since") || eq(key, "If-Match") || eq(key, "If-None-Match") || eq(key, "If-Range") )
 		throw Response::PreconditionFailedException();
+	if (eq(key, "Range"))
+		throw Response::RangeNotSatisfiableException();
+	if (eq(key, "Expect"))
+		throw Response::ExpectationFailedException();
 }
 
 std::string Request::getSessionCookie( void )
