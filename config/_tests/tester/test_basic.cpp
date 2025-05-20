@@ -239,16 +239,17 @@ TEST_CASE("Multipart Form Upload", "[http]") {
     REQUIRE(curl != nullptr);
 
     std::string response_data;
-    long response_code;
+    long response_code = 0;
 
     curl_mime* mime = curl_mime_init(curl);
     curl_mimepart* part = curl_mime_addpart(mime);
 
+    const unsigned char minimal_content[] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00 };
+
     curl_mime_name(part, "fileToUpload");
     curl_mime_type(part, "image/png");
-    // Change route to where the test image is
-    curl_mime_filedata(part, "/home/vbcvali/Desktop/webserv/config/cgi-bin/uploads/oCCkZEQs_400x400.png");
-    curl_mime_filename(part, "test_image.png");
+    curl_mime_data(part, (const char*)minimal_content, sizeof(minimal_content));
+    curl_mime_filename(part, "minimal_image.png");
 
     std::string url = "http://localhost:8080/upload_script.php";
 
@@ -256,8 +257,6 @@ TEST_CASE("Multipart Form Upload", "[http]") {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
-
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
     CURLcode res = curl_easy_perform(curl);
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
@@ -267,8 +266,10 @@ TEST_CASE("Multipart Form Upload", "[http]") {
     INFO("Status code: " << response_code);
     INFO("Response text: " << response_data);
 
+    curl_easy_cleanup(curl);
+
     REQUIRE(res == CURLE_OK);
-    REQUIRE((response_code == 200 || response_code == 201));
+    REQUIRE(response_code == 200);
 }
 
 TEST_CASE("Cookie Handling", "[http]") {
@@ -496,4 +497,99 @@ TEST_CASE("Content Type Test", "[http]") {
             }
         }
     }
+}
+
+TEST_CASE("HTTP Status Code - 414", "[http]") {
+    CURL* curl = curl_easy_init();
+    REQUIRE(curl != nullptr);
+
+    std::string response_data;
+    long response_code;
+
+    std::string long_path = "/";
+    for (int i = 0; i < 10000; i++) {
+        long_path += "very_long_path";
+    }
+    long_path += ".html";
+
+    std::string url = "http://localhost:8080" + long_path;
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    INFO("Status code: " << response_code);
+    INFO("Response text: " << response_data);
+
+    curl_easy_cleanup(curl);
+
+    REQUIRE(res == CURLE_OK);
+    REQUIRE(response_code == 414);
+}
+
+TEST_CASE("HTTP Status Code - 406", "[http]") {
+    CURL* curl = curl_easy_init();
+    REQUIRE(curl != nullptr);
+
+    std::string response_data;
+    long reponse_code = 0;
+    struct curl_slist* headers = NULL;
+
+    headers = curl_slist_append(headers, "Accept: application/nonexistent-format");
+
+    std::string url = "http://localhost:8080/";
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &reponse_code);
+
+    INFO("Status code: " << reponse_code);
+    INFO("Response text: " << response_data);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    REQUIRE(res == CURLE_OK);
+    REQUIRE(reponse_code == 406);
+}
+
+TEST_CASE("HTTP Status code - 205", "[http]") {
+    CURL* curl = curl_easy_init();
+    REQUIRE(curl != nullptr);
+
+    std::string response_data;
+    long response_code = 0;
+
+    std::string post_data = "submit=1";
+
+    std::string url = "http://localhost:8080/upload.html";
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data.c_str());
+    
+    struct curl_slist* headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_slist_free_all(headers);
+
+    INFO("Status code: " << response_code);
+    INFO("Response text: " << response_data);
+
+    curl_easy_cleanup(curl);
+
+    REQUIRE(res == CURLE_OK);
+    REQUIRE(response_code == 205);
 }
