@@ -152,16 +152,28 @@ void Connection::processClientRequest( int clientSocketFD )
 			Request req(clientSocketFD, _cfg, it->second.port, _sessions);
 			e.erase(it);
 		}
-	} catch (Response::InternalServerException & e)
-	{
-		
+	} catch (...) {
+		try {
+			std::string r = Connection::miniResponse(500, "Internal Server Errors");
+			send(clientSocketFD, r.c_str(), r.size(), 0);
+			close(clientSocketFD);
+		} catch (...) { }
 	}
-
 }
 
 /*
 ** --------------------------------- UTILITIES ---------------------------------
 */
+
+std::string Connection::miniResponse( int errorCode, std::string description )
+{
+	std::string r = SSTR("HTTP/1.1 " << errorCode << " " << description << CRLF);
+	std::string c = ERROR;
+	r += SSTR("Content-Type: text/html" << CRLF);
+	r += SSTR("Content-Length: " << c.size() << CRLF << CRLF);
+	r += Response::replaceAll(Response::replaceAll(c, "[STATUS_CODE]", SSTR(errorCode)), "[STATUS_DESCRIPTION]", description);
+	return r;
+}
 
 void Connection::handleSigint( int sgn )
 {

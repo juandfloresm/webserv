@@ -115,7 +115,7 @@ class Response : public Message
 		char **getEnv( void );
 
 		void doResponse( void );
-		void doSend( int fd );
+		void doSend( void );
 
 		std::string const getParsedCGIResponse( std::string const response );
 		void setSingleEnv(char **env, std::string const s, int i);
@@ -135,7 +135,7 @@ class Response : public Message
 		int matchLocationLogestPrefix( std::string locationPath, std::string requestPath );
 		void showError( const std::string err ) const;
 		void validateLocationMethods( void ) const;
-		std::string replaceAll( std::string str, std::string from, std::string to ) const;
+		static std::string replaceAll( std::string str, std::string from, std::string to );
 		void p( std::string s ) const;
 		void checkAuthorization( void );
 

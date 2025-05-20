@@ -233,28 +233,28 @@ void Response::doResponse( void )
 	else if (_server.getAutoIndex() && isDirectory())				// ................................... AUTO INDEX
 	{
 		_content = readDirectory();
-		doSend(_clientSocket);
+		doSend();
 	}
 	else if (isCGI())												// ................................... DYNAMIC
 	{
 		_content = readDynamicPage();
-		doSend(_clientSocket);
+		doSend();
 	}
 	else															// ................................... STATIC
 	{
 		_content = readStaticPage();
-		doSend(_clientSocket);
+		doSend();
 	}
 }
 
-void Response::doSend( int fd )
+void Response::doSend( void )
 {
 	std::ostringstream ss;
 	ss << _status;
 	_description = _statusDescriptions[_status];
 	_statusString = ss.str();
 	std::string resp = toString();
-	send(fd, resp.c_str(), resp.size(), 0);
+	send(_clientSocket, resp.c_str(), resp.size(), 0);
 	close(_clientSocket);
 }
 
@@ -339,7 +339,7 @@ std::string Response::toString( void )
 	return r;
 }
 
-std::string Response::replaceAll( std::string str, std::string from, std::string to ) const
+std::string Response::replaceAll( std::string str, std::string from, std::string to )
 {
 	size_t pos = str.find(from);
 	while (pos != std::string::npos)
@@ -363,7 +363,7 @@ std::string Response::readError( std::string filePath )
 	std::string desc = _statusDescriptions.at(_status);
 	std::string s = content.str();
 	_contentType = "text/html";
-	return replaceAll(replaceAll(s, "[STATUS_CODE]", SSTR(_status)), "[STATUS_DESCRIPTION]", desc);
+	return Response::replaceAll(Response::replaceAll(s, "[STATUS_CODE]", SSTR(_status)), "[STATUS_DESCRIPTION]", desc);
 }
 
 std::string Response::readDirectory( void ) const
@@ -592,7 +592,7 @@ void Response::errorHandler( Status status )
 	showError(_statusDescriptions[status]);
 	_status = status;
 	setErrorPage();
-	doSend(_clientSocket);
+	doSend();
 }
 
 void Response::showError( const std::string err ) const
@@ -625,7 +625,7 @@ void Response::redirectCode( int code, std::string page )
 {
 	_status = static_cast<Status>(code);
 	_page = page;
-	doSend(_clientSocket);
+	doSend();
 }
 
 void Response::throwErrorCode( int code, std::string page )
@@ -635,7 +635,7 @@ void Response::throwErrorCode( int code, std::string page )
 		_content = readError(page);
 	else
 		setErrorPage();
-	doSend(_clientSocket);
+	doSend();
 }
 
 void Response::clearEnv( char **env )
@@ -840,7 +840,7 @@ bool Response::processUpload( void )
 		_status = CREATED;
 		_content = _request.getBody();
 		_contentType = FORM_TYPE_PLAIN;
-		doSend(_clientSocket);
+		doSend();
 		return true;
 	}
 	else
@@ -856,7 +856,7 @@ bool Response::processDelete( void )
 	{
 		_status = NO_CONTENT;
 		_content = "";
-		doSend(_clientSocket);
+		doSend();
 	}
 	else
 	{

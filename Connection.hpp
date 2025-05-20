@@ -21,6 +21,10 @@
 
 # define MAX_EVENTS 128
 # define MIN_CONNECTIONS 10
+# define ERROR "<html><head><title>[STATUS_CODE] [STATUS_DESCRIPTION]</title></head><body><center><h1>[STATUS_CODE] [STATUS_DESCRIPTION]</h1></center><hr><center>zweb/1.0.0</center></body></html>"
+
+# define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 typedef std::map<std::string, std::string> Config;
 typedef struct epoll_event EpollEvent;
@@ -58,6 +62,7 @@ class Connection
 		Configuration & getConfiguration( void ) const;
 
 		std::vector<std::string> & getSession( void );
+		static std::string miniResponse( int errorCode, std::string description);
 
 	private:
 		unsigned int _port;
