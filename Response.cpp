@@ -70,7 +70,6 @@ void Response::matchServer( void )
 		if (eq(it->getHost(), host))
 		{
 			_server = *it;
-			std::cout << "HOST " << it->getHost() << std::endl;
 			return;
 		}
 	}
@@ -80,7 +79,6 @@ void Response::matchServer( void )
 		if (it->getHost().empty() && it->getPort() == _port)
 		{
 			_server = *it;
-			std::cout << "PORT " << it->getPort() << std::endl;
 			return;
 		}
 	}
@@ -177,7 +175,7 @@ int Response::matchLocationLogestPrefix( std::string locationPath, std::string r
 	std::string locationSegment, requestSegment;
 	while (getline(f, locationSegment, '/') && getline(r, requestSegment, '/') && eq(locationSegment, requestSegment))
 		i++;
-	if (requestSegment.size() > locationSegment.size())
+	if (requestSegment.size() > locationSegment.size() && requestSegment.find(locationSegment) == 0)
 		return i;
 	else
 		return 0;
