@@ -593,3 +593,92 @@ TEST_CASE("HTTP Status code - 205", "[http]") {
     REQUIRE(res == CURLE_OK);
     REQUIRE(response_code == 205);
 }
+
+TEST_CASE("HTTP Status Code - 412", "[http]") {
+    CURL* curl = curl_easy_init();
+    REQUIRE(curl != nullptr);
+
+    std::string response_data;
+    long response_code = 0;
+    struct curl_slist* headers = NULL;
+
+    headers = curl_slist_append(headers, "If-Match: \"some-etag-value\"");
+
+    std::string url = "http://localhost:8080/";
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_slist_free_all(headers);
+
+    INFO("Status code: " << response_code);
+    INFO("Response text: " << response_data);
+
+    REQUIRE(res == CURLE_OK);
+    REQUIRE(response_code == 412);
+}
+
+TEST_CASE("HTTP Status Code - 416", "[http]") {
+    CURL* curl = curl_easy_init();
+    REQUIRE(curl != nullptr);
+
+    std::string response_data;
+    long response_code = 0;
+    struct curl_slist* headers = NULL;
+
+    headers = curl_slist_append(headers, "Range: bytes=100-200");
+
+    std::string url = "http://localhost:8080/";
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    INFO("Status code: " << response_code);
+    INFO("Response text: " << response_data);
+
+    REQUIRE(res == CURLE_OK);
+    REQUIRE(response_code == 416);
+}
+
+TEST_CASE("HTTP Status Code - 417", "[http]") {
+    CURL* curl = curl_easy_init();
+    REQUIRE(curl != nullptr);
+
+    std::string response_data;
+    long response_code = 0;
+    struct curl_slist* headers = NULL;
+
+    headers = curl_slist_append(headers, "Expect: 100-continue");
+
+    std::string url = "http://localhost:8080/";
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    INFO("Status code: " << response_code);
+    INFO("Response tex: " << response_data);
+
+    REQUIRE(res == CURLE_OK);
+    REQUIRE(response_code == 417);
+}
