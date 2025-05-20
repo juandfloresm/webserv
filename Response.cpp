@@ -702,6 +702,7 @@ void Response::initStatusDescriptions( void )
 	_statusDescriptions[CREATED] = "Created";
 	_statusDescriptions[ACCEPTED] = "Accepted";
 	_statusDescriptions[NO_CONTENT] = "No Content";
+	_statusDescriptions[RESET_CONTENT] = "Reset Content";
 	_statusDescriptions[PARTIAL_CONTENT] = "Partial Content";
 
 	/* 300 - 399 .............................. */
@@ -823,6 +824,10 @@ bool Response::processUpload( void )
 		_contentType = FORM_TYPE_PLAIN;
 		doSend(_clientSocket);
 		return true;
+	}
+	else
+	{
+		_status = RESET_CONTENT;
 	}
 	return false;
 }
