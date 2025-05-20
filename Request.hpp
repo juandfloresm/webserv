@@ -18,6 +18,7 @@
 # define LF 10
 # define CR 13
 # define CRLFF "\r\f"
+# define LINE_CAP 8 * 1024
 
 # define CONTENT_TYPE "Content-Type"
 # define CONTENT_LENGTH "Content-Length"

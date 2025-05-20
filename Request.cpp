@@ -573,6 +573,7 @@ std::string Request::getMessageLine( void )
 {
 	std::string line = "";
 	char c = '\0', p = '\0';
+	unsigned long lineCount = 0;
 	while (recv(_clientSocket, this->_buffer, 1, 0) > 0)
 	{
 		c = this->_buffer[0];
@@ -587,6 +588,9 @@ std::string Request::getMessageLine( void )
 			}
 		}
 		line.push_back(c);
+		lineCount++;
+		if(lineCount > LINE_CAP)
+			throw Response::URITooLongException();
 	}
 	return line;
 }
