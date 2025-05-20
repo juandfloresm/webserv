@@ -144,7 +144,7 @@ void Response::matchLocation( void )
 				_server.setUploadPath(loc.getUploadPath());
 
 			_location = loc;
-			p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
+			// p(requestPath + ", " + "Mached: " + loc.getPath() + ", Interpreting: " + _request.getResource());
 		}
 	}
 }
