@@ -191,12 +191,21 @@ void Request::parseHeaders( void )
 	}
 }
 
+bool Request::contains(std::string needle, std::string heystack, std::string delim)
+{
+	std::vector<std::string> list = split(heystack, delim, true);	
+	for(std::vector<std::string>::iterator it = list.begin(); it < list.end(); it++)
+	{
+		if(it->find(needle) == 0)
+			return true;
+	}
+	return false;
+}
+
 void Request::headerDelegate( std::string key, std::string value )
 {
-	if (eq(key, "Accept") && !eq(value, "*/*"))
-	{
+	if (eq(key, "Accept") && !contains("*/*", value, ","))
 		throw Response::NotAcceptableException();
-	}
 	if (eq(key, "Authorization") && eq(value, BASE64_HASH) && getSessionCookie().empty())
 	{
 		_sessionId = randomString(16);

@@ -144,13 +144,19 @@ void Connection::eventLoop( void )
 
 void Connection::processClientRequest( int clientSocketFD )
 {
-	SocketDataEvents e = this->_clientEvents;
-	SocketDataEventsIterator it = e.find(clientSocketFD);
-	if (it != e.end())
+	try {
+		SocketDataEvents e = this->_clientEvents;
+		SocketDataEventsIterator it = e.find(clientSocketFD);
+		if (it != e.end())
+		{
+			Request req(clientSocketFD, _cfg, it->second.port, _sessions);
+			e.erase(it);
+		}
+	} catch (Response::InternalServerException & e)
 	{
-		Request req(clientSocketFD, _cfg, it->second.port, _sessions);
-		e.erase(it);
+		
 	}
+
 }
 
 /*

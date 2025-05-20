@@ -93,6 +93,7 @@ class Request : public Message
 		void headerDelegate( std::string key, std::string value );
 
 		unsigned long getHeaderLength( void ) const;
+		bool contains(std::string needle, std::string heystack, std::string delim);
 
 	private:
 		std::string _resource;
