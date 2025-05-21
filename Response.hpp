@@ -152,97 +152,97 @@ class Response : public Message
 		/* 400 */
 		class BadRequestException : public std::exception {
 			public:
-				const char * what () { return "Bad Request"; }
+				const char * what () const throw() { return "Bad Request"; }
 		};
 		/* 401 */
 		class UnauthorizedException : public std::exception {
 			public:
-				const char * what () { return "Unauthorized"; }
+				const char * what () const throw() { return "Unauthorized"; }
 		};
 		/* 403 */
 		class ForbiddenException : public std::exception {
 			public:
-				const char * what () { return "Forbidden"; }
+				const char * what () const throw() { return "Forbidden"; }
 		};
 		/* 404 */
 		class NotFoundException : public std::exception {
 			public:
-				const char * what () { return "Not Found"; }
+				const char * what () const throw() { return "Not Found"; }
 		};
 		/* 405 */
 		class MethodNotAllowedException : public std::exception {
 			public:
-				const char * what () { return "Method Not Allowed"; }
+				const char * what () const throw() { return "Method Not Allowed"; }
 		};
 		/* 406 */
 		class NotAcceptableException : public std::exception {
 			public:
-				const char * what () { return "Not Acceptable"; }
+				const char * what () const throw() { return "Not Acceptable"; }
 		};
 		/* 411 */
 		class LengthRequiredException : public std::exception {
 			public:
-				const char * what () { return "Length Required"; }
+				const char * what () const throw() { return "Length Required"; }
 		};
 		/* 412 */
 		class PreconditionFailedException : public std::exception {
 			public:
-				const char * what () { return "Precondition Failed"; }
+				const char * what () const throw() { return "Precondition Failed"; }
 		};
 		/* 413 */
 		class ContentTooLargeException : public std::exception {
 			public:
-				const char * what () { return "Content Too Large"; }
+				const char * what () const throw() { return "Content Too Large"; }
 		};
 		/* 414 */
 		class URITooLongException : public std::exception {
 			public:
-				const char * what () { return "URI Too Long"; }
+				const char * what () const throw() { return "URI Too Long"; }
 		};
 		/* 415 */
 		class UnsupportedMediaTypeException : public std::exception {
 			public:
-				const char * what () { return "Unsupported Media Type"; }
+				const char * what () const throw() { return "Unsupported Media Type"; }
 		};
 		/* 416 */
 		class RangeNotSatisfiableException : public std::exception {
 			public:
-				const char * what () { return "Range Not Satisfiable"; }
+				const char * what () const throw() { return "Range Not Satisfiable"; }
 		};
 		/* 417 */
 		class ExpectationFailedException : public std::exception {
 			public:
-				const char * what () { return "Expectation Failed"; }
+				const char * what () const throw() { return "Expectation Failed"; }
 		};
 		/* 418 */
 		class ImATeaPotException : public std::exception {
 			public:
-				const char * what () { return "I'm a teapot"; }
+				const char * what () const throw() { return "I'm a teapot"; }
 		};
 		/* 422 */
 		class UnprocessableContentException : public std::exception {
 			public:
-				const char * what () { return "Unprocessable Content"; }
+				const char * what () const throw() { return "Unprocessable Content"; }
 		};
 		/* 426 */
 		class UpgradeRequiredException : public std::exception {
 			public:
-				const char * what () { return "Upgrade Required"; }
+				const char * what () const throw() { return "Upgrade Required"; }
 		};
 		/* 500 */
 		class InternalServerException : public std::exception {
 			public:
-				const char * what () { return "Internal Server Error"; }
+				const char * what () const throw() { return "Internal Server Error"; }
 		};
 		/* 501 */
 		class NotImplementedException : public std::exception {
 			public:
-				const char * what () { return "Not Implemented"; }
+				const char * what () const throw() { return "Not Implemented"; }
 		};
 		/* 502 */
 		class BadGatewayException : public std::exception {
 			public:
-				const char * what () { return "Bad Gateway"; }
+				const char * what () const throw() { return "Bad Gateway"; }
 		};
 
 
